@@ -1,0 +1,462 @@
+/* --- Global Styles & Variables --- */
+:root {
+    --primary-color: #007bff; /* Blue */
+    --primary-hover-color: #0056b3;
+    --secondary-color: #6c757d; /* Grey */
+    --secondary-hover-color: #5a6268;
+    --success-color: #28a745; /* Green */
+    --error-color: #dc3545; /* Red */
+    --error-bg: #f8d7da;
+    --error-border: #f5c6cb;
+    --text-dark: #343a40;
+    --text-medium: #6c757d;
+    --text-light: #f8f9fa;
+    --border-light: #dee2e6;
+    --background-light: #ffffff;
+    --background-grey: #f8f9fa;
+
+    --standard-padding: 15px;
+    --large-padding: 20px;
+    --standard-margin: 15px;
+    --large-margin: 25px;
+    --border-radius: 5px;
+}
+
+body {
+    font-family: 'Inter', sans-serif; /* Use Inter font */
+    line-height: 1.6;
+    color: var(--text-dark);
+    background-color: var(--background-light);
+    margin: 0;
+    padding: var(--standard-padding);
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: var(--large-padding);
+    background-color: var(--background-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Heading Styles --- */
+h1 {
+    text-align: center;                 /* Center the text */
+    background-color: var(--primary-color); /* Use the primary blue variable */
+    color: white;                       /* Make text white for contrast */
+    padding: 15px 10px;                 /* Add some space inside the blue box */
+    margin-top: 0;                      /* Remove default top margin if container handles it */
+    margin-left: -20px;                 /* Extend background to container padding edge */
+    margin-right: -20px;                /* Extend background to container padding edge */
+    margin-bottom: var(--large-margin); /* Keep space below the header */
+    border-top-left-radius: var(--border-radius); /* Match container radius */
+    border-top-right-radius: var(--border-radius);/* Match container radius */
+    /* border-radius: var(--border-radius); /* Optional: Round all corners */
+}
+
+h2, h3, h4 {
+    color: var(--text-dark);
+    margin-bottom: var(--standard-margin);
+}
+h2 {
+    /* text-align: center; */ /* Removed centering as h1 is centered */
+    margin-bottom: var(--large-margin);
+    /* color: var(--primary-color); */ /* Removed color as h1 has it */
+}
+h3 {
+    margin-top: var(--large-margin);
+}
+h4 {
+    margin-top: var(--standard-margin);
+    font-weight: 600; /* Bolder headings */
+}
+
+/* --- Form Styling --- */
+#aqlForm {
+    margin-bottom: var(--large-margin);
+}
+
+.form-section { /* General style for form sections */
+    margin-bottom: var(--large-margin);
+    padding-bottom: var(--standard-margin);
+    border-bottom: 1px solid #eee;
+}
+.form-section:last-of-type { /* Remove border from last section within the form */
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.form-section h3 { /* Style for section titles */
+    margin-top: 0; /* Remove top margin if it's the first element */
+    margin-bottom: var(--standard-margin);
+    font-size: 1.2rem;
+    color: var(--primary-hover-color);
+}
+
+/* Grid layout for form groups */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust minmax if needed */
+    gap: 15px;
+}
+
+.form-group {
+    /* Removed display: flex and related properties as .form-grid handles layout */
+    margin-bottom: 0; /* Grid gap handles spacing, remove bottom margin */
+}
+
+.form-group label {
+    /* Removed flex properties */
+    font-weight: 500;
+    display: block; /* Make label take its own line */
+    margin-bottom: 5px; /* Add space below label */
+    /* Removed text-align: right */
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select {
+    /* Removed flex-grow */
+    width: 100%; /* Make inputs fill their grid cell */
+    padding: 8px 12px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    box-sizing: border-box; /* Include padding in width */
+}
+.form-group input[readonly] {
+    background-color: var(--background-grey);
+    cursor: not-allowed;
+}
+.form-group input.input-error {
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Red glow */
+}
+
+/* --- Tooltip Styling --- */
+.tooltip-trigger {
+    cursor: help; /* Changes cursor to indicate help is available */
+    border-bottom: 1px dotted var(--text-medium); /* Subtle underline */
+    font-size: 0.9em; /* Slightly smaller */
+    color: var(--text-medium);
+    margin-left: 5px; /* Space from label */
+    display: inline-block; /* Ensures proper alignment and spacing */
+}
+
+/* --- Button Styling --- */
+.form-actions { /* Wrapper for form buttons */
+    margin-top: var(--large-margin);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap; /* Allow buttons to wrap on small screens */
+}
+
+button, .button { /* Style both button elements and elements with class="button" */
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-align: center;
+    text-decoration: none; /* For link buttons if used */
+    display: inline-block; /* Proper alignment */
+}
+
+.button.primary { /* Primary button style */
+    background-color: var(--primary-color);
+    color: white;
+}
+.button.primary:hover {
+    background-color: var(--primary-hover-color);
+}
+.button.primary.calculating { /* Specific state for calculate button */
+    background-color: var(--primary-hover-color);
+    cursor: wait;
+}
+.button.primary:disabled { /* Disabled state */
+    background-color: var(--secondary-color);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.button.secondary { /* Secondary button style */
+    background-color: var(--secondary-color);
+    color: white;
+}
+.button.secondary:hover {
+    background-color: var(--secondary-hover-color);
+}
+
+.button.tertiary { /* Tertiary button style */
+  background-color: #e9ecef;
+  color: var(--text-dark);
+}
+.button.tertiary:hover {
+  background-color: #ced4da;
+}
+
+/* --- Results & Step Sections --- */
+#results, .step-section {
+    margin-top: var(--large-margin);
+    padding: var(--large-padding); /* Increased padding */
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    background-color: var(--background-grey);
+}
+
+#results .initial-message {
+    color: var(--text-medium);
+    text-align: center;
+    font-style: italic;
+}
+
+.result-section {
+    margin-bottom: var(--standard-margin);
+    padding-bottom: var(--standard-margin);
+    border-bottom: 1px dashed var(--border-light);
+}
+.result-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.result-section h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--primary-hover-color);
+}
+.result-section p, .result-section ul {
+    margin-bottom: 5px;
+}
+.result-section strong {
+    color: var(--text-dark);
+}
+.result-section ul {
+    list-style: disc;
+    margin-left: 20px;
+}
+
+/* Hide step-by-step sections initially */
+.step-section {
+    display: none;
+}
+.step-section h3 { /* Style for titles within step sections */
+    margin-top: 0;
+    margin-bottom: var(--standard-margin);
+    font-size: 1.2rem;
+    color: var(--text-dark);
+}
+
+/* Override margin/padding for verdict message as it's simpler */
+#verdictMessage.step-section {
+    padding: 10px;
+    border: 1px solid transparent; /* Start with transparent border */
+    background-color: transparent; /* Start transparent */
+}
+
+/* Style for the defect input area */
+#defectsInputArea .form-group {
+    /* Inherits base form-group styles */
+    /* If using grid, ensure it's wrapped in .form-grid if needed */
+    margin-bottom: var(--standard-margin); /* Add margin below defect input */
+}
+#defectsInputArea .form-group label {
+    margin-bottom: 5px;
+}
+#defectsInputArea .form-group input {
+    width: 100%; /* Ensure input takes full width */
+}
+
+
+/* Verdict Message Styling */
+#verdictMessage {
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-align: center;
+  border-radius: var(--border-radius);
+}
+.verdict-accept {
+  color: var(--success-color);
+  background-color: #d4edda !important; /* Override transparent */
+  border-color: #c3e6cb !important;
+}
+.verdict-reject {
+  color: var(--error-color);
+  background-color: var(--error-bg) !important; /* Override transparent */
+  border-color: var(--error-border) !important;
+}
+.verdict-error {
+    color: var(--error-color);
+    background-color: var(--error-bg) !important; /* Override transparent */
+    border-color: var(--error-border) !important;
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+/* Defect Checklist Styling */
+#defectChecklist {
+    padding-top: var(--standard-padding);
+    border-top: 1px solid var(--border-light);
+}
+#defectChecklist p { /* Style for the instruction text */
+    margin-bottom: var(--standard-margin);
+    color: var(--text-medium);
+}
+.checklist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+.check-item {
+  display: flex;
+  align-items: center;
+}
+.check-item input[type="checkbox"] {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.check-item label {
+  font-weight: normal;
+  color: var(--text-dark);
+  flex: 1;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+/* Final Report Area Styling */
+#finalReportArea {
+    background-color: #e9ecef; /* Slightly different background */
+}
+#finalReportArea h2 { /* Report Title */
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: var(--standard-margin);
+    color: var(--text-dark);
+    font-size: 1.5rem; /* Make report title slightly larger */
+}
+#reportContent {
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+#reportContent h4 { /* Subheadings within the report */
+    margin-top: 1.2em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+    color: var(--primary-hover-color);
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 3px;
+}
+#reportContent p {
+    margin-bottom: 0.5em;
+}
+#reportContent ul {
+    list-style: disc;
+    margin-left: 25px;
+    margin-bottom: 1em;
+}
+#reportContent strong {
+    color: var(--text-dark);
+}
+
+/* Style for verdict text in the final report */
+.verdict-accept-text {
+    color: var(--success-color);
+    font-weight: bold;
+}
+.verdict-reject-text {
+    color: var(--error-color);
+    font-weight: bold;
+}
+
+
+/* --- Error Message Styling --- */
+.error-message {
+    color: var(--error-color);
+    background-color: var(--error-bg);
+    border: 1px solid var(--error-border);
+    padding: 10px;
+    margin-top: var(--standard-margin);
+    border-radius: var(--border-radius);
+    display: none; /* Hidden by default */
+    text-align: center;
+}
+
+/* --- Instructions Styling --- */
+/* (Keep your existing instructions styles if you have them) */
+/* .instructions { ... } */
+
+
+/* --- Responsive Design --- */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 15px;
+        margin: 10px auto;
+    }
+
+    h1 {
+        padding: 10px 5px;
+        font-size: 1.5rem; /* Slightly smaller title on mobile */
+        margin-left: -15px; /* Adjust negative margin for container padding */
+        margin-right: -15px;/* Adjust negative margin for container padding */
+    }
+
+    /* Adjust grid for smaller screens if needed, auto-fit might handle it */
+    .form-grid {
+        grid-template-columns: 1fr; /* Force single column */
+        gap: 10px; /* Reduce gap */
+    }
+
+    .form-group {
+        margin-bottom: 5px; /* Add back a small margin for stacked items */
+    }
+    .form-group label {
+        margin-bottom: 3px; /* Adjust space below label */
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select {
+        width: 100%; /* Ensure inputs take full width */
+    }
+
+    .form-actions {
+        flex-direction: column; /* Stack buttons vertically */
+        gap: 10px;
+    }
+    button, .button {
+        width: 100%;
+    }
+
+    .step-section {
+        margin-top: var(--standard-margin);
+        padding: var(--standard-padding);
+    }
+
+    #verdictMessage {
+        font-size: 1.1rem;
+    }
+
+    .checklist-grid {
+        grid-template-columns: 1fr; /* Single column */
+        gap: 8px;
+    }
+    .check-item label {
+        font-size: 0.9rem;
+    }
+
+    #finalReportArea h2 {
+        font-size: 1.3rem;
+    }
+    #reportContent {
+        font-size: 0.9rem;
+    }
+}
