@@ -251,6 +251,32 @@ button:disabled {
   background: #218838;
 }
 
+#reportContent {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1rem;
+  color: #222;
+  line-height: 1.5;
+}
+
+#reportContent h3 {
+  color: #3a3a3a;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+#reportContent p, #reportContent ul {
+  margin-bottom: 12px;
+}
+
+#reportContent ul {
+  padding-left: 20px;
+}
+
+#reportContent ul li {
+  margin-bottom: 6px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .form-grid {
