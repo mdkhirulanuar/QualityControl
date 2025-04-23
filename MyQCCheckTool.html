@@ -3,37 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AQL Sampling Calculator & QC Tool</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>AQL Sampling Calculator (Simplified)</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Link to html2pdf library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
+
     <div class="container">
-        <h1>MyQC Check Tool</h1>
+        <h1>AQL Sampling Calculator (Simplified)</h1>
+        <p>For General Inspection Level II (Normal Inspection)</p>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
 
         <form id="aqlForm">
+
             <div class="form-section batch-info">
-                <h3>Batch Identification</h3>
+                <h2>Batch Identification</h2>
                 <div class="form-grid">
-                    <div class="form-group">
-                        <label for="qcInspector">QC Inspector Name:</label>
+                    <div>
+                        <label for="qcInspector">QC Inspector:</label>
                         <input type="text" id="qcInspector" name="qcInspector">
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label for="operatorName">Operator Name:</label>
                         <input type="text" id="operatorName" name="operatorName">
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label for="machineNumber">Machine No:</label>
                         <input type="text" id="machineNumber" name="machineNumber">
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label for="partName">Part Name:</label>
                         <input type="text" id="partName" name="partName">
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label for="partId">Part ID:</label>
                         <input type="text" id="partId" name="partId">
                     </div>
@@ -41,112 +45,140 @@
             </div>
 
             <div class="form-section lot-details">
-                 <h3>Lot & Sampling Details</h3>
+                <h2>Lot & Sampling Details</h2>
                  <div class="form-grid">
-                    <div class="form-group">
-                        <label for="numBoxes">Number of Boxes/Batch:</label>
+                    <div>
+                        <label for="numBoxes">Number of Boxes:</label>
                         <input type="number" id="numBoxes" name="numBoxes" min="1" required>
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label for="pcsPerBox">Pieces per Box:</label>
                         <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" required>
                     </div>
-                    <div class="form-group">
-                        <label for="lotSize">Total Lot Size (Calculated):</label>
-                        <input type="number" id="lotSize" name="lotSize" readonly>
+                    <div>
+                        <label for="lotSize">Total Lot Size:</label>
+                        <input type="number" id="lotSize" name="lotSize" readonly required> <!-- Readonly, calculated -->
                     </div>
-                    <div class="form-group">
-                        <label for="inspectionLevel">Inspection Level: <span class="tooltip-trigger" title="General Inspection Levels determine the relative amount of inspection.&#10;Level I: Reduced inspection (use if supplier has excellent history).&#10;Level II: Normal inspection (most common default).&#10;Level III: Tightened inspection (use for critical items, new suppliers, or poor history).">(?)</span></label>
-                        <select id="inspectionLevel" name="inspectionLevel">
-                            <option value="I">Level I (Reduced)</option>
-                            <option value="II" selected>Level II (Normal)</option>
-                            <option value="III">Level III (Tightened)</option>
-                            <!-- Add Special Levels if needed later -->
+                    <div>
+                        <label for="aql">Acceptable Quality Level:</label>
+                        <select id="aql" name="aql" required>
+                            <option value="">-- Select Quality --</option>
+                            <option value="1.0">High Quality (AQL 1.0%)</option>
+                            <option value="2.5">Medium Quality (AQL 2.5%)</option>
+                            <option value="4.0">Low Quality (AQL 4.0%)</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="aql">Acceptable Quality Limit (AQL): <span class="tooltip-trigger" title="AQL represents the maximum percent defective considered acceptable as a process average.&#10;Lower AQL (e.g., 0.65) = Stricter standard (fewer defects allowed).&#10;Higher AQL (e.g., 4.0) = More lenient standard.&#10;Choice depends on product criticality and agreement. Common values range from 0.65 to 2.5 for major/minor defects.">(?)</span></label>
-                        <select id="aql" name="aql">
-                            <option value="0.065">0.065</option>
-                            <option value="0.10">0.10</option>
-                            <option value="0.15">0.15</option>
-                            <option value="0.25">0.25</option>
-                            <option value="0.40">0.40</option>
-                            <option value="0.65">0.65</option>
-                            <option value="1.0" selected>1.0</option>
-                            <option value="1.5">1.5</option>
-                            <option value="2.5">2.5</option>
-                            <option value="4.0">4.0</option>
-                            <option value="6.5">6.5</option>
-                        </select>
-                    </div>
-                </div>
-                 <div class="form-actions">
-                    <button type="button" id="calculateButton" class="button primary">Calculate Sampling Plan</button>
-                    <button type="button" id="resetButton" class="button secondary">Reset All</button>
                 </div>
             </div>
+
+            <div class="button-group">
+                <button type="button" id="calculateButton">Calculate Sampling Plan</button>
+                <button type="button" id="resetButton">Reset</button>
+            </div>
+
         </form>
 
-        <div id="error-message" class="error-message" style="display: none;"></div>
-
-        <!-- Step 1: Display Sampling Plan -->
-        <div id="results" class="results-area">
-             <p class="initial-message">Please enter batch details, select levels, and click calculate.</p>
+        <div id="results" class="results-section">
+            <p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>
+            <!-- Sampling plan results will be displayed here -->
         </div>
 
-        <!-- Step 2: Input Defects Found -->
-        <div id="defectsInputArea" class="step-section" style="display: none;">
-            <h3>Step 2: Record Defects Found</h3>
-            <div class="form-group"> <!-- Can use form-group directly here -->
-                <label for="defectsFound">Number of Defects Found in Sample:</label>
-                <input type="number" id="defectsFound" name="defectsFound" min="0">
+        <div id="defectsInputArea" class="form-section" style="display: none;">
+            <label for="defectsFound">Number of Defects Found in Sample:</label>
+            <input type="number" id="defectsFound" name="defectsFound" min="0" required>
+            <button type="button" id="submitDefectsButton">Submit Defects & Get Verdict</button>
+        </div>
+
+        <div id="verdictMessage" class="results-section" style="display: none;">
+            <!-- Verdict (Accept/Reject) will be displayed here -->
+        </div>
+
+        <!-- Updated Defect Checklist based on PDF -->
+        <div id="defectChecklist" class="form-section checklist-section" style="display: none;">
+            <h4>Observed Defect Types (Plastic Parts - Optional)</h4>
+            <div class="checklist-container">
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Scratches"> Plastic - Scratches
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Short Mould"> Plastic - Short Mould
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Painting Peel Off"> Plastic - Painting Peel Off
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Silkscreen Peel Off / Poor"> Plastic - Silkscreen Peel Off / Poor
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Weld/Joint Line Visible"> Plastic - Weld/Joint Line Visible
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Stressed Mark"> Plastic - Stressed Mark
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Bubble"> Plastic - Bubble
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Warped / Deformed"> Plastic - Warped / Deformed
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Excessive Flashes"> Plastic - Excessive Flashes
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Dirty / Stain"> Plastic - Dirty / Stain
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Oil Stain"> Plastic - Oil Stain
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Silverstreak"> Plastic - Silverstreak
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Brittle"> Plastic - Brittle
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Sink Mark"> Plastic - Sink Mark
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Flow Mark (Cosmetic)"> Plastic - Flow Mark (Cosmetic)
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Ejector Mark Visible"> Plastic - Ejector Mark Visible
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Cracked Part"> Plastic - Cracked Part
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Broken Part"> Plastic - Broken Part
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Un-shining / Poor Gloss"> Plastic - Un-shining / Poor Gloss
+                 </label>
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Plastic - Spots / Black Dot"> Plastic - Spots / Black Dot
+                 </label>
+                 <!-- Keep an 'Other' option if needed -->
+                 <label>
+                     <input type="checkbox" name="defect_type" value="Other"> Other (Specify if needed in report notes)
+                 </label>
             </div>
-            <button type="button" id="submitDefectsButton" class="button primary">Submit Defects & Get Verdict</button>
+        </div>
+        <!-- End Updated Defect Checklist -->
+
+
+        <div class="button-group">
+             <button type="button" id="generateReportButton" style="display: none;">Generate Full Report</button>
         </div>
 
-        <!-- Step 3: Display Verdict -->
-        <div id="verdictMessage" class="step-section" style="display: none;">
-            <!-- Verdict will be displayed here -->
-        </div>
-
-        <!-- Step 4: Defect Checklist -->
-        <div id="defectChecklist" class="step-section defect-checklist" style="display: none;">
-            <h3>Step 3: Record Specific Plastic Defects (Optional)</h3>
-            <p>Check all observed defects:</p>
-            <div class="checklist-grid">
-                <div class="check-item"><input type="checkbox" id="defect_short_mould" name="defect_type" value="Short Mould"><label for="defect_short_mould">Short Mould</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_flash" name="defect_type" value="Flash"><label for="defect_flash">Flash</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_flow_mark" name="defect_type" value="Flow Mark"><label for="defect_flow_mark">Flow Mark</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_sink_mark" name="defect_type" value="Sink Mark"><label for="defect_sink_mark">Sink Mark</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_weld_line" name="defect_type" value="Weld Line"><label for="defect_weld_line">Weld Line</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_black_mark" name="defect_type" value="Black Mark / Contamination"><label for="defect_black_mark">Black Mark / Contamination</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_silver_streak" name="defect_type" value="Silver Streak"><label for="defect_silver_streak">Silver Streak</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_oil_stain" name="defect_type" value="Oil Stain"><label for="defect_oil_stain">Oil Stain</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_crack" name="defect_type" value="Crack"><label for="defect_crack">Crack</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_scratch_mark" name="defect_type" value="Scratch Mark"><label for="defect_scratch_mark">Scratch Mark</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_dented" name="defect_type" value="Dented"><label for="defect_dented">Dented</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_white_mark" name="defect_type" value="White Mark"><label for="defect_white_mark">White Mark</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_uneven_color" name="defect_type" value="Uneven Color"><label for="defect_uneven_color">Uneven Color</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_foreign_material" name="defect_type" value="Foreign Material Embedded"><label for="defect_foreign_material">Foreign Material Embedded</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_deformation" name="defect_type" value="Deformation / Warpage"><label for="defect_deformation">Deformation / Warpage</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_rough_surface" name="defect_type" value="Rough Surface"><label for="defect_rough_surface">Rough Surface</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_over_cut" name="defect_type" value="Over Cut / Excess Material"><label for="defect_over_cut">Over Cut / Excess Material</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_dimension_off" name="defect_type" value="Dimension Off Spec"><label for="defect_dimension_off">Dimension Off Spec</label></div>
-                <div class="check-item"><input type="checkbox" id="defect_others" name="defect_type" value="Others"><label for="defect_others">Others (Specify if possible)</label></div>
-            </div>
-             <button type="button" id="generateReportButton" class="button primary" style="display: none; margin-top: 20px;">Generate Final Report</button>
-        </div>
-
-        <!-- Step 5: Final Report -->
-        <div id="finalReportArea" class="step-section report-area" style="display: none;">
+        <div id="finalReportArea" class="results-section report-area" style="display: none;">
             <h2>Final Inspection Report</h2>
             <div id="reportContent">
-                <!-- Report content will be generated here -->
+                <!-- Full report content will be generated here by JS -->
             </div>
+             <button type="button" id="savePdfButton" style="display: none;">Save Report as PDF</button>
         </div>
 
-    </div> <!-- /container -->
+    </div>
 
     <script src="script.js"></script>
 </body>
