@@ -341,35 +341,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- PDF Saving ---
   function saveReportAsPdf() {
-    const element = reportContentDiv;
-    const partName = partNameInput.value || 'UnknownPart';
-    const partId = partIdInput.value || 'NoID';
-    const date = new Date().toISOString().slice(0, 10);
-    const safePartName = partName.replace(/[^a-z0-9_.-]/gi, '_');
-    const safePartId = partId.replace(/[^a-z0-9_.-]/gi, '_');
-    const filename = `QC_Report_${safePartName}_${safePartId}_${date}.pdf`;
+  const element = reportContentDiv;
 
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+  // Force visible and full opacity before PDF generation
+  element.style.display = 'block';
+  element.style.opacity = '1';
 
-    if (!element || element.offsetParent === null || !element.innerHTML.trim()) {
-      console.error("PDF generation error: Report content element is not visible or empty.");
-      displayError("Cannot generate PDF: Report content is missing or hidden.");
-      return;
-    }
+  const partName = partNameInput.value || 'UnknownPart';
+  const partId = partIdInput.value || 'NoID';
+  const date = new Date().toISOString().slice(0, 10);
+  const safePartName = partName.replace(/[^a-z0-9_.-]/gi, '_');
+  const safePartId = partId.replace(/[^a-z0-9_.-]/gi, '_');
+  const filename = `QC_Report_${safePartName}_${safePartId}_${date}.pdf`;
 
-    html2pdf().set(opt).from(element).save().then(() => {
-      console.log("PDF generation successful.");
-    }).catch(err => {
-      console.error("PDF generation failed:", err);
-      displayError(`Failed to generate PDF: ${err.message}. Check console for more details.`);
-    });
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  if (!element || element.offsetParent === null || !element.innerHTML.trim()) {
+    console.error("PDF generation error: Report content element is not visible or empty.");
+    displayError("Cannot generate PDF: Report content is missing or hidden.");
+    return;
   }
+
+  html2pdf().set(opt).from(element).save().then(() => {
+    console.log("PDF generation successful.");
+  }).catch(err => {
+    console.error("PDF generation failed:", err);
+    displayError(`Failed to generate PDF: ${err.message}. Check console for more details.`);
+  });
+}
 
   // --- Reset ---
   function resetAll() {
