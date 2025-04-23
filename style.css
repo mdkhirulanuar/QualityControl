@@ -292,3 +292,35 @@ button:disabled {
     padding: 20px 15px 30px;
   }
 }
+
+@media print {
+  /* Make background white and text black for better print */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Remove shadows and rounded corners for cleaner print */
+  #finalReportArea {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 10px !important;
+  }
+
+  /* Hide buttons and other UI elements */
+  button,
+  .button-group,
+  #error-message,
+  #defectsInputArea,
+  #defectChecklist,
+  #verdictMessage,
+  #results {
+    display: none !important;
+  }
+
+  /* Optional: Adjust font sizes for print */
+  #reportContent {
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+  }
+}
