@@ -13,18 +13,21 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .container {
   background: #fff;
   max-width: 480px;
   width: 100%;
-  padding: 20px 15px;
+  padding: 15px;
   border-radius: 12px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  margin: 10px;
   margin-bottom: 40px;
   transition: box-shadow 0.3s ease;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
 }
 
 .container:hover {
@@ -90,6 +93,9 @@ select {
   font-size: 1rem;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   word-wrap: break-word;
+  height: 44px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 input[type="text"]:focus,
@@ -108,7 +114,7 @@ input[readonly] {
 button {
   width: 100%;
   padding: 14px 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   border: none;
   border-radius: 10px;
@@ -116,8 +122,10 @@ button {
   color: white;
   background: linear-gradient(90deg, #2575fc, #6a11cb);
   box-shadow: 0 6px 15px rgba(101, 41, 255, 0.4);
-  transition: background 0.4s ease, box-shadow 0.4s ease;
+  transition: background 0.4s ease, box-shadow 0.3s ease, transform 0.1s ease;
   margin-top: 10px;
+  min-height: 48px;
+  touch-action: manipulation;
 }
 
 button:hover:not(:disabled) {
@@ -129,6 +137,10 @@ button:disabled {
   background: #bbb;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+button.active {
+  transform: scale(0.98);
 }
 
 .button-group {
@@ -251,6 +263,20 @@ button:disabled {
   background: #218838;
 }
 
+#saveWordButton, #saveExcelButton {
+  margin-top: 20px;
+  width: auto;
+  padding: 12px 30px;
+  font-weight: 700;
+  background: #17a2b8;
+  box-shadow: 0 6px 15px rgba(23, 162, 184, 0.4);
+  transition: background 0.3s ease;
+}
+
+#saveWordButton:hover, #saveExcelButton:hover {
+  background: #138496;
+}
+
 #reportContent {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 1rem;
@@ -281,25 +307,42 @@ button:disabled {
 @media (max-width: 600px) {
   .form-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
   .button-group {
     flex-direction: column;
   }
   button {
-    font-size: 1.2rem;
+    font-size: 1rem;
+    padding: 12px;
   }
   .container {
-    padding: 20px 15px 30px;
+    padding: 15px 10px;
+  }
+  .checklist-container {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .checklist-container label {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+}
+
+/* Virtual keyboard adjustments */
+@media (max-height: 500px) {
+  .container {
+    padding-bottom: 150px;
   }
 }
 
 /* Enhanced print-specific styles */
 @media print {
   body * {
-    visibility: hidden; /* Hide everything by default */
+    visibility: hidden;
   }
   #finalReportArea, #finalReportArea * {
-    visibility: visible; /* Show only the report */
+    visibility: visible;
   }
   #finalReportArea {
     position: absolute;
@@ -313,148 +356,11 @@ button:disabled {
     color: black !important;
   }
   .button-group, .container form, .results-section:not(#finalReportArea), #error-message, #defectsInputArea, #defectChecklist, #verdictMessage {
-    display: none !important; /* Hide buttons and other sections */
+    display: none !important;
   }
   #reportContent {
     font-size: 12pt !important;
     line-height: 1.4 !important;
     color: black !important;
   }
-}
-
-/* Help Button and Modal */
-.help-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, #2575fc, #6a11cb);
-  color: white;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(101, 41, 255, 0.4);
-  transition: background 0.4s ease, box-shadow 0.4s ease;
-}
-
-.help-button:hover {
-  background: linear-gradient(90deg, #6a11cb, #2575fc);
-  box-shadow: 0 6px 15px rgba(101, 41, 255, 0.6);
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-}
-
-.modal-content h3 {
-  margin-top: 0;
-  color: #3a3a3a;
-}
-
-.modal-content p {
-  margin: 10px 0;
-  font-size: 0.95rem;
-}
-
-.modal-close {
-  width: auto;
-  padding: 10px 20px;
-  margin-top: 10px;
-  background: #28a745;
-  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
-}
-
-.modal-close:hover {
-  background: #218838;
-}
-
-/* Tooltips */
-label[title] {
-  position: relative;
-  cursor: help;
-}
-
-label[title]:hover::after {
-  content: attr(title);
-  position: absolute;
-  top: -100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #2575fc;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  z-index: 10;
-}
-
-/* Input Validation Feedback */
-input.valid, select.valid {
-  border-color: #28a745;
-  box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-}
-input.invalid, select.invalid {
-  border-color: #ff4d4f;
-  box-shadow: 0 0 5px rgba(255, 77, 79, 0.3);
-}
-
-/* Save and Load Buttons */
-#saveDraftButton, #loadInspectionsButton {
-  width: auto;
-  padding: 14px 20px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  color: white;
-  background: linear-gradient(90deg, #28a745, #218838);
-  box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
-  transition: background 0.4s ease, box-shadow 0.4s ease;
-  margin-top: 10px;
-}
-
-#saveDraftButton:hover, #loadInspectionsButton:hover {
-  background: linear-gradient(90deg, #218838, #28a745);
-  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.6);
-}
-
-/* Inspections List */
-#inspectionsList {
-  max-height: 300px;
-  overflow-y: auto;
-  margin: 10px 0;
-}
-
-#inspectionsList p {
-  background: #f9f9fb;
-  padding: 10px;
-  border-radius: 8px;
-  margin: 5px 0;
-  cursor: pointer;
-}
-
-#inspectionsList p:hover {
-  background: #e6f0ff;
 }
