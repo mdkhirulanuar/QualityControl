@@ -86,7 +86,7 @@ select {
   box-sizing: border-box;
   padding: 12px 14px;
   border-radius: 8px;
-  border: 2px household #ddd;
+  border: 2px solid #ddd;
   font-size: 1rem;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   word-wrap: break-word;
@@ -174,7 +174,7 @@ button:disabled {
 .accept {
   color: #155724;
   background-color: #d4edda;
-  border: 1px household #c3e6cb;
+  border: 1px solid #c3e6cb;
   padding: 10px;
   border-radius: 8px;
   font-weight: 700;
@@ -184,7 +184,7 @@ button:disabled {
 .reject {
   color: #721c24;
   background-color: #f8d7da;
-  border: 1px household #f5c6cb;
+  border: 1px solid #f5c6cb;
   padding: 10px;
   border-radius: 8px;
   font-weight: 700;
@@ -200,7 +200,7 @@ button:disabled {
 
 .checklist-container label {
   background: #fff;
-  border: 1px household #ddd;
+  border: 1px solid #ddd;
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
@@ -320,4 +320,141 @@ button:disabled {
     line-height: 1.4 !important;
     color: black !important;
   }
+}
+
+/* Help Button and Modal */
+.help-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #2575fc, #6a11cb);
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(101, 41, 255, 0.4);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.help-button:hover {
+  background: linear-gradient(90deg, #6a11cb, #2575fc);
+  box-shadow: 0 6px 15px rgba(101, 41, 255, 0.6);
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #3a3a3a;
+}
+
+.modal-content p {
+  margin: 10px 0;
+  font-size: 0.95rem;
+}
+
+.modal-close {
+  width: auto;
+  padding: 10px 20px;
+  margin-top: 10px;
+  background: #28a745;
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
+}
+
+.modal-close:hover {
+  background: #218838;
+}
+
+/* Tooltips */
+label[title] {
+  position: relative;
+  cursor: help;
+}
+
+label[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2575fc;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Input Validation Feedback */
+input.valid, select.valid {
+  border-color: #28a745;
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+}
+input.invalid, select.invalid {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 5px rgba(255, 77, 79, 0.3);
+}
+
+/* Save and Load Buttons */
+#saveDraftButton, #loadInspectionsButton {
+  width: auto;
+  padding: 14px 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: white;
+  background: linear-gradient(90deg, #28a745, #218838);
+  box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+  margin-top: 10px;
+}
+
+#saveDraftButton:hover, #loadInspectionsButton:hover {
+  background: linear-gradient(90deg, #218838, #28a745);
+  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.6);
+}
+
+/* Inspections List */
+#inspectionsList {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 10px 0;
+}
+
+#inspectionsList p {
+  background: #f9f9fb;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 5px 0;
+  cursor: pointer;
+}
+
+#inspectionsList p:hover {
+  background: #e6f0ff;
 }
