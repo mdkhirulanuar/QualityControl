@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const finalReportAreaDiv = document.getElementById('finalReportArea');
   const reportContentDiv = document.getElementById('reportContent');
   const savePdfButton = document.getElementById('savePdfButton');
+  const printButton = document.getElementById('printButton');
   const errorMessageDiv = document.getElementById('error-message');
 
   // --- State Variables ---
@@ -239,6 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(finalReportAreaDiv);
     fadeOut(generateReportButton);
     fadeOut(savePdfButton);
+    fadeOut(printButton);
   }
 
   // --- Defect Submission ---
@@ -252,6 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(generateReportButton);
       fadeOut(finalReportAreaDiv);
       fadeOut(savePdfButton);
+      fadeOut(printButton);
       return;
     }
     if (!currentSamplingPlan) {
@@ -273,6 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeIn(generateReportButton);
     fadeOut(finalReportAreaDiv);
     fadeOut(savePdfButton);
+    fadeOut(printButton);
   }
 
   // --- Report Generation ---
@@ -337,44 +341,51 @@ document.addEventListener('DOMContentLoaded', function() {
     reportContentDiv.innerHTML = reportHTML;
     fadeIn(finalReportAreaDiv);
     fadeIn(savePdfButton);
+    fadeIn(printButton);
   }
 
   // --- PDF Saving ---
   function saveReportAsPdf() {
-  const element = reportContentDiv;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const reportContent = document.getElementById('reportContent').innerText; // Get report text
+    const margin = 10;
+    const maxLineWidth = 190; // A4 width minus margins
+    let y = 20;
 
-  // Force visible and full opacity before PDF generation
-  element.style.display = 'block';
-  element.style.opacity = '1';
+    // Generate filename (reusing your original logic)
+    const partName = partNameInput.value || 'UnknownPart';
+    const partId = partIdInput.value || 'NoID';
+    const date = new Date().toISOString().slice(0, 10);
+    const safePartName = partName.replace(/[^a-z0-9_.-]/gi, '_');
+    const safePartId = partId.replace(/[^a-z0-9_.-]/gi, '_');
+    const filename = `QC_Report_${safePartName}_${safePartId}_${date}.pdf`;
 
-  const partName = partNameInput.value || 'UnknownPart';
-  const partId = partIdInput.value || 'NoID';
-  const date = new Date().toISOString().slice(0, 10);
-  const safePartName = partName.replace(/[^a-z0-9_.-]/gi, '_');
-  const safePartId = partId.replace(/[^a-z0-9_.-]/gi, '_');
-  const filename = `QC_Report_${safePartName}_${safePartId}_${date}.pdf`;
+    // Add title
+    doc.setFontSize(16);
+    doc.text("Quality Control Inspection Report", margin, y);
+    y += 10;
 
-  const opt = {
-    margin: [10, 10, 10, 10],
-    filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+    // Add report content
+    doc.setFontSize(12);
+    const lines = doc.splitTextToSize(reportContent, maxLineWidth); // Split text to fit page
+    lines.forEach(line => {
+      if (y > 280) { // Add new page if content exceeds page height
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, margin, y);
+      y += 7;
+    });
 
-  if (!element || element.offsetParent === null || !element.innerHTML.trim()) {
-    console.error("PDF generation error: Report content element is not visible or empty.");
-    displayError("Cannot generate PDF: Report content is missing or hidden.");
-    return;
+    // Save the PDF
+    doc.save(filename);
   }
 
-  html2pdf().set(opt).from(element).save().then(() => {
-    console.log("PDF generation successful.");
-  }).catch(err => {
-    console.error("PDF generation failed:", err);
-    displayError(`Failed to generate PDF: ${err.message}. Check console for more details.`);
-  });
-}
+  // --- Printing ---
+  function printReport() {
+    window.print();
+  }
 
   // --- Reset ---
   function resetAll() {
@@ -388,6 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(finalReportAreaDiv);
     fadeOut(generateReportButton);
     fadeOut(savePdfButton);
+    fadeOut(printButton);
     currentSamplingPlan = null;
     defectsFoundInput.value = '';
     document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => cb.checked = false);
@@ -426,12 +438,14 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(finalReportAreaDiv);
       fadeOut(generateReportButton);
       fadeOut(savePdfButton);
+      fadeOut(printButton);
     }
   });
 
   submitDefectsButton.addEventListener('click', submitDefects);
   generateReportButton.addEventListener('click', generateReport);
   savePdfButton.addEventListener('click', saveReportAsPdf);
+  printButton.addEventListener('click', printReport);
   resetButton.addEventListener('click', resetAll);
 
   // Initial setup
