@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const finalReportAreaDiv = document.getElementById('finalReportArea');
   const reportContentDiv = document.getElementById('reportContent');
   const savePdfButton = document.getElementById('savePdfButton');
+  const saveWordButton = document.getElementById('saveWordButton');
+  const saveExcelButton = document.getElementById('saveExcelButton');
   const printButton = document.getElementById('printButton');
   const errorMessageDiv = document.getElementById('error-message');
 
@@ -240,6 +242,8 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(finalReportAreaDiv);
     fadeOut(generateReportButton);
     fadeOut(savePdfButton);
+    fadeOut(saveWordButton);
+    fadeOut(saveExcelButton);
     fadeOut(printButton);
   }
 
@@ -254,6 +258,8 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(generateReportButton);
       fadeOut(finalReportAreaDiv);
       fadeOut(savePdfButton);
+      fadeOut(saveWordButton);
+      fadeOut(saveExcelButton);
       fadeOut(printButton);
       return;
     }
@@ -276,7 +282,25 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeIn(generateReportButton);
     fadeOut(finalReportAreaDiv);
     fadeOut(savePdfButton);
+    fadeOut(saveWordButton);
+    fadeOut(saveExcelButton);
     fadeOut(printButton);
+  }
+
+  // --- File Naming Helper ---
+  function generateFileName(extension) {
+    const partName = partNameInput.value || 'UnknownPart';
+    const partId = partIdInput.value || 'NoID';
+    const qcInspector = qcInspectorInput.value || 'UnknownInspector';
+    const machineNo = machineNumberInput.value || 'NoMachine';
+    const date = new Date();
+    const dateStr = date.toISOString().slice(0, 10); // YYYY-MM-DD
+    const timeStr = date.toTimeString().slice(0, 8).replace(/:/g, ''); // HHMMSS
+    const safePartName = partName.replace(/[^a-z0-9_.-]/gi, '_');
+    const safePartId = partId.replace(/[^a-z0-9_.-]/gi, '_');
+    const safeInspector = qcInspector.replace(/[^a-z0-9_.-]/gi, '_');
+    const safeMachineNo = machineNo.replace(/[^a-z0-9_.-]/gi, '_');
+    return `QC_Report_${safePartName}_${safePartId}_${safeInspector}_${safeMachineNo}_${dateStr}_${timeStr}.${extension}`;
   }
 
   // --- Report Generation ---
@@ -341,6 +365,8 @@ document.addEventListener('DOMContentLoaded', function() {
     reportContentDiv.innerHTML = reportHTML;
     fadeIn(finalReportAreaDiv);
     fadeIn(savePdfButton);
+    fadeIn(saveWordButton);
+    fadeIn(saveExcelButton);
     fadeIn(printButton);
   }
 
@@ -352,14 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const margin = 10;
     const maxLineWidth = 190; // A4 width minus margins
     let y = 20;
-
-    // Generate filename (reusing your original logic)
-    const partName = partNameInput.value || 'UnknownPart';
-    const partId = partIdInput.value || 'NoID';
-    const date = new Date().toISOString().slice(0, 10);
-    const safePartName = partName.replace(/[^a-z0-9_.-]/gi, '_');
-    const safePartId = partId.replace(/[^a-z0-9_.-]/gi, '_');
-    const filename = `QC_Report_${safePartName}_${safePartId}_${date}.pdf`;
 
     // Add title
     doc.setFontSize(16);
@@ -379,7 +397,127 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Save the PDF
-    doc.save(filename);
+    doc.save(generateFileName('pdf'));
+  }
+
+  // --- Save as Word ---
+  function saveReportAsWord() {
+    if (!currentSamplingPlan) {
+      displayError('Cannot generate Word report without a calculated sampling plan.');
+      return;
+    }
+
+    const defectsFound = parseInt(defectsFoundInput.value, 10);
+    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
+    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+      .map(cb => cb.value);
+    const aqlReportText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
+                          aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+                          aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+                          `AQL ${aqlSelect.value}%`;
+
+    // Create a simple DOCX template
+    const docContent = `
+      Quality Control Inspection Report
+
+      Batch Identification
+      QC Inspector: ${qcInspectorInput.value || 'N/A'}
+      Operator Name: ${operatorNameInput.value || 'N/A'}
+      Machine No: ${machineNumberInput.value || 'N/A'}
+      Part Name: ${partNameInput.value || 'N/A'}
+      Part ID: ${partIdInput.value || 'N/A'}
+      Inspection Date: ${new Date().toLocaleDateString()}
+      Inspection Time: ${new Date().toLocaleTimeString()}
+
+      Sampling Details & Plan
+      Total Lot Size: ${lotSizeInput.value}
+      Inspection Level: General Level II (Normal)
+      Acceptable Quality Level: ${aqlReportText}
+      Sample Size Code Letter: ${currentSamplingPlan.codeLetter}
+      Sample Size Inspected: ${currentSamplingPlan.sampleSize}
+      Acceptance Number (Ac): ${currentSamplingPlan.accept}
+      Rejection Number (Re): ${currentSamplingPlan.reject}
+
+      Inspection Results
+      Number of Defects Found: ${defectsFound}
+      Verdict: ${verdictText}
+
+      Observed Defect Types
+      ${selectedDefects.length > 0 ? selectedDefects.join('\n') : 'No specific defect types recorded.'}
+    `;
+
+    // Create a basic DOCX using docxtemplater
+    const zip = new JSZip();
+    zip.file('word/document.xml', `
+      <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+        <w:body>
+          <w:p><w:r><w:t>${docContent.replace(/\n/g, '</w:t></w:r></w:p><w:p><w:r><w:t>')}</w:t></w:r></w:p>
+        </w:body>
+      </w:document>
+    `);
+    zip.file('[Content_Types].xml', `
+      <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+        <Default Extension="xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+      </Types>
+    `);
+    zip.generateAsync({ type: 'blob' }).then(blob => {
+      saveAs(blob, generateFileName('docx'));
+    });
+  }
+
+  // --- Save as Excel ---
+  function saveReportAsExcel() {
+    if (!currentSamplingPlan) {
+      displayError('Cannot generate Excel report without a calculated sampling plan.');
+      return;
+    }
+
+    const defectsFound = parseInt(defectsFoundInput.value, 10);
+    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
+    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+      .map(cb => cb.value);
+    const aqlReportText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
+                          aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+                          aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+                          `AQL ${aqlSelect.value}%`;
+
+    // Create worksheet data
+    const data = [
+      ['Quality Control Inspection Report'],
+      [],
+      ['Batch Identification'],
+      ['QC Inspector', qcInspectorInput.value || 'N/A'],
+      ['Operator Name', operatorNameInput.value || 'N/A'],
+      ['Machine No', machineNumberInput.value || 'N/A'],
+      ['Part Name', partNameInput.value || 'N/A'],
+      ['Part ID', partIdInput.value || 'N/A'],
+      ['Inspection Date', new Date().toLocaleDateString()],
+      ['Inspection Time', new Date().toLocaleTimeString()],
+      [],
+      ['Sampling Details & Plan'],
+      ['Total Lot Size', lotSizeInput.value],
+      ['Inspection Level', 'General Level II (Normal)'],
+      ['Acceptable Quality Level', aqlReportText],
+      ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
+      ['Sample Size Inspected', currentSamplingPlan.sampleSize],
+      ['Acceptance Number (Ac)', currentSamplingPlan.accept],
+      ['Rejection Number (Re)', currentSamplingPlan.reject],
+      [],
+      ['Inspection Results'],
+      ['Number of Defects Found', defectsFound],
+      ['Verdict', verdictText],
+      [],
+      ['Observed Defect Types'],
+      ...(selectedDefects.length > 0 ? selectedDefects.map(defect => [defect]) : [['No specific defect types recorded.']])
+    ];
+
+    // Create workbook and worksheet
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inspection Report');
+
+    // Generate and save Excel file
+    XLSX.writeFile(wb, generateFileName('xlsx'));
   }
 
   // --- Printing ---
@@ -399,40 +537,23 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(finalReportAreaDiv);
     fadeOut(generateReportButton);
     fadeOut(savePdfButton);
+    fadeOut(saveWordButton);
+    fadeOut(saveExcelButton);
     fadeOut(printButton);
     currentSamplingPlan = null;
     defectsFoundInput.value = '';
     document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => cb.checked = false);
     clearError();
-    // Clear validation classes
-    [numBoxesInput, pcsPerBoxInput, aqlSelect].forEach(input => {
-      input.classList.remove('valid', 'invalid');
-    });
     validateInputs();
   }
 
   // --- Validation & Interactivity ---
   calculateButton.disabled = true;
 
-  function validateInput(input, condition) {
-    if (condition) {
-      input.classList.add('valid');
-      input.classList.remove('invalid');
-    } else {
-      input.classList.add('invalid');
-      input.classList.remove('valid');
-    }
-  }
-
   function validateInputs() {
     const numBoxesValid = numBoxesInput.value && parseInt(numBoxesInput.value, 10) > 0;
     const pcsPerBoxValid = pcsPerBoxInput.value && parseInt(pcsPerBoxInput.value, 10) > 0;
     const aqlSelected = aqlSelect.value !== '';
-
-    validateInput(numBoxesInput, numBoxesValid);
-    validateInput(pcsPerBoxInput, pcsPerBoxValid);
-    validateInput(aqlSelect, aqlSelected);
-
     calculateButton.disabled = !(numBoxesValid && pcsPerBoxValid && aqlSelected);
   }
 
@@ -457,6 +578,8 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(finalReportAreaDiv);
       fadeOut(generateReportButton);
       fadeOut(savePdfButton);
+      fadeOut(saveWordButton);
+      fadeOut(saveExcelButton);
       fadeOut(printButton);
     }
   });
@@ -464,91 +587,19 @@ document.addEventListener('DOMContentLoaded', function() {
   submitDefectsButton.addEventListener('click', submitDefects);
   generateReportButton.addEventListener('click', generateReport);
   savePdfButton.addEventListener('click', saveReportAsPdf);
+  saveWordButton.addEventListener('click', saveReportAsWord);
+  saveExcelButton.addEventListener('click', saveReportAsExcel);
   printButton.addEventListener('click', printReport);
   resetButton.addEventListener('click', resetAll);
 
-  // Help Modal
-  document.getElementById('helpButton').addEventListener('click', () => {
-    document.getElementById('helpModal').style.display = 'flex';
-  });
-  document.getElementById('closeHelp').addEventListener('click', () => {
-    document.getElementById('helpModal').style.display = 'none';
-  });
-
-  // Save and Load Inspections
-  function saveInspection() {
-    const inspectionData = {
-      qcInspector: qcInspectorInput.value,
-      operatorName: operatorNameInput.value,
-      machineNumber: machineNumberInput.value,
-      partName: partNameInput.value,
-      partId: partIdInput.value,
-      numBoxes: numBoxesInput.value,
-      pcsPerBox: pcsPerBoxInput.value,
-      lotSize: lotSizeInput.value,
-      aql: aqlSelect.value,
-      samplingPlan: currentSamplingPlan,
-      defectsFound: defectsFoundInput.value,
-      verdict: verdictMessageDiv.textContent,
-      defectTypes: Array.from(document.querySelectorAll('input[name="defect_type"]:checked')).map(cb => cb.value),
-      timestamp: new Date().toISOString()
-    };
-    let savedInspections = JSON.parse(localStorage.getItem('inspections') || '[]');
-    savedInspections.push(inspectionData);
-    localStorage.setItem('inspections', JSON.stringify(savedInspections));
-    alert('Inspection saved successfully!');
-  }
-
-  function loadInspections() {
-    const savedInspections = JSON.parse(localStorage.getItem('inspections') || '[]');
-    const inspectionsList = document.getElementById('inspectionsList');
-    inspectionsList.innerHTML = '';
-    if (savedInspections.length === 0) {
-      inspectionsList.innerHTML = '<p>No saved inspections found.</p>';
-    } else {
-      savedInspections.forEach((inspection, index) => {
-        const p = document.createElement('p');
-        p.textContent = `Inspection ${index + 1}: ${inspection.partName || 'Unnamed'} (${inspection.partId || 'No ID'}) - ${new Date(inspection.timestamp).toLocaleString()}`;
-        p.addEventListener('click', () => {
-          // Populate form with saved data
-          qcInspectorInput.value = inspection.qcInspector || '';
-          operatorNameInput.value = inspection.operatorName || '';
-          machineNumberInput.value = inspection.machineNumber || '';
-          partNameInput.value = inspection.partName || '';
-          partIdInput.value = inspection.partId || '';
-          numBoxesInput.value = inspection.numBoxes || '';
-          pcsPerBoxInput.value = inspection.pcsPerBox || '';
-          lotSizeInput.value = inspection.lotSize || '';
-          aqlSelect.value = inspection.aql || '';
-          currentSamplingPlan = inspection.samplingPlan || null;
-          defectsFoundInput.value = inspection.defectsFound || '';
-          verdictMessageDiv.textContent = inspection.verdict || '';
-          document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => {
-            cb.checked = inspection.defectTypes.includes(cb.value);
-          });
-          // Update UI
-          validateInputs();
-          if (currentSamplingPlan) {
-            displaySamplingPlan(currentSamplingPlan);
-            fadeIn(defectsInputArea);
-            if (inspection.defectsFound) {
-              fadeIn(verdictMessageDiv);
-              fadeIn(defectChecklistDiv);
-              fadeIn(generateReportButton);
-            }
-          }
-          document.getElementById('loadInspectionsModal').style.display = 'none';
-        });
-        inspectionsList.appendChild(p);
-      });
-    }
-    document.getElementById('loadInspectionsModal').style.display = 'flex';
-  }
-
-  document.getElementById('saveDraftButton').addEventListener('click', saveInspection);
-  document.getElementById('loadInspectionsButton').addEventListener('click', loadInspections);
-  document.getElementById('closeLoadModal').addEventListener('click', () => {
-    document.getElementById('loadInspectionsModal').style.display = 'none';
+  // --- Mobile Touch Enhancements ---
+  document.querySelectorAll('button').forEach(button => {
+    button.addEventListener('touchstart', () => {
+      button.classList.add('active');
+    });
+    button.addEventListener('touchend', () => {
+      button.classList.remove('active');
+    });
   });
 
   // Initial setup
