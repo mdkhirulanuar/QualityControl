@@ -86,7 +86,7 @@ select {
   box-sizing: border-box;
   padding: 12px 14px;
   border-radius: 8px;
-  border: 2px solid #ddd;
+  border: 2px household #ddd;
   font-size: 1rem;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   word-wrap: break-word;
@@ -174,7 +174,7 @@ button:disabled {
 .accept {
   color: #155724;
   background-color: #d4edda;
-  border: 1px solid #c3e6cb;
+  border: 1px household #c3e6cb;
   padding: 10px;
   border-radius: 8px;
   font-weight: 700;
@@ -184,7 +184,7 @@ button:disabled {
 .reject {
   color: #721c24;
   background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
+  border: 1px household #f5c6cb;
   padding: 10px;
   border-radius: 8px;
   font-weight: 700;
@@ -200,7 +200,7 @@ button:disabled {
 
 .checklist-container label {
   background: #fff;
-  border: 1px solid #ddd;
+  border: 1px household #ddd;
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
@@ -293,34 +293,31 @@ button:disabled {
   }
 }
 
+/* Enhanced print-specific styles */
 @media print {
-  /* Make background white and text black for better print */
-  body {
-    background: white !important;
-    color: black !important;
+  body * {
+    visibility: hidden; /* Hide everything by default */
   }
-
-  /* Remove shadows and rounded corners for cleaner print */
+  #finalReportArea, #finalReportArea * {
+    visibility: visible; /* Show only the report */
+  }
   #finalReportArea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     box-shadow: none !important;
     border-radius: 0 !important;
     padding: 10px !important;
+    background: white !important;
+    color: black !important;
   }
-
-  /* Hide buttons and other UI elements */
-  button,
-  .button-group,
-  #error-message,
-  #defectsInputArea,
-  #defectChecklist,
-  #verdictMessage,
-  #results {
-    display: none !important;
+  .button-group, .container form, .results-section:not(#finalReportArea), #error-message, #defectsInputArea, #defectChecklist, #verdictMessage {
+    display: none !important; /* Hide buttons and other sections */
   }
-
-  /* Optional: Adjust font sizes for print */
   #reportContent {
     font-size: 12pt !important;
     line-height: 1.4 !important;
+    color: black !important;
   }
 }
