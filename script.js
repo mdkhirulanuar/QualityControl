@@ -400,7 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
     doc.save(generateFileName('pdf'));
   }
 
-  // --- Save as Word ---
+  // --- Save as Word (Updated to Generate Proper .docx) ---
   function saveReportAsWord() {
     if (!currentSamplingPlan) {
       displayError('Cannot generate Word report without a calculated sampling plan.');
@@ -416,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
                           aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
                           `AQL ${aqlSelect.value}%`;
 
-    // Create a simple DOCX template
+    // Prepare the report content as plain text
     const docContent = `
       Quality Control Inspection Report
 
@@ -446,22 +446,48 @@ document.addEventListener('DOMContentLoaded', function() {
       ${selectedDefects.length > 0 ? selectedDefects.join('\n') : 'No specific defect types recorded.'}
     `;
 
-    // Create a basic DOCX using docxtemplater
+    // Create the ZIP structure for a .docx file
     const zip = new JSZip();
+
+    // [Content_Types].xml
+    zip.file('[Content_Types].xml', `
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+        <Default Extension="xml" ContentType="application/xml"/>
+        <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+        <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+      </Types>
+    `);
+
+    // _rels/.rels (Relationships)
+    zip.file('_rels/.rels', `
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+      </Relationships>
+    `);
+
+    // word/document.xml (Main document content)
     zip.file('word/document.xml', `
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
       <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
         <w:body>
-          <w:p><w:r><w:t>${docContent.replace(/\n/g, '</w:t></w:r></w:p><w:p><w:r><w:t>')}</w:t></w:r></w:p>
+          ${docContent.split('\n').map(line => {
+            if (line.trim() === '') return '<w:p><w:r><w:t> </w:t></w:r></w:p>'; // Empty line
+            return `<w:p><w:r><w:t>${line.trim()}</w:t></w:r></w:p>`;
+          }).join('')}
         </w:body>
       </w:document>
     `);
-    zip.file('[Content_Types].xml', `
-      <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-        <Default Extension="xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-      </Types>
-    `);
-    zip.generateAsync({ type: 'blob' }).then(blob => {
+
+    // Generate the .docx file as a blob with the correct MIME type
+    zip.generateAsync({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    }).then(blob => {
       saveAs(blob, generateFileName('docx'));
+    }).catch(err => {
+      displayError('Error generating Word document: ' + err.message);
     });
   }
 
