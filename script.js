@@ -228,4 +228,329 @@ document.addEventListener('DOMContentLoaded', function() {
       <p>Acceptable Quality Level: ${aqlText}</p>
       <p>Sample Size Code Letter: <strong>${plan.codeLetter}</strong></p>
       <p>Sample Size (pieces to inspect): <strong>${plan.sampleSize}</strong></p>
-      <p>Acceptance Number (
+      <p>Acceptance Number (Ac): Max ${plan.accept} defects allowed in sample.</p>
+      <p>Rejection Number (Re): If ${plan.reject} or more defects found, reject lot.</p>
+      ${samplingInstructions}
+    `;
+
+    fadeIn(resultsDiv);
+    fadeIn(defectsInputArea);
+    fadeOut(verdictMessageDiv);
+    fadeOut(defectChecklistDiv);
+    fadeOut(finalReportAreaDiv);
+    fadeOut(generateReportButton);
+    fadeOut(savePdfButton);
+    fadeOut(printButton);
+  }
+
+  // --- Defect Submission ---
+  function submitDefects() {
+    clearError();
+    const defectsFound = parseInt(defectsFoundInput.value, 10);
+    if (isNaN(defectsFound) || defectsFound < 0) {
+      displayError('Please enter a valid number of defects found (0 or more).');
+      fadeOut(verdictMessageDiv);
+      fadeOut(defectChecklistDiv);
+      fadeOut(generateReportButton);
+      fadeOut(finalReportAreaDiv);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+      return;
+    }
+    if (!currentSamplingPlan) {
+      displayError('Please calculate the sampling plan first.');
+      return;
+    }
+    let verdict = '';
+    let verdictClass = '';
+    if (defectsFound <= currentSamplingPlan.accept) {
+      verdict = `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit is ${currentSamplingPlan.accept})`;
+      verdictClass = 'accept';
+    } else {
+      verdict = `REJECT Lot (Found ${defectsFound} defects, Rejection limit is ${currentSamplingPlan.reject})`;
+      verdictClass = 'reject';
+    }
+    verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
+    fadeIn(verdictMessageDiv);
+    fadeIn(defectChecklistDiv);
+    fadeIn(generateReportButton);
+    fadeOut(finalReportAreaDiv);
+    fadeOut(savePdfButton);
+    fadeOut(printButton);
+  }
+
+  // --- Report Generation ---
+  function generateReport() {
+    if (!currentSamplingPlan) {
+      displayError('Cannot generate report without a calculated sampling plan and verdict.');
+      return;
+    }
+    const defectsFound = parseInt(defectsFoundInput.value, 10);
+    if (isNaN(defectsFound) || defectsFound < 0) {
+      displayError('Cannot generate report without valid defects found input.');
+      return;
+    }
+
+    const verdictText = (defectsFound <= currentSamplingPlan.accept) ? 'ACCEPT' : 'REJECT';
+    const verdictColor = (verdictText === 'ACCEPT') ? 'green' : 'red';
+    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+      .map(cb => cb.value);
+    const lotSizeVal = parseInt(lotSizeInput.value, 10);
+    let inspectionNote = '';
+    if (!isNaN(lotSizeVal) && currentSamplingPlan.sampleSize >= lotSizeVal) {
+      inspectionNote = `<p style="color: orange; font-weight: bold;">Note: 100% inspection was required/performed.</p>`;
+    }
+
+    let aqlReportText = '';
+    if (aqlSelect.value === '1.0') aqlReportText = 'High Quality (AQL 1.0%)';
+    else if (aqlSelect.value === '2.5') aqlReportText = 'Medium Quality (AQL 2.5%)';
+    else if (aqlSelect.value === '4.0') aqlReportText = 'Low Quality (AQL 4.0%)';
+    else aqlReportText = `AQL ${aqlSelect.value}%`;
+
+    const reportHTML = `
+      <h3>Batch Identification</h3>
+      <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
+      <p><strong>Operator Name:</strong> ${operatorNameInput.value || 'N/A'}</p>
+      <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
+      <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
+      <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
+      <p><strong>Inspection Date:</strong> ${new Date().toLocaleDateString()}</p>
+      <p><strong>Inspection Time:</strong> ${new Date().toLocaleTimeString()}</p>
+
+      <h3>Sampling Details & Plan</h3>
+      <p><strong>Total Lot Size:</strong> ${lotSizeInput.value}</p>
+      <p><strong>Inspection Level:</strong> General Level II (Normal)</p>
+      <p><strong>Acceptable Quality Level:</strong> ${aqlReportText}</p>
+      <p><strong>Sample Size Code Letter:</strong> ${currentSamplingPlan.codeLetter}</p>
+      <p><strong>Sample Size Inspected:</strong> ${currentSamplingPlan.sampleSize}</p>
+      ${inspectionNote}
+      <p><strong>Acceptance Number (Ac):</strong> ${currentSamplingPlan.accept}</p>
+      <p><strong>Rejection Number (Re):</strong> ${currentSamplingPlan.reject}</p>
+
+      <h3>Inspection Results</h3>
+      <p><strong>Number of Defects Found:</strong> ${defectsFound}</p>
+      <p><strong>Verdict:</strong> <strong style="color: ${verdictColor};">${verdictText}</strong></p>
+
+      <h3>Observed Defect Types</h3>
+      ${selectedDefects.length > 0
+        ? `<ul>${selectedDefects.map(defect => `<li>${defect}</li>`).join('')}</ul>`
+        : '<p>No specific defect types recorded.</p>'
+      }
+    `;
+
+    reportContentDiv.innerHTML = reportHTML;
+    fadeIn(finalReportAreaDiv);
+    fadeIn(savePdfButton);
+    fadeIn(printButton);
+  }
+
+  // --- PDF Saving ---
+  function saveReportAsPdf() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const reportContent = document.getElementById('reportContent').innerText; // Get report text
+    const margin = 10;
+    const maxLineWidth = 190; // A4 width minus margins
+    let y = 20;
+
+    // Generate filename (reusing your original logic)
+    const partName = partNameInput.value || 'UnknownPart';
+    const partId = partIdInput.value || 'NoID';
+    const date = new Date().toISOString().slice(0, 10);
+    const safePartName = partName.replace(/[^a-z0-9_.-]/gi, '_');
+    const safePartId = partId.replace(/[^a-z0-9_.-]/gi, '_');
+    const filename = `QC_Report_${safePartName}_${safePartId}_${date}.pdf`;
+
+    // Add title
+    doc.setFontSize(16);
+    doc.text("Quality Control Inspection Report", margin, y);
+    y += 10;
+
+    // Add report content
+    doc.setFontSize(12);
+    const lines = doc.splitTextToSize(reportContent, maxLineWidth); // Split text to fit page
+    lines.forEach(line => {
+      if (y > 280) { // Add new page if content exceeds page height
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, margin, y);
+      y += 7;
+    });
+
+    // Save the PDF
+    doc.save(filename);
+  }
+
+  // --- Printing ---
+  function printReport() {
+    window.print();
+  }
+
+  // --- Reset ---
+  function resetAll() {
+    aqlForm.reset();
+    lotSizeInput.value = '';
+    resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
+    fadeIn(resultsDiv);
+    fadeOut(defectsInputArea);
+    fadeOut(verdictMessageDiv);
+    fadeOut(defectChecklistDiv);
+    fadeOut(finalReportAreaDiv);
+    fadeOut(generateReportButton);
+    fadeOut(savePdfButton);
+    fadeOut(printButton);
+    currentSamplingPlan = null;
+    defectsFoundInput.value = '';
+    document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => cb.checked = false);
+    clearError();
+    // Clear validation classes
+    [numBoxesInput, pcsPerBoxInput, aqlSelect].forEach(input => {
+      input.classList.remove('valid', 'invalid');
+    });
+    validateInputs();
+  }
+
+  // --- Validation & Interactivity ---
+  calculateButton.disabled = true;
+
+  function validateInput(input, condition) {
+    if (condition) {
+      input.classList.add('valid');
+      input.classList.remove('invalid');
+    } else {
+      input.classList.add('invalid');
+      input.classList.remove('valid');
+    }
+  }
+
+  function validateInputs() {
+    const numBoxesValid = numBoxesInput.value && parseInt(numBoxesInput.value, 10) > 0;
+    const pcsPerBoxValid = pcsPerBoxInput.value && parseInt(pcsPerBoxInput.value, 10) > 0;
+    const aqlSelected = aqlSelect.value !== '';
+
+    validateInput(numBoxesInput, numBoxesValid);
+    validateInput(pcsPerBoxInput, pcsPerBoxValid);
+    validateInput(aqlSelect, aqlSelected);
+
+    calculateButton.disabled = !(numBoxesValid && pcsPerBoxValid && aqlSelected);
+  }
+
+  numBoxesInput.addEventListener('input', () => {
+    calculateLotSize();
+    validateInputs();
+  });
+  pcsPerBoxInput.addEventListener('input', () => {
+    calculateLotSize();
+    validateInputs();
+  });
+  aqlSelect.addEventListener('change', validateInputs);
+
+  calculateButton.addEventListener('click', () => {
+    currentSamplingPlan = calculateSamplingPlan();
+    if (currentSamplingPlan) {
+      displaySamplingPlan(currentSamplingPlan);
+    } else {
+      fadeOut(defectsInputArea);
+      fadeOut(verdictMessageDiv);
+      fadeOut(defectChecklistDiv);
+      fadeOut(finalReportAreaDiv);
+      fadeOut(generateReportButton);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+    }
+  });
+
+  submitDefectsButton.addEventListener('click', submitDefects);
+  generateReportButton.addEventListener('click', generateReport);
+  savePdfButton.addEventListener('click', saveReportAsPdf);
+  printButton.addEventListener('click', printReport);
+  resetButton.addEventListener('click', resetAll);
+
+  // Help Modal
+  document.getElementById('helpButton').addEventListener('click', () => {
+    document.getElementById('helpModal').style.display = 'flex';
+  });
+  document.getElementById('closeHelp').addEventListener('click', () => {
+    document.getElementById('helpModal').style.display = 'none';
+  });
+
+  // Save and Load Inspections
+  function saveInspection() {
+    const inspectionData = {
+      qcInspector: qcInspectorInput.value,
+      operatorName: operatorNameInput.value,
+      machineNumber: machineNumberInput.value,
+      partName: partNameInput.value,
+      partId: partIdInput.value,
+      numBoxes: numBoxesInput.value,
+      pcsPerBox: pcsPerBoxInput.value,
+      lotSize: lotSizeInput.value,
+      aql: aqlSelect.value,
+      samplingPlan: currentSamplingPlan,
+      defectsFound: defectsFoundInput.value,
+      verdict: verdictMessageDiv.textContent,
+      defectTypes: Array.from(document.querySelectorAll('input[name="defect_type"]:checked')).map(cb => cb.value),
+      timestamp: new Date().toISOString()
+    };
+    let savedInspections = JSON.parse(localStorage.getItem('inspections') || '[]');
+    savedInspections.push(inspectionData);
+    localStorage.setItem('inspections', JSON.stringify(savedInspections));
+    alert('Inspection saved successfully!');
+  }
+
+  function loadInspections() {
+    const savedInspections = JSON.parse(localStorage.getItem('inspections') || '[]');
+    const inspectionsList = document.getElementById('inspectionsList');
+    inspectionsList.innerHTML = '';
+    if (savedInspections.length === 0) {
+      inspectionsList.innerHTML = '<p>No saved inspections found.</p>';
+    } else {
+      savedInspections.forEach((inspection, index) => {
+        const p = document.createElement('p');
+        p.textContent = `Inspection ${index + 1}: ${inspection.partName || 'Unnamed'} (${inspection.partId || 'No ID'}) - ${new Date(inspection.timestamp).toLocaleString()}`;
+        p.addEventListener('click', () => {
+          // Populate form with saved data
+          qcInspectorInput.value = inspection.qcInspector || '';
+          operatorNameInput.value = inspection.operatorName || '';
+          machineNumberInput.value = inspection.machineNumber || '';
+          partNameInput.value = inspection.partName || '';
+          partIdInput.value = inspection.partId || '';
+          numBoxesInput.value = inspection.numBoxes || '';
+          pcsPerBoxInput.value = inspection.pcsPerBox || '';
+          lotSizeInput.value = inspection.lotSize || '';
+          aqlSelect.value = inspection.aql || '';
+          currentSamplingPlan = inspection.samplingPlan || null;
+          defectsFoundInput.value = inspection.defectsFound || '';
+          verdictMessageDiv.textContent = inspection.verdict || '';
+          document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => {
+            cb.checked = inspection.defectTypes.includes(cb.value);
+          });
+          // Update UI
+          validateInputs();
+          if (currentSamplingPlan) {
+            displaySamplingPlan(currentSamplingPlan);
+            fadeIn(defectsInputArea);
+            if (inspection.defectsFound) {
+              fadeIn(verdictMessageDiv);
+              fadeIn(defectChecklistDiv);
+              fadeIn(generateReportButton);
+            }
+          }
+          document.getElementById('loadInspectionsModal').style.display = 'none';
+        });
+        inspectionsList.appendChild(p);
+      });
+    }
+    document.getElementById('loadInspectionsModal').style.display = 'flex';
+  }
+
+  document.getElementById('saveDraftButton').addEventListener('click', saveInspection);
+  document.getElementById('loadInspectionsButton').addEventListener('click', loadInspections);
+  document.getElementById('closeLoadModal').addEventListener('click', () => {
+    document.getElementById('loadInspectionsModal').style.display = 'none';
+  });
+
+  // Initial setup
+  resetAll();
+});
