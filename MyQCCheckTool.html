@@ -2,34 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>AQL Sampling Calculator (Simplified)</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.28.0/docxtemplater.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-
     <div class="container">
         <h1>AQL Sampling Calculator (Simplified)</h1>
         <p>For General Inspection Level II (Normal Inspection)</p>
-        
-        <!-- Help Button and Modal -->
-        <button type="button" id="helpButton" class="help-button" aria-label="Open help information">?</button>
-        <div id="helpModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <h3>AQL Calculator Help</h3>
-                <p><strong>Lot Size</strong>: Total number of items in the batch, calculated as Number of Boxes × Pieces per Box.</p>
-                <p><strong>AQL (Acceptable Quality Level)</strong>: The maximum defect rate considered acceptable. Lower AQLs (e.g., 1.0%) indicate stricter quality standards.</p>
-                <p><strong>Sample Size</strong>: Number of items to inspect, determined by the AQL table and lot size.</p>
-                <p><strong>Acceptance Number (Ac)</strong>: Maximum number of defects allowed in the sample to accept the lot.</p>
-                <p><strong>Rejection Number (Re)</strong>: Number of defects that triggers lot rejection.</p>
-                <button type="button" id="closeHelp" class="modal-close">Close</button>
-            </div>
-        </div>
 
         <div id="error-message" class="error-message" style="display: none;"></div>
 
         <form id="aqlForm">
-
             <div class="form-section batch-info">
                 <h2>Batch Identification</h2>
                 <div class="form-grid">
@@ -60,19 +50,19 @@
                 <h2>Lot & Sampling Details</h2>
                 <div class="form-grid">
                     <div>
-                        <label for="numBoxes" title="Total number of boxes in the batch">Number of Boxes:</label>
+                        <label for="numBoxes">Number of Boxes:</label>
                         <input type="number" id="numBoxes" name="numBoxes" min="1" required>
                     </div>
                     <div>
-                        <label for="pcsPerBox" title="Number of pieces in each box">Pieces per Box:</label>
+                        <label for="pcsPerBox">Pieces per Box:</label>
                         <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" required>
                     </div>
                     <div>
-                        <label for="lotSize" title="Total pieces in the batch (Number of Boxes × Pieces per Box)">Total Lot Size:</label>
+                        <label for="lotSize">Total Lot Size:</label>
                         <input type="number" id="lotSize" name="lotSize" readonly required>
                     </div>
                     <div>
-                        <label for="aql" title="Maximum acceptable defect rate (lower AQL = stricter quality)">Acceptable Quality Level:</label>
+                        <label for="aql">Acceptable Quality Level:</label>
                         <select id="aql" name="aql" required>
                             <option value="">-- Select Quality --</option>
                             <option value="1.0">High Quality (AQL 1.0%)</option>
@@ -86,23 +76,11 @@
             <div class="button-group">
                 <button type="button" id="calculateButton">Calculate Sampling Plan</button>
                 <button type="button" id="resetButton">Reset</button>
-                <button type="button" id="saveDraftButton">Save Draft</button>
-                <button type="button" id="loadInspectionsButton">Load Inspections</button>
             </div>
-
         </form>
 
         <div id="results" class="results-section">
             <p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>
-        </div>
-
-        <!-- Load Inspections Modal -->
-        <div id="loadInspectionsModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <h3>Saved Inspections</h3>
-                <div id="inspectionsList"></div>
-                <button type="button" id="closeLoadModal" class="modal-close">Close</button>
-            </div>
         </div>
 
         <div id="defectsInputArea" class="form-section" style="display: none;">
@@ -185,6 +163,8 @@
         <div class="button-group">
             <button type="button" id="generateReportButton" style="display: none;">Generate Full Report</button>
             <button type="button" id="savePdfButton" style="display: none;">Save as PDF</button>
+            <button type="button" id="saveWordButton" style="display: none;">Save as Word</button>
+            <button type="button" id="saveExcelButton" style="display: none;">Save as Excel</button>
             <button type="button" id="printButton" style="display: none;">Print Report</button>
         </div>
 
@@ -194,7 +174,6 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
