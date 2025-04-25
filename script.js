@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const finalReportAreaDiv = document.getElementById('finalReportArea');
   const reportContentDiv = document.getElementById('reportContent');
   const savePdfButton = document.getElementById('savePdfButton');
-  const saveWordButton = document.getElementById('saveWordButton');
   const saveExcelButton = document.getElementById('saveExcelButton');
   const printButton = document.getElementById('printButton');
   const errorMessageDiv = document.getElementById('error-message');
@@ -242,7 +241,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(finalReportAreaDiv);
     fadeOut(generateReportButton);
     fadeOut(savePdfButton);
-    fadeOut(saveWordButton);
     fadeOut(saveExcelButton);
     fadeOut(printButton);
   }
@@ -258,7 +256,6 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(generateReportButton);
       fadeOut(finalReportAreaDiv);
       fadeOut(savePdfButton);
-      fadeOut(saveWordButton);
       fadeOut(saveExcelButton);
       fadeOut(printButton);
       return;
@@ -282,7 +279,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeIn(generateReportButton);
     fadeOut(finalReportAreaDiv);
     fadeOut(savePdfButton);
-    fadeOut(saveWordButton);
     fadeOut(saveExcelButton);
     fadeOut(printButton);
   }
@@ -365,7 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
     reportContentDiv.innerHTML = reportHTML;
     fadeIn(finalReportAreaDiv);
     fadeIn(savePdfButton);
-    fadeIn(saveWordButton);
     fadeIn(saveExcelButton);
     fadeIn(printButton);
   }
@@ -398,97 +393,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Save the PDF
     doc.save(generateFileName('pdf'));
-  }
-
-  // --- Save as Word (Updated to Generate Proper .docx) ---
-  function saveReportAsWord() {
-    if (!currentSamplingPlan) {
-      displayError('Cannot generate Word report without a calculated sampling plan.');
-      return;
-    }
-
-    const defectsFound = parseInt(defectsFoundInput.value, 10);
-    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
-    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
-      .map(cb => cb.value);
-    const aqlReportText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                          aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                          aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                          `AQL ${aqlSelect.value}%`;
-
-    // Prepare the report content as plain text
-    const docContent = `
-      Quality Control Inspection Report
-
-      Batch Identification
-      QC Inspector: ${qcInspectorInput.value || 'N/A'}
-      Operator Name: ${operatorNameInput.value || 'N/A'}
-      Machine No: ${machineNumberInput.value || 'N/A'}
-      Part Name: ${partNameInput.value || 'N/A'}
-      Part ID: ${partIdInput.value || 'N/A'}
-      Inspection Date: ${new Date().toLocaleDateString()}
-      Inspection Time: ${new Date().toLocaleTimeString()}
-
-      Sampling Details & Plan
-      Total Lot Size: ${lotSizeInput.value}
-      Inspection Level: General Level II (Normal)
-      Acceptable Quality Level: ${aqlReportText}
-      Sample Size Code Letter: ${currentSamplingPlan.codeLetter}
-      Sample Size Inspected: ${currentSamplingPlan.sampleSize}
-      Acceptance Number (Ac): ${currentSamplingPlan.accept}
-      Rejection Number (Re): ${currentSamplingPlan.reject}
-
-      Inspection Results
-      Number of Defects Found: ${defectsFound}
-      Verdict: ${verdictText}
-
-      Observed Defect Types
-      ${selectedDefects.length > 0 ? selectedDefects.join('\n') : 'No specific defect types recorded.'}
-    `;
-
-    // Create the ZIP structure for a .docx file
-    const zip = new JSZip();
-
-    // [Content_Types].xml
-    zip.file('[Content_Types].xml', `
-      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-      <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-        <Default Extension="xml" ContentType="application/xml"/>
-        <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-        <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-      </Types>
-    `);
-
-    // _rels/.rels (Relationships)
-    zip.file('_rels/.rels', `
-      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-      <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-      </Relationships>
-    `);
-
-    // word/document.xml (Main document content)
-    zip.file('word/document.xml', `
-      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-      <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-        <w:body>
-          ${docContent.split('\n').map(line => {
-            if (line.trim() === '') return '<w:p><w:r><w:t> </w:t></w:r></w:p>'; // Empty line
-            return `<w:p><w:r><w:t>${line.trim()}</w:t></w:r></w:p>`;
-          }).join('')}
-        </w:body>
-      </w:document>
-    `);
-
-    // Generate the .docx file as a blob with the correct MIME type
-    zip.generateAsync({
-      type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    }).then(blob => {
-      saveAs(blob, generateFileName('docx'));
-    }).catch(err => {
-      displayError('Error generating Word document: ' + err.message);
-    });
   }
 
   // --- Save as Excel ---
@@ -563,7 +467,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(finalReportAreaDiv);
     fadeOut(generateReportButton);
     fadeOut(savePdfButton);
-    fadeOut(saveWordButton);
     fadeOut(saveExcelButton);
     fadeOut(printButton);
     currentSamplingPlan = null;
@@ -604,7 +507,6 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(finalReportAreaDiv);
       fadeOut(generateReportButton);
       fadeOut(savePdfButton);
-      fadeOut(saveWordButton);
       fadeOut(saveExcelButton);
       fadeOut(printButton);
     }
@@ -613,7 +515,6 @@ document.addEventListener('DOMContentLoaded', function() {
   submitDefectsButton.addEventListener('click', submitDefects);
   generateReportButton.addEventListener('click', generateReport);
   savePdfButton.addEventListener('click', saveReportAsPdf);
-  saveWordButton.addEventListener('click', saveReportAsWord);
   saveExcelButton.addEventListener('click', saveReportAsExcel);
   printButton.addEventListener('click', printReport);
   resetButton.addEventListener('click', resetAll);
