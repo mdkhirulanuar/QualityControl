@@ -263,7 +263,7 @@ button.active {
   background: #218838;
 }
 
-#saveWordButton, #saveExcelButton {
+#saveExcelButton {
   margin-top: 20px;
   width: auto;
   padding: 12px 30px;
@@ -273,7 +273,7 @@ button.active {
   transition: background 0.3s ease;
 }
 
-#saveWordButton:hover, #saveExcelButton:hover {
+#saveExcelButton:hover {
   background: #138496;
 }
 
