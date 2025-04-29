@@ -1,3 +1,8 @@
+/*
+    Copyright © 2025 [Khirul Anuar]. All rights reserved.
+    This AQL Sampling Calculator app is the initiative of [Khirul Anuar].
+*/
+
 document.addEventListener('DOMContentLoaded', function() {
   // --- DOM Element Selection ---
   const aqlForm = document.getElementById('aqlForm');
@@ -17,11 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const defectsFoundInput = document.getElementById('defectsFound');
   const submitDefectsButton = document.getElementById('submitDefectsButton');
   const photoCaptureArea = document.getElementById('photoCaptureArea');
-  const captureSinglePhotoButton = document.getElementById('captureSinglePhotoButton');
-  const captureMultiplePhotosButton = document.getElementById('captureMultiplePhotosButton');
   const uploadSinglePhotoInput = document.getElementById('uploadSinglePhoto');
   const uploadMultiplePhotosInput = document.getElementById('uploadMultiplePhotos');
-  const dragDropArea = document.getElementById('dragDropArea');
   const photoPreview = document.getElementById('photoPreview');
   const photoCount = document.getElementById('photoCount');
   const verdictMessageDiv = document.getElementById('verdictMessage');
@@ -34,10 +36,27 @@ document.addEventListener('DOMContentLoaded', function() {
   const printButton = document.getElementById('printButton');
   const errorMessageDiv = document.getElementById('error-message');
 
+  // --- Annotation DOM Elements ---
+  const annotationModal = document.getElementById('annotationModal');
+  const annotationCanvas = document.getElementById('annotationCanvas');
+  const closeModal = document.querySelector('.close-modal');
+  const drawCircleButton = document.getElementById('drawCircleButton');
+  const drawTextButton = document.getElementById('drawTextButton');
+  const drawFreehandButton = document.getElementById('drawFreehandButton');
+  const undoButton = document.getElementById('undoButton');
+  const saveAnnotationButton = document.getElementById('saveAnnotationButton');
+
   // --- State Variables ---
   let currentSamplingPlan = null; // To store { codeLetter, sampleSize, accept, reject }
   let capturedPhotos = []; // Array to store photo data (base64 strings)
   const MAX_PHOTOS = 5; // Maximum number of photos allowed
+  let fabricCanvas = null; // Fabric.js canvas instance
+  let currentPhotoIndex = null; // Index of the photo being annotated
+  let annotationHistory = []; // Store actions for undo functionality
+  let currentMode = null; // Track current annotation mode (circle, text, freehand)
+
+  // --- Copyright Notice ---
+  const copyrightNotice = "Copyright © 2025 [Khirul Anuar]. All rights reserved. This tool is the initiative of [Khirul Anuar].";
 
   // --- AQL Data & Logic (Simplified & Based on Khirul's List) ---
   const sampleSizeCodeLetters_Level_II = {
@@ -191,21 +210,15 @@ document.addEventListener('DOMContentLoaded', function() {
     photoPreview.innerHTML = capturedPhotos.length === 0
       ? '<p>No photos added yet.</p>'
       : capturedPhotos.map((photo, index) => `
-          <img src="${photo}" alt="Photo ${index + 1}" data-index="${index}" title="Click to remove">
+          <img src="${photo}" alt="Photo ${index + 1}" data-index="${index}" title="Click to annotate or remove">
         `).join('');
     photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
     if (capturedPhotos.length >= MAX_PHOTOS) {
-      captureSinglePhotoButton.disabled = true;
-      captureMultiplePhotosButton.disabled = true;
       uploadSinglePhotoInput.disabled = true;
       uploadMultiplePhotosInput.disabled = true;
-      dragDropArea.classList.add('disabled');
     } else {
-      captureSinglePhotoButton.disabled = false;
-      captureMultiplePhotosButton.disabled = false;
       uploadSinglePhotoInput.disabled = false;
       uploadMultiplePhotosInput.disabled = false;
-      dragDropArea.classList.remove('disabled');
     }
   }
 
@@ -226,54 +239,6 @@ document.addEventListener('DOMContentLoaded', function() {
     clearError();
   }
 
-  function capturePhotoFromCamera(multiple = false) {
-    const video = document.createElement('video');
-    const canvas = document.createElement('canvas');
-    const captureButton = document.createElement('button');
-    captureButton.textContent = 'Capture Photo';
-    const closeButton = document.createElement('button');
-    closeButton.textContent = 'Close';
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
-      align-items: center; justify-content: center; z-index: 1000;
-    `;
-    video.style.maxWidth = '90%';
-    captureButton.style.cssText = closeButton.style.cssText = `
-      margin: 10px; padding: 10px 20px; font-size: 1rem; color: white;
-      background: #2575fc; border: none; border-radius: 8px; cursor: pointer;
-    `;
-    modal.append(video, captureButton, closeButton);
-    document.body.appendChild(modal);
-
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-        video.play();
-        captureButton.onclick = () => {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          canvas.getContext('2d').drawImage(video, 0, 0);
-          const base64 = canvas.toDataURL('image/jpeg');
-          if (addPhoto(base64) && multiple) {
-            // Continue capturing for multiple photos
-          } else {
-            stream.getTracks().forEach(track => track.stop());
-            modal.remove();
-          }
-        };
-        closeButton.onclick = () => {
-          stream.getTracks().forEach(track => track.stop());
-          modal.remove();
-        };
-      })
-      .catch(err => {
-        displayError('Camera access denied or unavailable.');
-        modal.remove();
-      });
-  }
-
   function handleFileUpload(files) {
     const validImages = Array.from(files).filter(file => file.type.startsWith('image/'));
     if (validImages.length === 0) {
@@ -287,6 +252,149 @@ document.addEventListener('DOMContentLoaded', function() {
       reader.onerror = () => displayError('Error reading file.');
       reader.readAsDataURL(file);
     });
+  }
+
+  // --- Annotation Functions ---
+  function initAnnotationCanvas(imageSrc, index) {
+    currentPhotoIndex = index;
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = function() {
+      // Set canvas dimensions based on image
+      const maxWidth = 500; // Adjust based on modal size
+      const maxHeight = 400;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = (maxWidth / width) * height;
+        width = maxWidth;
+      }
+      if (height > maxHeight) {
+        width = (maxHeight / height) * width;
+        height = maxHeight;
+      }
+
+      annotationCanvas.width = width;
+      annotationCanvas.height = height;
+
+      fabricCanvas = new fabric.Canvas('annotationCanvas', {
+        width: width,
+        height: height
+      });
+
+      // Load the image onto the canvas
+      fabric.Image.fromURL(imageSrc, function(imgObj) {
+        imgObj.set({
+          selectable: false,
+          evented: false
+        });
+        imgObj.scaleToWidth(width);
+        imgObj.scaleToHeight(height);
+        fabricCanvas.add(imgObj);
+        fabricCanvas.sendToBack(imgObj);
+      });
+
+      // Reset annotation state
+      currentMode = null;
+      annotationHistory = [];
+      updateToolButtons();
+
+      // Circle drawing
+      drawCircleButton.addEventListener('click', () => {
+        currentMode = currentMode === 'circle' ? null : 'circle';
+        fabricCanvas.isDrawingMode = false;
+        updateToolButtons();
+      });
+
+      // Text drawing
+      drawTextButton.addEventListener('click', () => {
+        currentMode = currentMode === 'text' ? null : 'text';
+        fabricCanvas.isDrawingMode = false;
+        updateToolButtons();
+      });
+
+      // Freehand drawing
+      drawFreehandButton.addEventListener('click', () => {
+        currentMode = currentMode === 'freehand' ? null : 'freehand';
+        fabricCanvas.isDrawingMode = currentMode === 'freehand';
+        fabricCanvas.freeDrawingBrush.color = '#ff0000';
+        fabricCanvas.freeDrawingBrush.width = 2;
+        updateToolButtons();
+      });
+
+      // Canvas click events for circle and text
+      fabricCanvas.on('mouse:down', (options) => {
+        if (currentMode === 'circle') {
+          const pointer = fabricCanvas.getPointer(options.e);
+          const circle = new fabric.Circle({
+            left: pointer.x - 20,
+            top: pointer.y - 20,
+            radius: 20,
+            fill: '',
+            stroke: '#ff0000',
+            strokeWidth: 2,
+            originX: 'center',
+            originY: 'center'
+          });
+          fabricCanvas.add(circle);
+          annotationHistory.push(circle);
+        } else if (currentMode === 'text') {
+          const pointer = fabricCanvas.getPointer(options.e);
+          const text = new fabric.IText('Enter text', {
+            left: pointer.x,
+            top: pointer.y,
+            fill: '#ff0000',
+            fontSize: 16,
+            fontFamily: 'Arial'
+          });
+          fabricCanvas.add(text);
+          fabricCanvas.setActiveObject(text);
+          annotationHistory.push(text);
+        }
+      });
+
+      // Track freehand drawing for undo
+      fabricCanvas.on('path:created', (e) => {
+        annotationHistory.push(e.path);
+      });
+
+      // Undo functionality
+      undoButton.addEventListener('click', () => {
+        if (annotationHistory.length > 0) {
+          const lastAction = annotationHistory.pop();
+          fabricCanvas.remove(lastAction);
+          fabricCanvas.renderAll();
+        }
+      });
+
+      // Save annotation
+      saveAnnotationButton.addEventListener('click', () => {
+        const annotatedImage = fabricCanvas.toDataURL('image/jpeg');
+        capturedPhotos[currentPhotoIndex] = annotatedImage;
+        updatePhotoPreview();
+        closeAnnotationModal();
+      });
+    };
+    img.onerror = () => displayError('Error loading image for annotation.');
+    img.src = imageSrc;
+  }
+
+  function updateToolButtons() {
+    drawCircleButton.classList.toggle('active', currentMode === 'circle');
+    drawTextButton.classList.toggle('active', currentMode === 'text');
+    drawFreehandButton.classList.toggle('active', currentMode === 'freehand');
+  }
+
+  function closeAnnotationModal() {
+    annotationModal.style.display = 'none';
+    if (fabricCanvas) {
+      fabricCanvas.dispose();
+      fabricCanvas = null;
+    }
+    currentPhotoIndex = null;
+    currentMode = null;
+    annotationHistory = [];
   }
 
   // --- Display Sampling Plan ---
@@ -476,6 +584,9 @@ document.addEventListener('DOMContentLoaded', function() {
           `).join('')
         : '<p>No photos added.</p>'
       }
+
+      <h3>Ownership</h3>
+      <p>${copyrightNotice}</p>
     `;
 
     reportContentDiv.innerHTML = reportHTML;
@@ -553,6 +664,10 @@ document.addEventListener('DOMContentLoaded', function() {
       .map(cb => cb.value);
     if (selectedDefects.length > 0) {
       selectedDefects.forEach(defect => {
+        if (y > 260) {
+          doc.addPage();
+          y = 20;
+        }
         doc.text(`- ${defect}`, margin, y);
         y += 7;
       });
@@ -584,6 +699,15 @@ document.addEventListener('DOMContentLoaded', function() {
       doc.text("No photos added.", margin, y);
       y += 7;
     }
+    y += 10;
+
+    if (y > 260) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.text("Ownership", margin, y);
+    y += 7;
+    doc.text(copyrightNotice, margin, y, { maxWidth: 190 });
 
     doc.save(generateFileName('pdf'));
   }
@@ -635,7 +759,10 @@ document.addEventListener('DOMContentLoaded', function() {
       ['Photo Documentation'],
       ...(capturedPhotos.length > 0
         ? capturedPhotos.map((photo, index) => [`Photo ${index + 1} (Base64)`, photo])
-        : [['No photos added.']])
+        : [['No photos added.']]),
+      [],
+      ['Ownership'],
+      [copyrightNotice]
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(data);
@@ -719,32 +846,25 @@ document.addEventListener('DOMContentLoaded', function() {
   printButton.addEventListener('click', printReport);
 
   // --- Photo Event Listeners ---
-  captureSinglePhotoButton.addEventListener('click', () => capturePhotoFromCamera(false));
-  captureMultiplePhotosButton.addEventListener('click', () => capturePhotoFromCamera(true));
   uploadSinglePhotoInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
   uploadMultiplePhotosInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
-
-  dragDropArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dragDropArea.classList.add('drag-active');
-  });
-  dragDropArea.addEventListener('dragleave', () => {
-    dragDropArea.classList.remove('drag-active');
-  });
-  dragDropArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dragDropArea.classList.remove('drag-active');
-    handleFileUpload(e.dataTransfer.files);
-  });
 
   photoPreview.addEventListener('click', (e) => {
     if (e.target.tagName === 'IMG') {
       const index = parseInt(e.target.dataset.index, 10);
-      if (confirm('Remove this photo?')) {
-        removePhoto(index);
+      const action = prompt('Do you want to annotate or remove this photo? Type "annotate" or "remove".');
+      if (action && action.toLowerCase() === 'annotate') {
+        initAnnotationCanvas(capturedPhotos[index], index);
+        annotationModal.style.display = 'flex';
+      } else if (action && action.toLowerCase() === 'remove') {
+        if (confirm('Remove this photo?')) {
+          removePhoto(index);
+        }
       }
     }
   });
+
+  closeModal.addEventListener('click', closeAnnotationModal);
 
   // --- Mobile Touch Enhancements ---
   document.querySelectorAll('button').forEach(button => {
