@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--
+        Copyright © 2025 [Your Name]. All rights reserved.
+        This AQL Sampling Calculator app is the initiative of [Your Name].
+    -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -9,6 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -89,22 +94,35 @@
 
         <div id="photoCaptureArea" class="form-section photo-section" style="display: none;">
             <h4>Photo Documentation (Batch or Defect Samples)</h4>
-            <p>Add up to 5 photos to document the batch or defects.</p>
+            <p>Add up to 5 photos to document the batch or defects. Click a photo to annotate or remove.</p>
             <div class="photo-options">
-                <button type="button" id="captureSinglePhotoButton">Take Single Photo</button>
-                <button type="button" id="captureMultiplePhotosButton">Take Multiple Photos</button>
                 <label for="uploadSinglePhoto" class="upload-button">Upload Single Photo
                     <input type="file" id="uploadSinglePhoto" accept="image/*" style="display: none;">
                 </label>
                 <label for="uploadMultiplePhotos" class="upload-button">Upload Multiple Photos
                     <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;">
                 </label>
-                <div id="dragDropArea" class="drag-drop-area">Drag & Drop Photos Here</div>
             </div>
             <div id="photoPreview" class="photo-preview">
                 <p>No photos added yet.</p>
             </div>
             <p id="photoCount">Photos: 0/5</p>
+        </div>
+
+        <!-- Annotation Modal -->
+        <div id="annotationModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-modal">×</span>
+                <h3>Annotate Photo</h3>
+                <div class="annotation-tools">
+                    <button id="drawCircleButton" class="tool-button">Draw Circle</button>
+                    <button id="drawTextButton" class="tool-button">Add Text</button>
+                    <button id="drawFreehandButton" class="tool-button">Freehand Draw</button>
+                    <button id="undoButton" class="tool-button">Undo</button>
+                    <button id="saveAnnotationButton" class="tool-button save-button">Save</button>
+                </div>
+                <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
+            </div>
         </div>
 
         <div id="verdictMessage" class="results-section" style="display: none;"></div>
@@ -189,6 +207,11 @@
             <h2>Final Inspection Report</h2>
             <div id="reportContent"></div>
         </div>
+
+        <!-- Copyright Notice -->
+        <footer class="footer">
+            <p>Copyright © 2025 [Your Name]. All rights reserved. This tool is the initiative of [Your Name].</p>
+        </footer>
     </div>
 
     <script src="script.js"></script>
