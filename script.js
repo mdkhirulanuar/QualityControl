@@ -1,6 +1,5 @@
 /*
-    Copyright © 2025 [Khirul Anuar]. All rights reserved.
-    This AQL Sampling Calculator app is the initiative of [Khirul Anuar].
+    Copyright © 2025 Khirul Anuar. This AQL Sampling Calculator app is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
 */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -56,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentMode = null; // Track current annotation mode (circle, text, freehand)
 
   // --- Copyright Notice ---
-  const copyrightNotice = "Copyright © 2025 [Khirul Anuar]. All rights reserved. This tool is the initiative of [Khirul Anuar].";
+  const copyrightNotice = "Copyright © 2025 Khirul Anuar. This AQL Sampling Calculator app is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
 
   // --- AQL Data & Logic (Simplified & Based on Khirul's List) ---
   const sampleSizeCodeLetters_Level_II = {
