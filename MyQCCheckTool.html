@@ -10,8 +10,7 @@
     <title>AQL Sampling Calculator (Simplified)</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
 <body>
@@ -41,7 +40,7 @@
                         <label for="partId">Part ID:</label>
                         <select id="partId" name="partId">
                             <option value="">-- Select Part ID --</option>
-                            <!-- Options will be populated by JavaScript -->
+                            <!-- Options populated by JavaScript -->
                         </select>
                     </div>
                     <div>
@@ -132,76 +131,33 @@
         <div id="defectChecklist" class="form-section checklist-section" style="display: none;">
             <h4>Observed Defect Types (Plastic Parts - Optional)</h4>
             <div class="checklist-container">
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Scratches"> Plastic - Scratches
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Short Mould"> Plastic - Short Mould
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Painting Peel Off"> Plastic - Painting Peel Off
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Silkscreen Peel Off / Poor"> Plastic - Silkscreen Peel Off / Poor
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Weld/Joint Line Visible"> Plastic - Weld/Joint Line Visible
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Stressed Mark"> Plastic - Stressed Mark
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Bubble"> Plastic - Bubble
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Warped / Deformed"> Plastic - Warped / Deformed
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Excessive Flashes"> Plastic - Excessive Flashes
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Dirty / Stain"> Plastic - Dirty / Stain
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Oil Stain"> Plastic - Oil Stain
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Silverstreak"> Plastic - Silverstreak
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Brittle"> Plastic - Brittle
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Sink Mark"> Plastic - Sink Mark
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Flow Mark (Cosmetic)"> Plastic - Flow Mark (Cosmetic)
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Ejector Mark Visible"> Plastic - Ejector Mark Visible
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Cracked Part"> Plastic - Cracked Part
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Broken Part"> Plastic - Broken Part
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Un-shining / Poor Gloss"> Plastic - Un-shining / Poor Gloss
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Plastic - Spots / Black Dot"> Plastic - Spots / Black Dot
-                </label>
-                <label>
-                    <input type="checkbox" name="defect_type" value="Other"> Other (Specify if needed in report notes)
-                </label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Scratches"> Plastic - Scratches</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Short Mould"> Plastic - Short Mould</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Painting Peel Off"> Plastic - Painting Peel Off</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Silkscreen Peel Off / Poor"> Plastic - Silkscreen Peel Off / Poor</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Weld/Joint Line Visible"> Plastic - Weld/Joint Line Visible</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Stressed Mark"> Plastic - Stressed Mark</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Bubble"> Plastic - Bubble</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Warped / Deformed"> Plastic - Warped / Deformed</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Excessive Flashes"> Plastic - Excessive Flashes</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Dirty / Stain"> Plastic - Dirty / Stain</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Oil Stain"> Plastic - Oil Stain</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Silverstreak"> Plastic - Silverstreak</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Brittle"> Plastic - Brittle</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Sink Mark"> Plastic - Sink Mark</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Flow Mark (Cosmetic)"> Plastic - Flow Mark (Cosmetic)</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Ejector Mark Visible"> Plastic - Ejector Mark Visible</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Cracked Part"> Plastic - Cracked Part</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Broken Part"> Plastic - Broken Part</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Un-shining / Poor Gloss"> Plastic - Un-shining / Poor Gloss</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Spots / Black Dot"> Plastic - Spots / Black Dot</label>
+                <label><input type="checkbox" name="defect_type" value="Other"> Other (Specify if needed in report notes)</label>
             </div>
         </div>
 
         <div class="button-group">
             <button type="button" id="generateReportButton" style="display: none;">Generate Full Report</button>
             <button type="button" id="savePdfButton" style="display: none;">Save as PDF</button>
-            <button type="button" id="saveExcelButton" style="display: none;">Save as Excel</button>
             <button type="button" id="printButton" style="display: none;">Print Report</button>
         </div>
 
