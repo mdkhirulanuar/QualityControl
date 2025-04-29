@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <!--
-        Copyright © 2025 Khirul Anuar. All rights reserved.
-        This AQL Sampling Calculator app is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
+        Copyright © 2025 [Your Name]. All rights reserved.
+        This AQL Sampling Calculator app is the initiative of [Your Name].
     -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -18,7 +18,7 @@
 <body>
     <div class="container">
         <h1>AQL Sampling Calculator (Simplified)</h1>
-        <p><centre>For General Inspection Level II (Normal Inspection)</centre></p>
+        <p>For General Inspection Level II (Normal Inspection)</p>
 
         <div id="error-message" class="error-message" style="display: none;"></div>
 
@@ -39,12 +39,15 @@
                         <input type="text" id="machineNumber" name="machineNumber">
                     </div>
                     <div>
-                        <label for="partName">Part Name:</label>
-                        <input type="text" id="partName" name="partName">
+                        <label for="partId">Part ID:</label>
+                        <select id="partId" name="partId">
+                            <option value="">-- Select Part ID --</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
                     </div>
                     <div>
-                        <label for="partId">Part ID:</label>
-                        <input type="text" id="partId" name="partId">
+                        <label for="partName">Part Name:</label>
+                        <input type="text" id="partName" name="partName" readonly>
                     </div>
                 </div>
             </div>
@@ -210,10 +213,12 @@
 
         <!-- Copyright Notice -->
         <footer class="footer">
-            <p>Copyright © 2025 Khirul Anuar. This AQL Sampling Calculator app is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.</p>
+            <p>Copyright © 2025 [Your Name]. All rights reserved. This tool is the initiative of [Your Name].</p>
         </footer>
     </div>
 
+    <!-- Include the parts list before the main script -->
+    <script src="partsList.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
