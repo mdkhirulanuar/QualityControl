@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const defectsInputArea = document.getElementById('defectsInputArea');
   const defectsFoundInput = document.getElementById('defectsFound');
   const submitDefectsButton = document.getElementById('submitDefectsButton');
+  const photoCaptureArea = document.getElementById('photoCaptureArea');
+  const captureSinglePhotoButton = document.getElementById('captureSinglePhotoButton');
+  const captureMultiplePhotosButton = document.getElementById('captureMultiplePhotosButton');
+  const uploadSinglePhotoInput = document.getElementById('uploadSinglePhoto');
+  const uploadMultiplePhotosInput = document.getElementById('uploadMultiplePhotos');
+  const dragDropArea = document.getElementById('dragDropArea');
+  const photoPreview = document.getElementById('photoPreview');
+  const photoCount = document.getElementById('photoCount');
   const verdictMessageDiv = document.getElementById('verdictMessage');
   const defectChecklistDiv = document.getElementById('defectChecklist');
   const generateReportButton = document.getElementById('generateReportButton');
@@ -28,10 +36,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- State Variables ---
   let currentSamplingPlan = null; // To store { codeLetter, sampleSize, accept, reject }
+  let capturedPhotos = []; // Array to store photo data (base64 strings)
+  const MAX_PHOTOS = 5; // Maximum number of photos allowed
 
   // --- AQL Data & Logic (Simplified & Based on Khirul's List) ---
-
-  // Table 1 Representation: Sample size code letters (ONLY General Inspection Level II)
   const sampleSizeCodeLetters_Level_II = {
     '2-8': 'A', '9-15': 'B', '16-25': 'C', '26-50': 'D', '51-90': 'E',
     '91-150': 'F', '151-280': 'G', '281-500': 'H', '501-1200': 'J',
@@ -39,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
     '35001-150000': 'N', '150001-500000': 'P', '500001+': 'Q'
   };
 
-  // Table II-A Representation: Master Table (UPDATED based on Khirul's provided list 2025-04-23 - NO ARROWS NEEDED)
   const aqlMasterTable_Simplified = {
     'A': { sampleSize: 2, plans: { '1.0': { ac: 0, re: 1 }, '2.5': { ac: 0, re: 1 }, '4.0': { ac: 0, re: 1 } } },
     'B': { sampleSize: 3, plans: { '1.0': { ac: 0, re: 1 }, '2.5': { ac: 0, re: 1 }, '4.0': { ac: 0, re: 1 } } },
@@ -179,6 +186,109 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30);
   }
 
+  // --- Photo Handling Functions ---
+  function updatePhotoPreview() {
+    photoPreview.innerHTML = capturedPhotos.length === 0
+      ? '<p>No photos added yet.</p>'
+      : capturedPhotos.map((photo, index) => `
+          <img src="${photo}" alt="Photo ${index + 1}" data-index="${index}" title="Click to remove">
+        `).join('');
+    photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
+    if (capturedPhotos.length >= MAX_PHOTOS) {
+      captureSinglePhotoButton.disabled = true;
+      captureMultiplePhotosButton.disabled = true;
+      uploadSinglePhotoInput.disabled = true;
+      uploadMultiplePhotosInput.disabled = true;
+      dragDropArea.classList.add('disabled');
+    } else {
+      captureSinglePhotoButton.disabled = false;
+      captureMultiplePhotosButton.disabled = false;
+      uploadSinglePhotoInput.disabled = false;
+      uploadMultiplePhotosInput.disabled = false;
+      dragDropArea.classList.remove('disabled');
+    }
+  }
+
+  function addPhoto(base64) {
+    if (capturedPhotos.length >= MAX_PHOTOS) {
+      displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
+      return false;
+    }
+    capturedPhotos.push(base64);
+    updatePhotoPreview();
+    clearError();
+    return true;
+  }
+
+  function removePhoto(index) {
+    capturedPhotos.splice(index, 1);
+    updatePhotoPreview();
+    clearError();
+  }
+
+  function capturePhotoFromCamera(multiple = false) {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const captureButton = document.createElement('button');
+    captureButton.textContent = 'Capture Photo';
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close';
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 1000;
+    `;
+    video.style.maxWidth = '90%';
+    captureButton.style.cssText = closeButton.style.cssText = `
+      margin: 10px; padding: 10px 20px; font-size: 1rem; color: white;
+      background: #2575fc; border: none; border-radius: 8px; cursor: pointer;
+    `;
+    modal.append(video, captureButton, closeButton);
+    document.body.appendChild(modal);
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        video.play();
+        captureButton.onclick = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          const base64 = canvas.toDataURL('image/jpeg');
+          if (addPhoto(base64) && multiple) {
+            // Continue capturing for multiple photos
+          } else {
+            stream.getTracks().forEach(track => track.stop());
+            modal.remove();
+          }
+        };
+        closeButton.onclick = () => {
+          stream.getTracks().forEach(track => track.stop());
+          modal.remove();
+        };
+      })
+      .catch(err => {
+        displayError('Camera access denied or unavailable.');
+        modal.remove();
+      });
+  }
+
+  function handleFileUpload(files) {
+    const validImages = Array.from(files).filter(file => file.type.startsWith('image/'));
+    if (validImages.length === 0) {
+      displayError('No valid images selected.');
+      return;
+    }
+    validImages.forEach(file => {
+      if (capturedPhotos.length >= MAX_PHOTOS) return;
+      const reader = new FileReader();
+      reader.onload = () => addPhoto(reader.result);
+      reader.onerror = () => displayError('Error reading file.');
+      reader.readAsDataURL(file);
+    });
+  }
+
   // --- Display Sampling Plan ---
   function displaySamplingPlan(plan) {
     const lotSizeVal = parseInt(lotSizeInput.value, 10);
@@ -236,6 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     fadeIn(resultsDiv);
     fadeIn(defectsInputArea);
+    fadeIn(photoCaptureArea);
     fadeOut(verdictMessageDiv);
     fadeOut(defectChecklistDiv);
     fadeOut(finalReportAreaDiv);
@@ -356,6 +467,15 @@ document.addEventListener('DOMContentLoaded', function() {
         ? `<ul>${selectedDefects.map(defect => `<li>${defect}</li>`).join('')}</ul>`
         : '<p>No specific defect types recorded.</p>'
       }
+
+      <h3>Photo Documentation</h3>
+      ${capturedPhotos.length > 0
+        ? capturedPhotos.map((photo, index) => `
+            <p>Photo ${index + 1}:</p>
+            <img src="${photo}" style="max-width: 200px; border-radius: 8px;">
+          `).join('')
+        : '<p>No photos added.</p>'
+      }
     `;
 
     reportContentDiv.innerHTML = reportHTML;
@@ -369,29 +489,102 @@ document.addEventListener('DOMContentLoaded', function() {
   function saveReportAsPdf() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const reportContent = document.getElementById('reportContent').innerText; // Get report text
     const margin = 10;
-    const maxLineWidth = 190; // A4 width minus margins
     let y = 20;
 
-    // Add title
     doc.setFontSize(16);
     doc.text("Quality Control Inspection Report", margin, y);
     y += 10;
 
-    // Add report content
     doc.setFontSize(12);
-    const lines = doc.splitTextToSize(reportContent, maxLineWidth); // Split text to fit page
-    lines.forEach(line => {
-      if (y > 280) { // Add new page if content exceeds page height
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(line, margin, y);
-      y += 7;
-    });
+    doc.text("Batch Identification", margin, y);
+    y += 7;
+    doc.text(`QC Inspector: ${qcInspectorInput.value || 'N/A'}`, margin, y);
+    y += 7;
+    doc.text(`Operator Name: ${operatorNameInput.value || 'N/A'}`, margin, y);
+    y += 7;
+    doc.text(`Machine No: ${machineNumberInput.value || 'N/A'}`, margin, y);
+    y += 7;
+    doc.text(`Part Name: ${partNameInput.value || 'N/A'}`, margin, y);
+    y += 7;
+    doc.text(`Part ID: ${partIdInput.value || 'N/A'}`, margin, y);
+    y += 7;
+    doc.text(`Inspection Date: ${new Date().toLocaleDateString()}`, margin, y);
+    y += 7;
+    doc.text(`Inspection Time: ${new Date().toLocaleTimeString()}`, margin, y);
+    y += 10;
 
-    // Save the PDF
+    doc.text("Sampling Details & Plan", margin, y);
+    y += 7;
+    doc.text(`Total Lot Size: ${lotSizeInput.value}`, margin, y);
+    y += 7;
+    doc.text("Inspection Level: General Level II (Normal)", margin, y);
+    y += 7;
+    const aqlReportText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
+                          aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+                          aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+                          `AQL ${aqlSelect.value}%`;
+    doc.text(`Acceptable Quality Level: ${aqlReportText}`, margin, y);
+    y += 7;
+    doc.text(`Sample Size Code Letter: ${currentSamplingPlan.codeLetter}`, margin, y);
+    y += 7;
+    doc.text(`Sample Size Inspected: ${currentSamplingPlan.sampleSize}`, margin, y);
+    y += 7;
+    if (currentSamplingPlan.sampleSize >= parseInt(lotSizeInput.value, 10)) {
+      doc.text("Note: 100% inspection was required/performed.", margin, y);
+      y += 7;
+    }
+    doc.text(`Acceptance Number (Ac): ${currentSamplingPlan.accept}`, margin, y);
+    y += 7;
+    doc.text(`Rejection Number (Re): ${currentSamplingPlan.reject}`, margin, y);
+    y += 10;
+
+    doc.text("Inspection Results", margin, y);
+    y += 7;
+    doc.text(`Number of Defects Found: ${defectsFoundInput.value}`, margin, y);
+    y += 7;
+    const verdictText = parseInt(defectsFoundInput.value, 10) <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
+    doc.text(`Verdict: ${verdictText}`, margin, y);
+    y += 10;
+
+    doc.text("Observed Defect Types", margin, y);
+    y += 7;
+    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+      .map(cb => cb.value);
+    if (selectedDefects.length > 0) {
+      selectedDefects.forEach(defect => {
+        doc.text(`- ${defect}`, margin, y);
+        y += 7;
+      });
+    } else {
+      doc.text("No specific defect types recorded.", margin, y);
+      y += 7;
+    }
+    y += 10;
+
+    doc.text("Photo Documentation", margin, y);
+    y += 7;
+    if (capturedPhotos.length > 0) {
+      capturedPhotos.forEach((photo, index) => {
+        if (y > 260) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`Photo ${index + 1}:`, margin, y);
+        y += 5;
+        try {
+          doc.addImage(photo, 'JPEG', margin, y, 50, 50);
+          y += 55;
+        } catch (err) {
+          doc.text("(Photo could not be included)", margin, y);
+          y += 7;
+        }
+      });
+    } else {
+      doc.text("No photos added.", margin, y);
+      y += 7;
+    }
+
     doc.save(generateFileName('pdf'));
   }
 
@@ -411,7 +604,6 @@ document.addEventListener('DOMContentLoaded', function() {
                           aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
                           `AQL ${aqlSelect.value}%`;
 
-    // Create worksheet data
     const data = [
       ['Quality Control Inspection Report'],
       [],
@@ -438,15 +630,17 @@ document.addEventListener('DOMContentLoaded', function() {
       ['Verdict', verdictText],
       [],
       ['Observed Defect Types'],
-      ...(selectedDefects.length > 0 ? selectedDefects.map(defect => [defect]) : [['No specific defect types recorded.']])
+      ...(selectedDefects.length > 0 ? selectedDefects.map(defect => [defect]) : [['No specific defect types recorded.']]),
+      [],
+      ['Photo Documentation'],
+      ...(capturedPhotos.length > 0
+        ? capturedPhotos.map((photo, index) => [`Photo ${index + 1} (Base64)`, photo])
+        : [['No photos added.']])
     ];
 
-    // Create workbook and worksheet
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inspection Report');
-
-    // Generate and save Excel file
     XLSX.writeFile(wb, generateFileName('xlsx'));
   }
 
@@ -462,6 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
     resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
     fadeIn(resultsDiv);
     fadeOut(defectsInputArea);
+    fadeOut(photoCaptureArea);
     fadeOut(verdictMessageDiv);
     fadeOut(defectChecklistDiv);
     fadeOut(finalReportAreaDiv);
@@ -471,6 +666,8 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(printButton);
     currentSamplingPlan = null;
     defectsFoundInput.value = '';
+    capturedPhotos = [];
+    updatePhotoPreview();
     document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => cb.checked = false);
     clearError();
     validateInputs();
@@ -489,10 +686,12 @@ document.addEventListener('DOMContentLoaded', function() {
   numBoxesInput.addEventListener('input', () => {
     calculateLotSize();
     validateInputs();
+    clearError();
   });
   pcsPerBoxInput.addEventListener('input', () => {
     calculateLotSize();
     validateInputs();
+    clearError();
   });
   aqlSelect.addEventListener('change', validateInputs);
 
@@ -502,6 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
       displaySamplingPlan(currentSamplingPlan);
     } else {
       fadeOut(defectsInputArea);
+      fadeOut(photoCaptureArea);
       fadeOut(verdictMessageDiv);
       fadeOut(defectChecklistDiv);
       fadeOut(finalReportAreaDiv);
@@ -517,7 +717,34 @@ document.addEventListener('DOMContentLoaded', function() {
   savePdfButton.addEventListener('click', saveReportAsPdf);
   saveExcelButton.addEventListener('click', saveReportAsExcel);
   printButton.addEventListener('click', printReport);
-  resetButton.addEventListener('click', resetAll);
+
+  // --- Photo Event Listeners ---
+  captureSinglePhotoButton.addEventListener('click', () => capturePhotoFromCamera(false));
+  captureMultiplePhotosButton.addEventListener('click', () => capturePhotoFromCamera(true));
+  uploadSinglePhotoInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
+  uploadMultiplePhotosInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
+
+  dragDropArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dragDropArea.classList.add('drag-active');
+  });
+  dragDropArea.addEventListener('dragleave', () => {
+    dragDropArea.classList.remove('drag-active');
+  });
+  dragDropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragDropArea.classList.remove('drag-active');
+    handleFileUpload(e.dataTransfer.files);
+  });
+
+  photoPreview.addEventListener('click', (e) => {
+    if (e.target.tagName === 'IMG') {
+      const index = parseInt(e.target.dataset.index, 10);
+      if (confirm('Remove this photo?')) {
+        removePhoto(index);
+      }
+    }
+  });
 
   // --- Mobile Touch Enhancements ---
   document.querySelectorAll('button').forEach(button => {
