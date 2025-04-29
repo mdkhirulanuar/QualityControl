@@ -49,11 +49,11 @@
                 <div class="form-grid">
                     <div>
                         <label for="numBoxes">Number of Boxes:</label>
-                        <input type="number" id="numBoxes" name="numBoxes" min="1" required>
+                        <input type="number" id="numBoxes" name="numBoxes" min="1" inputmode="numeric" required>
                     </div>
                     <div>
                         <label for="pcsPerBox">Pieces per Box:</label>
-                        <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" required>
+                        <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" inputmode="numeric" required>
                     </div>
                     <div>
                         <label for="lotSize">Total Lot Size:</label>
@@ -83,8 +83,28 @@
 
         <div id="defectsInputArea" class="form-section" style="display: none;">
             <label for="defectsFound">Number of Defects Found in Sample:</label>
-            <input type="number" id="defectsFound" name="defectsFound" min="0" required>
+            <input type="number" id="defectsFound" name="defectsFound" min="0" inputmode="numeric" required>
             <button type="button" id="submitDefectsButton">Submit Defects & Get Verdict</button>
+        </div>
+
+        <div id="photoCaptureArea" class="form-section photo-section" style="display: none;">
+            <h4>Photo Documentation (Batch or Defect Samples)</h4>
+            <p>Add up to 5 photos to document the batch or defects.</p>
+            <div class="photo-options">
+                <button type="button" id="captureSinglePhotoButton">Take Single Photo</button>
+                <button type="button" id="captureMultiplePhotosButton">Take Multiple Photos</button>
+                <label for="uploadSinglePhoto" class="upload-button">Upload Single Photo
+                    <input type="file" id="uploadSinglePhoto" accept="image/*" style="display: none;">
+                </label>
+                <label for="uploadMultiplePhotos" class="upload-button">Upload Multiple Photos
+                    <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;">
+                </label>
+                <div id="dragDropArea" class="drag-drop-area">Drag & Drop Photos Here</div>
+            </div>
+            <div id="photoPreview" class="photo-preview">
+                <p>No photos added yet.</p>
+            </div>
+            <p id="photoCount">Photos: 0/5</p>
         </div>
 
         <div id="verdictMessage" class="results-section" style="display: none;"></div>
