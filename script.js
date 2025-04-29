@@ -1,5 +1,5 @@
 /*
-    Copyright © 2025 Khirul Anuar. This AQL Sampling Calculator app is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
+    Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
 */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -55,7 +55,25 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentMode = null; // Track current annotation mode (circle, text, freehand)
 
   // --- Copyright Notice ---
-  const copyrightNotice = "Copyright © 2025 Khirul Anuar. This AQL Sampling Calculator app is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
+  const copyrightNotice = "Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
+
+  // --- Populate Part ID Dropdown ---
+  function populatePartIdDropdown() {
+    partIdInput.innerHTML = '<option value="">-- Select Part ID --</option>'; // Reset dropdown
+    partsList.forEach(part => {
+      const option = document.createElement('option');
+      option.value = part.partId;
+      option.textContent = part.partId;
+      partIdInput.appendChild(option);
+    });
+  }
+
+  // --- Auto-Populate Part Name Based on Part ID ---
+  partIdInput.addEventListener('change', function() {
+    const selectedPartId = partIdInput.value;
+    const part = partsList.find(p => p.partId === selectedPartId);
+    partNameInput.value = part ? part.partName : '';
+  });
 
   // --- AQL Data & Logic (Simplified & Based on Khirul's List) ---
   const sampleSizeCodeLetters_Level_II = {
@@ -550,8 +568,8 @@ document.addEventListener('DOMContentLoaded', function() {
       <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
       <p><strong>Operator Name:</strong> ${operatorNameInput.value || 'N/A'}</p>
       <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
-      <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
       <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
+      <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
       <p><strong>Inspection Date:</strong> ${new Date().toLocaleDateString()}</p>
       <p><strong>Inspection Time:</strong> ${new Date().toLocaleTimeString()}</p>
 
@@ -615,9 +633,9 @@ document.addEventListener('DOMContentLoaded', function() {
     y += 7;
     doc.text(`Machine No: ${machineNumberInput.value || 'N/A'}`, margin, y);
     y += 7;
-    doc.text(`Part Name: ${partNameInput.value || 'N/A'}`, margin, y);
-    y += 7;
     doc.text(`Part ID: ${partIdInput.value || 'N/A'}`, margin, y);
+    y += 7;
+    doc.text(`Part Name: ${partNameInput.value || 'N/A'}`, margin, y);
     y += 7;
     doc.text(`Inspection Date: ${new Date().toLocaleDateString()}`, margin, y);
     y += 7;
@@ -734,8 +752,8 @@ document.addEventListener('DOMContentLoaded', function() {
       ['QC Inspector', qcInspectorInput.value || 'N/A'],
       ['Operator Name', operatorNameInput.value || 'N/A'],
       ['Machine No', machineNumberInput.value || 'N/A'],
-      ['Part Name', partNameInput.value || 'N/A'],
       ['Part ID', partIdInput.value || 'N/A'],
+      ['Part Name', partNameInput.value || 'N/A'],
       ['Inspection Date', new Date().toLocaleDateString()],
       ['Inspection Time', new Date().toLocaleTimeString()],
       [],
@@ -766,6 +784,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
+    const wsCols = [
+      { wch: 30 }, // Column A
+      { wch: 50 }  // Column B
+    ];
+    ws['!cols'] = wsCols;
     XLSX.utils.book_append_sheet(wb, ws, 'Inspection Report');
     XLSX.writeFile(wb, generateFileName('xlsx'));
   }
@@ -779,6 +802,9 @@ document.addEventListener('DOMContentLoaded', function() {
   function resetAll() {
     aqlForm.reset();
     lotSizeInput.value = '';
+    partIdInput.value = ''; // Reset dropdown
+    partNameInput.value = ''; // Reset Part Name
+    populatePartIdDropdown(); // Repopulate dropdown
     resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
     fadeIn(resultsDiv);
     fadeOut(defectsInputArea);
@@ -876,5 +902,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Initial setup
+  populatePartIdDropdown();
   resetAll();
 });
