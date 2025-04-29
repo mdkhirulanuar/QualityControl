@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentPhotoIndex = null; // Index of photo being annotated
   let annotationHistory = []; // For undo functionality
   let currentMode = null; // Tracks annotation mode (circle, text, freehand)
-  const qcMonitorContact = "qc.monitor@kpielectrical.com"; // UPDATE THIS with your email/WhatsApp
+  const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately"; // UPDATE THIS with your email/WhatsApp
 
   // --- Copyright Notice ---
   const copyrightNotice = "Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
