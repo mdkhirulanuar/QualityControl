@@ -736,61 +736,85 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    const defectsFound = parseInt(defectsFoundInput.value, 10);
-    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
-    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
-      .map(cb => cb.value);
-    const aqlReportText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                          aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                          aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                          `AQL ${aqlSelect.value}%`;
+    try {
+      const defectsFound = parseInt(defectsFoundInput.value, 10);
+      if (isNaN(defectsFound) || defectsFound < 0) {
+        displayError('Please enter a valid number of defects found.');
+        return;
+      }
+      const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
+      const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+        .map(cb => cb.value);
+      const aqlReportText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
+                            aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+                            aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+                            `AQL ${aqlSelect.value}%`;
 
-    const data = [
-      ['Quality Control Inspection Report'],
-      [],
-      ['Batch Identification'],
-      ['QC Inspector', qcInspectorInput.value || 'N/A'],
-      ['Operator Name', operatorNameInput.value || 'N/A'],
-      ['Machine No', machineNumberInput.value || 'N/A'],
-      ['Part ID', partIdInput.value || 'N/A'],
-      ['Part Name', partNameInput.value || 'N/A'],
-      ['Inspection Date', new Date().toLocaleDateString()],
-      ['Inspection Time', new Date().toLocaleTimeString()],
-      [],
-      ['Sampling Details & Plan'],
-      ['Total Lot Size', lotSizeInput.value],
-      ['Inspection Level', 'General Level II (Normal)'],
-      ['Acceptable Quality Level', aqlReportText],
-      ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
-      ['Sample Size Inspected', currentSamplingPlan.sampleSize],
-      ['Acceptance Number (Ac)', currentSamplingPlan.accept],
-      ['Rejection Number (Re)', currentSamplingPlan.reject],
-      [],
-      ['Inspection Results'],
-      ['Number of Defects Found', defectsFound],
-      ['Verdict', verdictText],
-      [],
-      ['Observed Defect Types'],
-      ...(selectedDefects.length > 0 ? selectedDefects.map(defect => [defect]) : [['No specific defect types recorded.']]),
-      [],
-      ['Photo Documentation'],
-      ...(capturedPhotos.length > 0
-        ? capturedPhotos.map((photo, index) => [`Photo ${index + 1} (Base64)`, photo])
-        : [['No photos added.']]),
-      [],
-      ['Ownership'],
-      [copyrightNotice]
-    ];
+      const data = [
+        ['Quality Control Inspection Report'],
+        [],
+        ['Batch Identification'],
+        ['QC Inspector', qcInspectorInput.value || 'N/A'],
+        ['Operator Name', operatorNameInput.value || 'N/A'],
+        ['Machine No', machineNumberInput.value || 'N/A'],
+        ['Part ID', partIdInput.value || 'N/A'],
+        ['Part Name', partNameInput.value || 'N/A'],
+        ['Inspection Date', new Date().toLocaleDateString()],
+        ['Inspection Time', new Date().toLocaleTimeString()],
+        [],
+        ['Sampling Details & Plan'],
+        ['Total Lot Size', lotSizeInput.value],
+        ['Inspection Level', 'General Level II (Normal)'],
+        ['Acceptable Quality Level', aqlReportText],
+        ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
+        ['Sample Size Inspected', currentSamplingPlan.sampleSize],
+        ['Acceptance Number (Ac)', currentSamplingPlan.accept],
+        ['Rejection Number (Re)', currentSamplingPlan.reject],
+        [],
+        ['Inspection Results'],
+        ['Number of Defects Found', defectsFound],
+        ['Verdict', verdictText],
+        [],
+        ['Observed Defect Types'],
+        ...(selectedDefects.length > 0 ? selectedDefects.map(defect => [defect]) : [['No specific defect types recorded.']]),
+        [],
+        ['Photo Documentation'],
+        ...(capturedPhotos.length > 0
+          ? capturedPhotos.map((_, index) => [`Photo ${index + 1}`, 'See PDF report for images'])
+          : [['No photos added.']]),
+        [],
+        ['Ownership'],
+        [copyrightNotice]
+      ];
 
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    const wsCols = [
-      { wch: 30 }, // Column A
-      { wch: 50 }  // Column B
-    ];
-    ws['!cols'] = wsCols;
-    XLSX.utils.book_append_sheet(wb, ws, 'Inspection Report');
-    XLSX.writeFile(wb, generateFileName('xlsx'));
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      const wsCols = [
+        { wch: 30 }, // Column A
+        { wch: 50 }  // Column B
+      ];
+      ws['!cols'] = wsCols;
+      XLSX.utils.book_append_sheet(wb, ws, 'Inspection Report');
+
+      // Generate Excel file as array buffer
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      // Create Blob for download
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      // Simplify file name to avoid length issues
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+      const fileName = `QC_Report_${(partIdInput.value || 'NoID').replace(/[^a-z0-9_-]/gi, '')}_${date}.xlsx`;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating Excel:', error);
+      displayError('Failed to download Excel file. Please try again or check console for details.');
+    }
   }
 
   // --- Printing ---
@@ -867,7 +891,10 @@ document.addEventListener('DOMContentLoaded', function() {
   submitDefectsButton.addEventListener('click', submitDefects);
   generateReportButton.addEventListener('click', generateReport);
   savePdfButton.addEventListener('click', saveReportAsPdf);
-  saveExcelButton.addEventListener('click', saveReportAsExcel);
+  saveExcelButton.addEventListener('click', () => {
+    console.log('Save Excel button clicked');
+    saveReportAsExcel();
+  });
   printButton.addEventListener('click', printReport);
 
   // --- Photo Event Listeners ---
