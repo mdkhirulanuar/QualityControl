@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const finalReportAreaDiv = document.getElementById('finalReportArea');
   const reportContentDiv = document.getElementById('reportContent');
   const savePdfButton = document.getElementById('savePdfButton');
-  const saveExcelButton = document.getElementById('saveExcelButton');
   const printButton = document.getElementById('printButton');
   const errorMessageDiv = document.getElementById('error-message');
 
@@ -46,20 +45,21 @@ document.addEventListener('DOMContentLoaded', function() {
   const saveAnnotationButton = document.getElementById('saveAnnotationButton');
 
   // --- State Variables ---
-  let currentSamplingPlan = null; // To store { codeLetter, sampleSize, accept, reject }
-  let capturedPhotos = []; // Array to store photo data (base64 strings)
-  const MAX_PHOTOS = 5; // Maximum number of photos allowed
+  let currentSamplingPlan = null; // Stores { codeLetter, sampleSize, accept, reject }
+  let capturedPhotos = []; // Array of photo data (base64 strings)
+  const MAX_PHOTOS = 5; // Max photos allowed
   let fabricCanvas = null; // Fabric.js canvas instance
-  let currentPhotoIndex = null; // Index of the photo being annotated
-  let annotationHistory = []; // Store actions for undo functionality
-  let currentMode = null; // Track current annotation mode (circle, text, freehand)
+  let currentPhotoIndex = null; // Index of photo being annotated
+  let annotationHistory = []; // For undo functionality
+  let currentMode = null; // Tracks annotation mode (circle, text, freehand)
+  const qcMonitorContact = "qc.monitor@kpielectrical.com"; // UPDATE THIS with your email/WhatsApp
 
   // --- Copyright Notice ---
   const copyrightNotice = "Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
 
   // --- Populate Part ID Dropdown ---
   function populatePartIdDropdown() {
-    partIdInput.innerHTML = '<option value="">-- Select Part ID --</option>'; // Reset dropdown
+    partIdInput.innerHTML = '<option value="">-- Select Part ID --</option>';
     partsList.forEach(part => {
       const option = document.createElement('option');
       option.value = part.partId;
@@ -68,14 +68,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // --- Auto-Populate Part Name Based on Part ID ---
+  // --- Auto-Populate Part Name ---
   partIdInput.addEventListener('change', function() {
     const selectedPartId = partIdInput.value;
     const part = partsList.find(p => p.partId === selectedPartId);
     partNameInput.value = part ? part.partName : '';
   });
 
-  // --- AQL Data & Logic (Simplified & Based on Khirul's List) ---
+  // --- AQL Data (Simplified, from your list) ---
   const sampleSizeCodeLetters_Level_II = {
     '2-8': 'A', '9-15': 'B', '16-25': 'C', '26-50': 'D', '51-90': 'E',
     '91-150': 'F', '151-280': 'G', '281-500': 'H', '501-1200': 'J',
@@ -142,39 +142,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // --- Core Calculation Function ---
+  // --- Calculate Sampling Plan ---
   function calculateSamplingPlan() {
     clearError();
     const lotSize = parseInt(lotSizeInput.value, 10);
     const aqlValue = aqlSelect.value;
 
     if (isNaN(lotSize) || lotSize <= 0) {
-      displayError('Please enter valid Number of Boxes and Pieces per Box to calculate Lot Size.');
+      displayError('Please enter valid Number of Boxes and Pieces per Box.');
       return null;
     }
     if (lotSize < 2) {
-      displayError('Lot Size must be 2 or greater for standard AQL sampling.');
+      displayError('Lot Size must be 2 or greater.');
       return null;
     }
     if (!['1.0', '2.5', '4.0'].includes(aqlValue)) {
-      displayError('Invalid AQL selected. Please choose High (1.0%), Medium (2.5%), or Low (4.0%).');
+      displayError('Please select High (1.0%), Medium (2.5%), or Low (4.0%) AQL.');
       return null;
     }
 
     const lotRange = getLotSizeRange(lotSize);
     if (!lotRange) {
-      displayError('Lot size is outside the standard range defined in the table.');
+      displayError('Lot size outside standard range.');
       return null;
     }
     const codeLetter = sampleSizeCodeLetters_Level_II[lotRange];
     if (!codeLetter) {
-      displayError(`Could not determine Sample Size Code Letter for Lot Size ${lotSize} (using Level II).`);
+      displayError(`Could not determine Sample Size Code Letter for Lot Size ${lotSize}.`);
       return null;
     }
 
     const planData = aqlMasterTable_Simplified[codeLetter];
     if (!planData || !planData.plans) {
-      displayError(`Internal Error: AQL data not found for Code Letter ${codeLetter}.`);
+      displayError(`AQL data not found for Code Letter ${codeLetter}.`);
       return null;
     }
 
@@ -182,12 +182,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const planDetails = planData.plans[aqlValue];
 
     if (!planDetails || typeof planDetails.ac === 'undefined' || typeof planDetails.re === 'undefined') {
-      displayError(`Internal Error: Ac/Re values not found for Code Letter ${codeLetter} and AQL ${aqlValue}. Check table data.`);
+      displayError(`Ac/Re values not found for Code Letter ${codeLetter} and AQL ${aqlValue}.`);
       return null;
     }
 
     if (sampleSize >= lotSize) {
-      console.warn(`Warning: Sample Size (${sampleSize}) equals or exceeds Lot Size (${lotSize}). Standard recommends 100% inspection.`);
+      console.warn(`Sample Size (${sampleSize}) equals/exceeds Lot Size (${lotSize}).`);
     }
 
     return {
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 30);
   }
 
-  // --- Photo Handling Functions ---
+  // --- Photo Handling ---
   function updatePhotoPreview() {
     photoPreview.innerHTML = capturedPhotos.length === 0
       ? '<p>No photos added yet.</p>'
@@ -230,13 +230,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <img src="${photo}" alt="Photo ${index + 1}" data-index="${index}" title="Click to annotate or remove">
         `).join('');
     photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
-    if (capturedPhotos.length >= MAX_PHOTOS) {
-      uploadSinglePhotoInput.disabled = true;
-      uploadMultiplePhotosInput.disabled = true;
-    } else {
-      uploadSinglePhotoInput.disabled = false;
-      uploadMultiplePhotosInput.disabled = false;
-    }
+    uploadSinglePhotoInput.disabled = capturedPhotos.length >= MAX_PHOTOS;
+    uploadMultiplePhotosInput.disabled = capturedPhotos.length >= MAX_PHOTOS;
   }
 
   function addPhoto(base64) {
@@ -277,8 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const img = new Image();
     img.crossOrigin = "Anonymous";
     img.onload = function() {
-      // Set canvas dimensions based on image
-      const maxWidth = 500; // Adjust based on modal size
+      const maxWidth = 500;
       const maxHeight = 400;
       let width = img.width;
       let height = img.height;
@@ -300,38 +294,30 @@ document.addEventListener('DOMContentLoaded', function() {
         height: height
       });
 
-      // Load the image onto the canvas
       fabric.Image.fromURL(imageSrc, function(imgObj) {
-        imgObj.set({
-          selectable: false,
-          evented: false
-        });
+        imgObj.set({ selectable: false, evented: false });
         imgObj.scaleToWidth(width);
         imgObj.scaleToHeight(height);
         fabricCanvas.add(imgObj);
         fabricCanvas.sendToBack(imgObj);
       });
 
-      // Reset annotation state
       currentMode = null;
       annotationHistory = [];
       updateToolButtons();
 
-      // Circle drawing
       drawCircleButton.addEventListener('click', () => {
         currentMode = currentMode === 'circle' ? null : 'circle';
         fabricCanvas.isDrawingMode = false;
         updateToolButtons();
       });
 
-      // Text drawing
       drawTextButton.addEventListener('click', () => {
         currentMode = currentMode === 'text' ? null : 'text';
         fabricCanvas.isDrawingMode = false;
         updateToolButtons();
       });
 
-      // Freehand drawing
       drawFreehandButton.addEventListener('click', () => {
         currentMode = currentMode === 'freehand' ? null : 'freehand';
         fabricCanvas.isDrawingMode = currentMode === 'freehand';
@@ -340,7 +326,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateToolButtons();
       });
 
-      // Canvas click events for circle and text
       fabricCanvas.on('mouse:down', (options) => {
         if (currentMode === 'circle') {
           const pointer = fabricCanvas.getPointer(options.e);
@@ -371,12 +356,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      // Track freehand drawing for undo
       fabricCanvas.on('path:created', (e) => {
         annotationHistory.push(e.path);
       });
 
-      // Undo functionality
       undoButton.addEventListener('click', () => {
         if (annotationHistory.length > 0) {
           const lastAction = annotationHistory.pop();
@@ -385,7 +368,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
-      // Save annotation
       saveAnnotationButton.addEventListener('click', () => {
         const annotatedImage = fabricCanvas.toDataURL('image/jpeg');
         capturedPhotos[currentPhotoIndex] = annotatedImage;
@@ -426,36 +408,26 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (plan.sampleSize >= lotSizeVal) {
       samplingInstructions = '<p><strong>Sampling Instructions:</strong> Inspect all pieces from all boxes (100% inspection required).</p>';
     } else if (isNaN(numBoxesVal) || numBoxesVal <= 0 || isNaN(pcsPerBoxVal) || pcsPerBoxVal <= 0) {
-      samplingInstructions = '<p style="color: red;">Enter valid Number of Boxes and Pieces per Box to see sampling instructions.</p>';
+      samplingInstructions = '<p style="color: red;">Enter valid Number of Boxes and Pieces per Box.</p>';
     } else {
-      const minBoxesTheoretical = plan.sampleSize / pcsPerBoxVal;
-      const minBoxesToOpen = Math.ceil(minBoxesTheoretical);
+      const minBoxesToOpen = Math.ceil(plan.sampleSize / pcsPerBoxVal);
       const boxesToOpen = Math.min(minBoxesToOpen, numBoxesVal);
-
-      const pcsPerOpenedBoxTheoretical = plan.sampleSize / boxesToOpen;
-      const pcsPerOpenedBox = Math.ceil(pcsPerOpenedBoxTheoretical);
-      const totalActuallyInspected = boxesToOpen * pcsPerOpenedBox;
+      const pcsPerOpenedBox = Math.ceil(plan.sampleSize / boxesToOpen);
+      const totalInspected = boxesToOpen * pcsPerOpenedBox;
 
       samplingInstructions = `
         <p><strong>Sampling Instructions:</strong></p>
         <ul>
-          <li>Randomly select and open <strong>${boxesToOpen}</strong> box(es) (out of ${numBoxesVal} total).</li>
-          <li>From each opened box, randomly select and inspect <strong>${pcsPerOpenedBox}</strong> piece(s).</li>
+          <li>Randomly select and open <strong>${boxesToOpen}</strong> box(es) (out of ${numBoxesVal}).</li>
+          <li>From each opened box, inspect <strong>${pcsPerOpenedBox}</strong> piece(s).</li>
         </ul>
-      `;
-
-      if (totalActuallyInspected > plan.sampleSize) {
-        samplingInstructions += `<p><small>(Total pieces inspected: ${totalActuallyInspected}. This slightly exceeds the minimum sample size of ${plan.sampleSize} due to practical sampling per box.)</small></p>`;
-      } else {
-        samplingInstructions += `<p><small>(Total pieces inspected: ${totalActuallyInspected})</small></p>`;
-      }
+        <p><small>(Total pieces inspected: ${totalInspected}${totalInspected > plan.sampleSize ? ', slightly exceeding the minimum sample size of ' + plan.sampleSize : ''})</small></p>`;
     }
 
-    let aqlText = '';
-    if (aqlSelect.value === '1.0') aqlText = 'High Quality (AQL 1.0%)';
-    else if (aqlSelect.value === '2.5') aqlText = 'Medium Quality (AQL 2.5%)';
-    else if (aqlSelect.value === '4.0') aqlText = 'Low Quality (AQL 4.0%)';
-    else aqlText = `AQL ${aqlSelect.value}%`;
+    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
+                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+                    `AQL ${aqlSelect.value}%`;
 
     resultsDiv.innerHTML = `
       <p><strong>Sampling Plan Calculated:</strong></p>
@@ -463,9 +435,9 @@ document.addEventListener('DOMContentLoaded', function() {
       <p>Inspection Level: General Level II (Normal)</p>
       <p>Acceptable Quality Level: ${aqlText}</p>
       <p>Sample Size Code Letter: <strong>${plan.codeLetter}</strong></p>
-      <p>Sample Size (pieces to inspect): <strong>${plan.sampleSize}</strong></p>
-      <p>Acceptance Number (Ac): Max ${plan.accept} defects allowed in sample.</p>
-      <p>Rejection Number (Re): If ${plan.reject} or more defects found, reject lot.</p>
+      <p>Sample Size: <strong>${plan.sampleSize}</strong></p>
+      <p>Acceptance Number (Ac): Max ${plan.accept} defects.</p>
+      <p>Rejection Number (Re): ${plan.reject} or more defects, reject lot.</p>
       ${samplingInstructions}
     `;
 
@@ -477,22 +449,20 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(finalReportAreaDiv);
     fadeOut(generateReportButton);
     fadeOut(savePdfButton);
-    fadeOut(saveExcelButton);
     fadeOut(printButton);
   }
 
-  // --- Defect Submission ---
+  // --- Submit Defects ---
   function submitDefects() {
     clearError();
     const defectsFound = parseInt(defectsFoundInput.value, 10);
     if (isNaN(defectsFound) || defectsFound < 0) {
-      displayError('Please enter a valid number of defects found (0 or more).');
+      displayError('Please enter a valid number of defects (0 or more).');
       fadeOut(verdictMessageDiv);
       fadeOut(defectChecklistDiv);
       fadeOut(generateReportButton);
       fadeOut(finalReportAreaDiv);
       fadeOut(savePdfButton);
-      fadeOut(saveExcelButton);
       fadeOut(printButton);
       return;
     }
@@ -500,71 +470,49 @@ document.addEventListener('DOMContentLoaded', function() {
       displayError('Please calculate the sampling plan first.');
       return;
     }
-    let verdict = '';
-    let verdictClass = '';
-    if (defectsFound <= currentSamplingPlan.accept) {
-      verdict = `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit is ${currentSamplingPlan.accept})`;
-      verdictClass = 'accept';
-    } else {
-      verdict = `REJECT Lot (Found ${defectsFound} defects, Rejection limit is ${currentSamplingPlan.reject})`;
-      verdictClass = 'reject';
-    }
+    const verdict = defectsFound <= currentSamplingPlan.accept
+      ? `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit: ${currentSamplingPlan.accept})`
+      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
+    const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
     fadeIn(verdictMessageDiv);
     fadeIn(defectChecklistDiv);
     fadeIn(generateReportButton);
     fadeOut(finalReportAreaDiv);
     fadeOut(savePdfButton);
-    fadeOut(saveExcelButton);
     fadeOut(printButton);
   }
 
-  // --- File Naming Helper ---
-  function generateFileName(extension) {
-    const partName = partNameInput.value || 'UnknownPart';
-    const partId = partIdInput.value || 'NoID';
-    const qcInspector = qcInspectorInput.value || 'UnknownInspector';
-    const machineNo = machineNumberInput.value || 'NoMachine';
-    const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10); // YYYY-MM-DD
-    const timeStr = date.toTimeString().slice(0, 8).replace(/:/g, ''); // HHMMSS
-    const safePartName = partName.replace(/[^a-z0-9_.-]/gi, '_');
-    const safePartId = partId.replace(/[^a-z0-9_.-]/gi, '_');
-    const safeInspector = qcInspector.replace(/[^a-z0-9_.-]/gi, '_');
-    const safeMachineNo = machineNo.replace(/[^a-z0-9_.-]/gi, '_');
-    return `QC_Report_${safePartName}_${safePartId}_${safeInspector}_${safeMachineNo}_${dateStr}_${timeStr}.${extension}`;
-  }
-
-  // --- Report Generation ---
+  // --- Generate Report ---
   function generateReport() {
     if (!currentSamplingPlan) {
-      displayError('Cannot generate report without a calculated sampling plan and verdict.');
+      displayError('Calculate sampling plan and submit defects first.');
       return;
     }
     const defectsFound = parseInt(defectsFoundInput.value, 10);
     if (isNaN(defectsFound) || defectsFound < 0) {
-      displayError('Cannot generate report without valid defects found input.');
+      displayError('Enter valid defects found.');
       return;
     }
 
-    const verdictText = (defectsFound <= currentSamplingPlan.accept) ? 'ACCEPT' : 'REJECT';
-    const verdictColor = (verdictText === 'ACCEPT') ? 'green' : 'red';
+    const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
+    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
+    const verdictColor = verdictText === 'ACCEPT' ? 'green' : 'red';
     const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
       .map(cb => cb.value);
     const lotSizeVal = parseInt(lotSizeInput.value, 10);
-    let inspectionNote = '';
-    if (!isNaN(lotSizeVal) && currentSamplingPlan.sampleSize >= lotSizeVal) {
-      inspectionNote = `<p style="color: orange; font-weight: bold;">Note: 100% inspection was required/performed.</p>`;
-    }
+    const inspectionNote = lotSizeVal && currentSamplingPlan.sampleSize >= lotSizeVal
+      ? `<p style="color: orange; font-weight: bold;">Note: 100% inspection required/performed.</p>`
+      : '';
 
-    let aqlReportText = '';
-    if (aqlSelect.value === '1.0') aqlReportText = 'High Quality (AQL 1.0%)';
-    else if (aqlSelect.value === '2.5') aqlReportText = 'Medium Quality (AQL 2.5%)';
-    else if (aqlSelect.value === '4.0') aqlReportText = 'Low Quality (AQL 4.0%)';
-    else aqlReportText = `AQL ${aqlSelect.value}%`;
+    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
+                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+                    `AQL ${aqlSelect.value}%`;
 
     const reportHTML = `
       <h3>Batch Identification</h3>
+      <p><strong>Report ID:</strong> ${reportId}</p>
       <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
       <p><strong>Operator Name:</strong> ${operatorNameInput.value || 'N/A'}</p>
       <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
@@ -576,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <h3>Sampling Details & Plan</h3>
       <p><strong>Total Lot Size:</strong> ${lotSizeInput.value}</p>
       <p><strong>Inspection Level:</strong> General Level II (Normal)</p>
-      <p><strong>Acceptable Quality Level:</strong> ${aqlReportText}</p>
+      <p><strong>Acceptable Quality Level:</strong> ${aqlText}</p>
       <p><strong>Sample Size Code Letter:</strong> ${currentSamplingPlan.codeLetter}</p>
       <p><strong>Sample Size Inspected:</strong> ${currentSamplingPlan.sampleSize}</p>
       ${inspectionNote}
@@ -609,11 +557,10 @@ document.addEventListener('DOMContentLoaded', function() {
     reportContentDiv.innerHTML = reportHTML;
     fadeIn(finalReportAreaDiv);
     fadeIn(savePdfButton);
-    fadeIn(saveExcelButton);
     fadeIn(printButton);
   }
 
-  // --- PDF Saving ---
+  // --- Save PDF ---
   function saveReportAsPdf() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -625,55 +572,59 @@ document.addEventListener('DOMContentLoaded', function() {
     y += 10;
 
     doc.setFontSize(12);
-    doc.text("Batch Identification", margin, y);
-    y += 7;
-    doc.text(`QC Inspector: ${qcInspectorInput.value || 'N/A'}`, margin, y);
-    y += 7;
-    doc.text(`Operator Name: ${operatorNameInput.value || 'N/A'}`, margin, y);
-    y += 7;
-    doc.text(`Machine No: ${machineNumberInput.value || 'N/A'}`, margin, y);
-    y += 7;
-    doc.text(`Part ID: ${partIdInput.value || 'N/A'}`, margin, y);
-    y += 7;
-    doc.text(`Part Name: ${partNameInput.value || 'N/A'}`, margin, y);
-    y += 7;
-    doc.text(`Inspection Date: ${new Date().toLocaleDateString()}`, margin, y);
-    y += 7;
-    doc.text(`Inspection Time: ${new Date().toLocaleTimeString()}`, margin, y);
-    y += 10;
+    const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
+    doc.autoTable({
+      startY: y,
+      head: [['Field', 'Value']],
+      body: [
+        ['Report ID', reportId],
+        ['QC Inspector', qcInspectorInput.value || 'N/A'],
+        ['Operator Name', operatorNameInput.value || 'N/A'],
+        ['Machine No', machineNumberInput.value || 'N/A'],
+        ['Part ID', partIdInput.value || 'N/A'],
+        ['Part Name', partNameInput.value || 'N/A'],
+        ['Inspection Date', new Date().toLocaleDateString()],
+        ['Inspection Time', new Date().toLocaleTimeString()]
+      ],
+      theme: 'grid'
+    });
+    y = doc.lastAutoTable.finalY + 10;
 
     doc.text("Sampling Details & Plan", margin, y);
-    y += 7;
-    doc.text(`Total Lot Size: ${lotSizeInput.value}`, margin, y);
-    y += 7;
-    doc.text("Inspection Level: General Level II (Normal)", margin, y);
-    y += 7;
-    const aqlReportText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                          aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                          aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                          `AQL ${aqlSelect.value}%`;
-    doc.text(`Acceptable Quality Level: ${aqlReportText}`, margin, y);
-    y += 7;
-    doc.text(`Sample Size Code Letter: ${currentSamplingPlan.codeLetter}`, margin, y);
-    y += 7;
-    doc.text(`Sample Size Inspected: ${currentSamplingPlan.sampleSize}`, margin, y);
-    y += 7;
-    if (currentSamplingPlan.sampleSize >= parseInt(lotSizeInput.value, 10)) {
-      doc.text("Note: 100% inspection was required/performed.", margin, y);
-      y += 7;
-    }
-    doc.text(`Acceptance Number (Ac): ${currentSamplingPlan.accept}`, margin, y);
-    y += 7;
-    doc.text(`Rejection Number (Re): ${currentSamplingPlan.reject}`, margin, y);
-    y += 10;
+    y += 5;
+    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
+                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+                    `AQL ${aqlSelect.value}%`;
+    doc.autoTable({
+      startY: y,
+      head: [['Field', 'Value']],
+      body: [
+        ['Total Lot Size', lotSizeInput.value],
+        ['Inspection Level', 'General Level II (Normal)'],
+        ['Acceptable Quality Level', aqlText],
+        ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
+        ['Sample Size Inspected', currentSamplingPlan.sampleSize],
+        ...(currentSamplingPlan.sampleSize >= parseInt(lotSizeInput.value, 10) ? [['Note', '100% inspection required/performed.']] : []),
+        ['Acceptance Number (Ac)', currentSamplingPlan.accept],
+        ['Rejection Number (Re)', currentSamplingPlan.reject]
+      ],
+      theme: 'grid'
+    });
+    y = doc.lastAutoTable.finalY + 10;
 
     doc.text("Inspection Results", margin, y);
-    y += 7;
-    doc.text(`Number of Defects Found: ${defectsFoundInput.value}`, margin, y);
-    y += 7;
-    const verdictText = parseInt(defectsFoundInput.value, 10) <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
-    doc.text(`Verdict: ${verdictText}`, margin, y);
-    y += 10;
+    y += 5;
+    doc.autoTable({
+      startY: y,
+      head: [['Field', 'Value']],
+      body: [
+        ['Number of Defects Found', defectsFoundInput.value],
+        ['Verdict', parseInt(defectsFoundInput.value, 10) <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT']
+      ],
+      theme: 'grid'
+    });
+    y = doc.lastAutoTable.finalY + 10;
 
     doc.text("Observed Defect Types", margin, y);
     y += 7;
@@ -726,98 +677,11 @@ document.addEventListener('DOMContentLoaded', function() {
     y += 7;
     doc.text(copyrightNotice, margin, y, { maxWidth: 190 });
 
-    doc.save(generateFileName('pdf'));
+    doc.save(`${reportId}.pdf`);
+    alert(`PDF report saved. Please send the PDF with Report ID ${reportId} to ${qcMonitorContact}.`);
   }
 
-  // --- Save as Excel ---
-  function saveReportAsExcel() {
-    if (!currentSamplingPlan) {
-      displayError('Cannot generate Excel report without a calculated sampling plan.');
-      return;
-    }
-
-    try {
-      const defectsFound = parseInt(defectsFoundInput.value, 10);
-      if (isNaN(defectsFound) || defectsFound < 0) {
-        displayError('Please enter a valid number of defects found.');
-        return;
-      }
-      const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
-      const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
-        .map(cb => cb.value);
-      const aqlReportText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                            aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                            aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                            `AQL ${aqlSelect.value}%`;
-
-      const data = [
-        ['Quality Control Inspection Report'],
-        [],
-        ['Batch Identification'],
-        ['QC Inspector', qcInspectorInput.value || 'N/A'],
-        ['Operator Name', operatorNameInput.value || 'N/A'],
-        ['Machine No', machineNumberInput.value || 'N/A'],
-        ['Part ID', partIdInput.value || 'N/A'],
-        ['Part Name', partNameInput.value || 'N/A'],
-        ['Inspection Date', new Date().toLocaleDateString()],
-        ['Inspection Time', new Date().toLocaleTimeString()],
-        [],
-        ['Sampling Details & Plan'],
-        ['Total Lot Size', lotSizeInput.value],
-        ['Inspection Level', 'General Level II (Normal)'],
-        ['Acceptable Quality Level', aqlReportText],
-        ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
-        ['Sample Size Inspected', currentSamplingPlan.sampleSize],
-        ['Acceptance Number (Ac)', currentSamplingPlan.accept],
-        ['Rejection Number (Re)', currentSamplingPlan.reject],
-        [],
-        ['Inspection Results'],
-        ['Number of Defects Found', defectsFound],
-        ['Verdict', verdictText],
-        [],
-        ['Observed Defect Types'],
-        ...(selectedDefects.length > 0 ? selectedDefects.map(defect => [defect]) : [['No specific defect types recorded.']]),
-        [],
-        ['Photo Documentation'],
-        ...(capturedPhotos.length > 0
-          ? capturedPhotos.map((_, index) => [`Photo ${index + 1}`, 'See PDF report for images'])
-          : [['No photos added.']]),
-        [],
-        ['Ownership'],
-        [copyrightNotice]
-      ];
-
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      const wsCols = [
-        { wch: 30 }, // Column A
-        { wch: 50 }  // Column B
-      ];
-      ws['!cols'] = wsCols;
-      XLSX.utils.book_append_sheet(wb, ws, 'Inspection Report');
-
-      // Generate Excel file as array buffer
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      // Create Blob for download
-      const blob = new Blob([wbout], { type: 'application/octet-stream' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      // Simplify file name to avoid length issues
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
-      const fileName = `QC_Report_${(partIdInput.value || 'NoID').replace(/[^a-z0-9_-]/gi, '')}_${date}.xlsx`;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error generating Excel:', error);
-      displayError('Failed to download Excel file. Please try again or check console for details.');
-    }
-  }
-
-  // --- Printing ---
+  // --- Print Report ---
   function printReport() {
     window.print();
   }
@@ -826,9 +690,9 @@ document.addEventListener('DOMContentLoaded', function() {
   function resetAll() {
     aqlForm.reset();
     lotSizeInput.value = '';
-    partIdInput.value = ''; // Reset dropdown
-    partNameInput.value = ''; // Reset Part Name
-    populatePartIdDropdown(); // Repopulate dropdown
+    partIdInput.value = '';
+    partNameInput.value = '';
+    populatePartIdDropdown();
     resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
     fadeIn(resultsDiv);
     fadeOut(defectsInputArea);
@@ -838,7 +702,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeOut(finalReportAreaDiv);
     fadeOut(generateReportButton);
     fadeOut(savePdfButton);
-    fadeOut(saveExcelButton);
     fadeOut(printButton);
     currentSamplingPlan = null;
     defectsFoundInput.value = '';
@@ -883,7 +746,6 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(finalReportAreaDiv);
       fadeOut(generateReportButton);
       fadeOut(savePdfButton);
-      fadeOut(saveExcelButton);
       fadeOut(printButton);
     }
   });
@@ -891,11 +753,8 @@ document.addEventListener('DOMContentLoaded', function() {
   submitDefectsButton.addEventListener('click', submitDefects);
   generateReportButton.addEventListener('click', generateReport);
   savePdfButton.addEventListener('click', saveReportAsPdf);
-  saveExcelButton.addEventListener('click', () => {
-    console.log('Save Excel button clicked');
-    saveReportAsExcel();
-  });
   printButton.addEventListener('click', printReport);
+  resetButton.addEventListener('click', resetAll);
 
   // --- Photo Event Listeners ---
   uploadSinglePhotoInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
@@ -904,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function() {
   photoPreview.addEventListener('click', (e) => {
     if (e.target.tagName === 'IMG') {
       const index = parseInt(e.target.dataset.index, 10);
-      const action = prompt('Do you want to annotate or remove this photo? Type "annotate" or "remove".');
+      const action = prompt('Type "annotate" to annotate or "remove" to delete this photo.');
       if (action && action.toLowerCase() === 'annotate') {
         initAnnotationCanvas(capturedPhotos[index], index);
         annotationModal.style.display = 'flex';
@@ -920,15 +779,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- Mobile Touch Enhancements ---
   document.querySelectorAll('button').forEach(button => {
-    button.addEventListener('touchstart', () => {
-      button.classList.add('active');
-    });
-    button.addEventListener('touchend', () => {
-      button.classList.remove('active');
-    });
+    button.addEventListener('touchstart', () => button.classList.add('active'));
+    button.addEventListener('touchend', () => button.classList.remove('active'));
   });
 
-  // Initial setup
+  // --- Initial Setup ---
   populatePartIdDropdown();
   resetAll();
 });
