@@ -44,6 +44,7 @@ body {
     margin-bottom: 40px;
     transition: box-shadow 0.3s ease;
     overflow-x: hidden;
+    position: relative;
 }
 
 .container:hover {
@@ -100,7 +101,7 @@ label {
 
 input[type="text"],
 input[type="number"],
-select {
+.menu-trigger {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -111,21 +112,60 @@ select {
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     word-wrap: break-word;
     height: 44px;
-    -webkit-appearance: none;
-    appearance: none;
+    background: #fff;
+    cursor: pointer;
 }
 
 input[type="text"]:focus,
 input[type="number"]:focus,
-select:focus {
+.menu-trigger:focus {
     border-color: var(--primary-gradient-start);
     box-shadow: 0 0 8px rgba(37, 117, 252, 0.67);
+    outline: none;
 }
 
 input[readonly] {
     background-color: #e9ecef;
     cursor: not-allowed;
     color: #666;
+}
+
+.menu-trigger:invalid {
+    color: #999;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    position: absolute;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 5px;
+}
+
+.menu-option {
+    padding: 10px 15px;
+    background: #f9f9fb;
+    border-radius: 5px;
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.menu-option:hover {
+    background: #e6f0ff;
 }
 
 /* Buttons */
