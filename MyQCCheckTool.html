@@ -1,179 +1,533 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <!--
-        Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
-    -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>AQL Sampling Calculator (Simplified)</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-</head>
-<body>
-    <div class="container">
-        <h1>AQL Sampling Calculator (Simplified)</h1>
-        <p>For General Inspection Level II (Normal Inspection)</p>
+/*
+    Copyright © 2025 Khirul Anuar. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
+*/
 
-        <div id="error-message" class="error-message" style="display: none;"></div>
+/* CSS Variables for Consistency */
+:root {
+    --primary-gradient-start: #2575fc;
+    --primary-gradient-end: #6a11cb;
+    --success-color: #28a745;
+    --success-hover: #218838;
+    --excel-color: #17a2b8;
+    --excel-hover: #138496;
+    --border-radius: 10px;
+    --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
 
-        <form id="aqlForm">
-            <div class="form-section batch-info">
-                <h2>Batch Identification</h2>
-                <div class="form-grid">
-                    <div>
-                        <label for="qcInspector">QC Inspector:</label>
-                        <input type="text" id="qcInspector" name="qcInspector">
-                    </div>
-                    <div>
-                        <label for="operatorName">Operator Name:</label>
-                        <input type="text" id="operatorName" name="operatorName">
-                    </div>
-                    <div>
-                        <label for="machineNumber">Machine No:</label>
-                        <input type="text" id="machineNumber" name="machineNumber">
-                    </div>
-                    <div>
-                        <label for="partId">Part ID:</label>
-                        <select id="partId" name="partId">
-                            <option value="">-- Select Part ID --</option>
-                            <!-- Options populated by JavaScript -->
-                        </select>
-                    </div>
-                    <div>
-                        <label for="partName">Part Name:</label>
-                        <input type="text" id="partName" name="partName" readonly>
-                    </div>
-                </div>
-            </div>
+/* Reset and Base */
+* {
+    box-sizing: border-box;
+}
 
-            <div class="form-section lot-details">
-                <h2>Lot & Sampling Details</h2>
-                <div class="form-grid">
-                    <div>
-                        <label for="numBoxes">Number of Boxes:</label>
-                        <input type="number" id="numBoxes" name="numBoxes" min="1" inputmode="numeric" required>
-                    </div>
-                    <div>
-                        <label for="pcsPerBox">Pieces per Box:</label>
-                        <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" inputmode="numeric" required>
-                    </div>
-                    <div>
-                        <label for="lotSize">Total Lot Size:</label>
-                        <input type="number" id="lotSize" name="lotSize" readonly required>
-                    </div>
-                    <div>
-                        <label for="aql">Acceptable Quality Level:</label>
-                        <select id="aql" name="aql" required>
-                            <option value="">-- Select Quality --</option>
-                            <option value="1.0">High Quality (AQL 1.0%)</option>
-                            <option value="2.5">Medium Quality (AQL 2.5%)</option>
-                            <option value="4.0">Low Quality (AQL 4.0%)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--primary-gradient-end) 0%, var(--primary-gradient-start) 100%);
+    color: #222;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-x: hidden;
+    width: 100%;
+}
 
-            <div class="button-group">
-                <button type="button" id="calculateButton">Calculate Sampling Plan</button>
-                <button type="button" id="resetButton">Reset</button>
-            </div>
-        </form>
+.container {
+    background: #fff;
+    max-width: 480px;
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin: 10px;
+    margin-bottom: 40px;
+    transition: box-shadow 0.3s ease;
+    overflow-x: hidden;
+}
 
-        <div id="results" class="results-section">
-            <p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>
-        </div>
+.container:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
 
-        <div id="defectsInputArea" class="form-section" style="display: none;">
-            <label for="defectsFound">Number of Defects Found in Sample:</label>
-            <input type="number" id="defectsFound" name="defectsFound" min="0" inputmode="numeric" required>
-            <button type="button" id="submitDefectsButton">Submit Defects & Get Verdict</button>
-        </div>
+h1, h2 {
+    color: #3a3a3a;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+    letter-spacing: 1.2px;
+}
 
-        <div id="photoCaptureArea" class="form-section photo-section" style="display: none;">
-            <h4>Photo Documentation (Batch or Defect Samples)</h4>
-            <p>Add up to 5 photos to document the batch or defects. Click a photo to annotate or remove.</p>
-            <div class="photo-options">
-                <label for="uploadSinglePhoto" class="upload-button">Upload Single Photo
-                    <input type="file" id="uploadSinglePhoto" accept="image/*" style="display: none;">
-                </label>
-                <label for="uploadMultiplePhotos" class="upload-button">Upload Multiple Photos
-                    <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;">
-                </label>
-            </div>
-            <div id="photoPreview" class="photo-preview">
-                <p>No photos added yet.</p>
-            </div>
-            <p id="photoCount">Photos: 0/5</p>
-        </div>
+p {
+    line-height: 1.5;
+    font-size: 1rem;
+}
 
-        <!-- Annotation Modal -->
-        <div id="annotationModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <span class="close-modal">×</span>
-                <h3>Annotate Photo</h3>
-                <div class="annotation-tools">
-                    <button id="drawCircleButton" class="tool-button">Draw Circle</button>
-                    <button id="drawTextButton" class="tool-button">Add Text</button>
-                    <button id="drawFreehandButton" class="tool-button">Freehand Draw</button>
-                    <button id="undoButton" class="tool-button">Undo</button>
-                    <button id="saveAnnotationButton" class="tool-button save-button">Save</button>
-                </div>
-                <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
-            </div>
-        </div>
+/* Form Section */
+.form-section {
+    margin-bottom: 30px;
+    padding: 15px 10px;
+    border-radius: var(--border-radius);
+    background: #f9f9fb;
+    box-shadow: inset 0 0 8px #e0e0e0;
+    transition: background-color 0.3s ease;
+}
 
-        <div id="verdictMessage" class="results-section" style="display: none;"></div>
+.form-section:hover {
+    background-color: #e6f0ff;
+}
 
-        <div id="defectChecklist" class="form-section checklist-section" style="display: none;">
-            <h4>Observed Defect Types (Plastic Parts - Optional)</h4>
-            <div class="checklist-container">
-                <label><input type="checkbox" name="defect_type" value="Plastic - Scratches"> Plastic - Scratches</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Short Mould"> Plastic - Short Mould</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Painting Peel Off"> Plastic - Painting Peel Off</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Silkscreen Peel Off / Poor"> Plastic - Silkscreen Peel Off / Poor</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Weld/Joint Line Visible"> Plastic - Weld/Joint Line Visible</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Stressed Mark"> Plastic - Stressed Mark</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Bubble"> Plastic - Bubble</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Warped / Deformed"> Plastic - Warped / Deformed</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Excessive Flashes"> Plastic - Excessive Flashes</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Dirty / Stain"> Plastic - Dirty / Stain</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Oil Stain"> Plastic - Oil Stain</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Silverstreak"> Plastic - Silverstreak</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Brittle"> Plastic - Brittle</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Sink Mark"> Plastic - Sink Mark</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Flow Mark (Cosmetic)"> Plastic - Flow Mark (Cosmetic)</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Ejector Mark Visible"> Plastic - Ejector Mark Visible</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Cracked Part"> Plastic - Cracked Part</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Broken Part"> Plastic - Broken Part</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Un-shining / Poor Gloss"> Plastic - Un-shining / Poor Gloss</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Spots / Black Dot"> Plastic - Spots / Black Dot</label>
-                <label><input type="checkbox" name="defect_type" value="Other"> Other (Specify if needed in report notes)</label>
-            </div>
-        </div>
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-        <div class="button-group">
-            <button type="button" id="generateReportButton" style="display: none;">Generate Full Report</button>
-            <button type="button" id="savePdfButton" style="display: none;">Save as PDF</button>
-            <button type="button" id="printButton" style="display: none;">Print Report</button>
-        </div>
+.form-grid > div {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+}
 
-        <div id="finalReportArea" class="results-section report-area" style="display: none;">
-            <h2>Final Inspection Report</h2>
-            <div id="reportContent"></div>
-        </div>
+label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #555;
+    font-size: 0.95rem;
+}
 
-        <!-- Copyright Notice -->
-        <footer class="footer">
-            <p>Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.</p>
-        </footer>
-    </div>
+input[type="text"],
+input[type="number"],
+.menu-trigger {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    word-wrap: break-word;
+    height: 44px;
+    background: #fff;
+    cursor: pointer;
+}
 
-    <!-- Include the parts list before the main script -->
-    <script src="partsList.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+input[type="text"]:focus,
+input[type="number"]:focus,
+.menu-trigger:focus {
+    border-color: var(--primary-gradient-start);
+    box-shadow: 0 0 8px rgba(37, 117, 252, 0.67);
+    outline: none;
+}
+
+input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    color: #666;
+}
+
+.menu-trigger:invalid {
+    color: #999;
+}
+
+/* Selection Menu Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #555;
+}
+
+.close-modal:hover {
+    color: #000;
+}
+
+.menu-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.menu-option {
+    padding: 15px;
+    background: #f9f9fb;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.menu-option:hover {
+    background: #e6f0ff;
+}
+
+/* Buttons */
+button {
+    width: 100%;
+    padding: 14px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    color: white;
+    background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    box-shadow: =: 0 6px 15px rgba(101, 41, 255, 0.4);
+    transition: background 0.4s ease, box-shadow 0.3s ease, transform 0.1s ease;
+    margin-top: 10px;
+    min-height: 48px;
+    touch-action: manipulation;
+}
+
+button:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--primary-gradient-end), var--primary-gradient-start));
+    box-shadow: 0 8px 20px rgba(101, 41, 255, 0.6);
+}
+
+button:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+button.active {
+    transform: scale(0.98);
+}
+
+button:focus {
+    outline: 2px solid var(--primary-gradient-start);
+    outline-offset: 2px;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Error Message */
+.error-message {
+    background-color: #ff4d4f;
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 0 10px rgba(255, 77, 79, 0.67);
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+}
+
+/* Results Section */
+.results-section {
+    background: #f0f4ff;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: inset 0 0 10px #c3d0ff;
+    margin-top: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    transition: background-color 0.3s ease;
+}
+
+.results-section p {
+    margin: 8px 0;
+}
+
+.accept {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.reject {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Checklist Section */
+.checklist-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.checklist-container label {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.checklist-container input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.checklist-container label:hover {
+    background-color: #e6f0ff;
+    border-color: var(--primary-gradient-start);
+}
+
+.checklist-container input[type="checkbox"]:checked + label {
+    background-color: var(--primary-gradient-start);
+    color: white;
+    border-color: var(--primary-gradient-start);
+}
+
+/* Report Area */
+#finalReportArea {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+}
+
+#savePdfButton {
+    margin-top: 20px;
+    width: auto;
+    padding: 12px 30px;
+    font-weight: 700;
+    background: var(--success-color);
+    box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+    transition: background 0.3s ease;
+}
+
+#savePdfButton:hover {
+    background: var(--success-hover);
+}
+
+#saveExcelButton {
+    margin-top: 20px;
+    width: auto;
+    padding: 12px 30px;
+    font-weight: 700;
+    background: var(--excel-color);
+    box-shadow: 0 6px 15px rgba(23, 162, 184, 0.4);
+    transition: background 0.3s ease;
+}
+
+#saveExcelButton:hover {
+    background: var(--excel-hover);
+}
+
+#reportContent {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
+    color: #222;
+    line-height: 1.5;
+}
+
+#reportContent h3 {
+    color: #3a3a3a;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+#reportContent p, #reportContent ul {
+    margin-bottom: 12px;
+}
+
+#reportContent ul {
+    padding-left: 20px;
+}
+
+#reportContent ul li {
+    margin-bottom: 6px;
+}
+
+/* Photo Section */
+.photo-section {
+    background: #f9f9fb;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+.photo-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.upload-button {
+    display: inline-block;
+    width: auto;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    color: white;
+    background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    box-shadow: 0 6px 15px rgba(101, 41, 255, 0.4);
+    transition: background 0.4s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.upload-button:hover {
+    background: linear-gradient(90deg, var(--primary-gradient-end), var(--primary-gradient-start));
+    box-shadow: 0 8px 20px rgba(101, 41,  there255, 0.6);
+}
+
+.photo-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    min-height: 100px;
+}
+
+.photo-preview img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.photo-preview img:hover {
+    border-color: var(--primary-gradient-start);
+}
+
+#photoCount {
+    font-weight: 600;
+    color: #555;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* Annotation Modal */
+.annotation-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.tool-button {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #e0e0e0;
+    transition: background 0.3s ease;
+}
+
+.tool-button:hover {
+    background: #d0d0d0;
+}
+
+.tool-button.active {
+    background: var(--primary-gradient-start);
+    color: white;
+}
+
+.save-button {
+    background: var(--success-color);
+    color: white;
+}
+
+.save-button:hover {
+    background: var(--success-hover);
+}
+
+.annotation-canvas {
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* Footer */
+.footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #555;
+    padding: 10px 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .button-group {
+        flex-direction: column;
+    }
+    button {
+        font-size: 1rem;
+        padding: 12px;
+    }
+    .container {
+        padding: 15px 10px;
+    }
