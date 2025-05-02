@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const machineNumberInput = document.getElementById('machineNumber');
   const partNameInput = document.getElementById('partName');
   const partIdInput = document.getElementById('partId');
+  const poNumberInput = document.getElementById('poNumber'); // Added for PO Number
+  const productionDateInput = document.getElementById('productionDate'); // Added for Production Date
   const numBoxesInput = document.getElementById('numBoxes');
   const pcsPerBoxInput = document.getElementById('pcsPerBox');
   const lotSizeInput = document.getElementById('lotSize');
@@ -518,6 +520,8 @@ document.addEventListener('DOMContentLoaded', function() {
       <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
       <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
       <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
+      <p><strong>PO Number:</strong> ${poNumberInput.value || 'N/A'}</p>
+      <p><strong>Production Date:</strong> ${productionDateInput.value || 'N/A'}</p>
       <p><strong>Inspection Date:</strong> ${new Date().toLocaleDateString()}</p>
       <p><strong>Inspection Time:</strong> ${new Date().toLocaleTimeString()}</p>
 
@@ -583,6 +587,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ['Machine No', machineNumberInput.value || 'N/A'],
         ['Part ID', partIdInput.value || 'N/A'],
         ['Part Name', partNameInput.value || 'N/A'],
+        ['PO Number', poNumberInput.value || 'N/A'], // Added for PO Number
+        ['Production Date', productionDateInput.value || 'N/A'], // Added for Production Date
         ['Inspection Date', new Date().toLocaleDateString()],
         ['Inspection Time', new Date().toLocaleTimeString()]
       ],
@@ -692,6 +698,8 @@ document.addEventListener('DOMContentLoaded', function() {
     lotSizeInput.value = '';
     partIdInput.value = '';
     partNameInput.value = '';
+    poNumberInput.value = ''; // Added to reset PO Number
+    productionDateInput.value = ''; // Added to reset Production Date
     populatePartIdDropdown();
     resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
     fadeIn(resultsDiv);
