@@ -138,6 +138,35 @@
             <button type="button" id="submitDefectsButton">Submit Defects & Get Verdict</button>
         </div>
 
+        <div id="verdictMessage" class="results-section" style="display: none;"></div>
+
+        <div id="defectChecklist" class="form-section checklist-section" style="display: none;">
+            <h4>Observed Defect Types (Plastic Parts - Optional)</h4>
+            <div class="checklist-container">
+                <label><input type="checkbox" name="defect_type" value="Plastic - Scratches"> Plastic - Scratches</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Short Mould"> Plastic - Short Mould</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Painting Peel Off"> Plastic - Painting Peel Off</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Silkscreen Peel Off / Poor"> Plastic - Silkscreen Peel Off / Poor</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Weld/Joint Line Visible"> Plastic - Weld/Joint Line Visible</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Stressed Mark"> Plastic - Stressed Mark</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Bubble"> Plastic - Bubble</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Warped / Deformed"> Plastic - Warped / Deformed</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Excessive Flashes"> Plastic - Excessive Flashes</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Dirty / Stain"> Plastic - Dirty / Stain</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Oil Stain"> Plastic - Oil Stain</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Silverstreak"> Plastic - Silverstreak</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Brittle"> Plastic - Brittle</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Sink Mark"> Plastic - Sink Mark</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Flow Mark (Cosmetic)"> Plastic - Flow Mark (Cosmetic)</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Ejector Mark Visible"> Plastic - Ejector Mark Visible</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Cracked Part"> Plastic - Cracked Part</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Broken Part"> Plastic - Broken Part</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Un-shining / Poor Gloss"> Plastic - Un-shining / Poor Gloss</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Spots / Black Dot"> Plastic - Spots / Black Dot</label>
+                <label><input type="checkbox" name="defect_type" value="Other"> Other (Specify if needed in report notes)</label>
+            </div>
+        </div>
+
         <div id="photoCaptureArea" class="form-section photo-section" style="display: none;">
             <h4>Photo Documentation (Batch or Defect Samples)</h4>
             <p>Add up to 5 photos to document the batch or defects. Click a photo to annotate or remove.</p>
@@ -168,35 +197,6 @@
                     <button id="saveAnnotationButton" class="tool-button save-button">Save</button>
                 </div>
                 <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
-            </div>
-        </div>
-
-        <div id="verdictMessage" class="results-section" style="display: none;"></div>
-
-        <div id="defectChecklist" class="form-section checklist-section" style="display: none;">
-            <h4>Observed Defect Types (Plastic Parts - Optional)</h4>
-            <div class="checklist-container">
-                <label><input type="checkbox" name="defect_type" value="Plastic - Scratches"> Plastic - Scratches</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Short Mould"> Plastic - Short Mould</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Painting Peel Off"> Plastic - Painting Peel Off</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Silkscreen Peel Off / Poor"> Plastic - Silkscreen Peel Off / Poor</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Weld/Joint Line Visible"> Plastic - Weld/Joint Line Visible</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Stressed Mark"> Plastic - Stressed Mark</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Bubble"> Plastic - Bubble</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Warped / Deformed"> Plastic - Warped / Deformed</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Excessive Flashes"> Plastic - Excessive Flashes</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Dirty / Stain"> Plastic - Dirty / Stain</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Oil Stain"> Plastic - Oil Stain</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Silverstreak"> Plastic - Silverstreak</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Brittle"> Plastic - Brittle</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Sink Mark"> Plastic - Sink Mark</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Flow Mark (Cosmetic)"> Plastic - Flow Mark (Cosmetic)</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Ejector Mark Visible"> Plastic - Ejector Mark Visible</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Cracked Part"> Plastic - Cracked Part</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Broken Part"> Plastic - Broken Part</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Un-shining / Poor Gloss"> Plastic - Un-shining / Poor Gloss</label>
-                <label><input type="checkbox" name="defect_type" value="Plastic - Spots / Black Dot"> Plastic - Spots / Black Dot</label>
-                <label><input type="checkbox" name="defect_type" value="Other"> Other (Specify if needed in report notes)</label>
             </div>
         </div>
 
