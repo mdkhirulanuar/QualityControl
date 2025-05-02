@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const defectsFoundInput = document.getElementById('defectsFound');
   const submitDefectsButton = document.getElementById('submitDefectsButton');
   const photoCaptureArea = document.getElementById('photoCaptureArea');
-  const uploadSinglePhotoInput = document.getElementById('uploadSinglePhoto');
   const uploadMultiplePhotosInput = document.getElementById('uploadMultiplePhotos');
   const photoPreview = document.getElementById('photoPreview');
   const photoCount = document.getElementById('photoCount');
@@ -232,7 +231,6 @@ document.addEventListener('DOMContentLoaded', function() {
           <img src="${photo}" alt="Photo ${index + 1}" data-index="${index}" title="Click to annotate or remove">
         `).join('');
     photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
-    uploadSinglePhotoInput.disabled = capturedPhotos.length >= MAX_PHOTOS;
     uploadMultiplePhotosInput.disabled = capturedPhotos.length >= MAX_PHOTOS;
   }
 
@@ -765,7 +763,6 @@ document.addEventListener('DOMContentLoaded', function() {
   resetButton.addEventListener('click', resetAll);
 
   // --- Photo Event Listeners ---
-  uploadSinglePhotoInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
   uploadMultiplePhotosInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
 
   photoPreview.addEventListener('click', (e) => {
