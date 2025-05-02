@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const machineNumberInput = document.getElementById('machineNumber');
   const partNameInput = document.getElementById('partName');
   const partIdInput = document.getElementById('partId');
-  const poNumberInput = document.getElementById('poNumber'); // Added for PO Number
-  const productionDateInput = document.getElementById('productionDate'); // Added for Production Date
+  const poNumberInput = document.getElementById('poNumber');
+  const productionDateInput = document.getElementById('productionDate');
   const numBoxesInput = document.getElementById('numBoxes');
   const pcsPerBoxInput = document.getElementById('pcsPerBox');
   const lotSizeInput = document.getElementById('lotSize');
@@ -477,8 +477,8 @@ document.addEventListener('DOMContentLoaded', function() {
       : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
     const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
-    fadeIn(verdictMessageDiv);
-    fadeIn(defectChecklistDiv);
+    fadeIn(verdictMessageDiv); // Show verdict first
+    fadeIn(defectChecklistDiv); // Show checklist after verdict
     fadeIn(generateReportButton);
     fadeOut(finalReportAreaDiv);
     fadeOut(savePdfButton);
@@ -587,8 +587,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ['Machine No', machineNumberInput.value || 'N/A'],
         ['Part ID', partIdInput.value || 'N/A'],
         ['Part Name', partNameInput.value || 'N/A'],
-        ['PO Number', poNumberInput.value || 'N/A'], // Added for PO Number
-        ['Production Date', productionDateInput.value || 'N/A'], // Added for Production Date
+        ['PO Number', poNumberInput.value || 'N/A'],
+        ['Production Date', productionDateInput.value || 'N/A'],
         ['Inspection Date', new Date().toLocaleDateString()],
         ['Inspection Time', new Date().toLocaleTimeString()]
       ],
@@ -698,8 +698,8 @@ document.addEventListener('DOMContentLoaded', function() {
     lotSizeInput.value = '';
     partIdInput.value = '';
     partNameInput.value = '';
-    poNumberInput.value = ''; // Added to reset PO Number
-    productionDateInput.value = ''; // Added to reset Production Date
+    poNumberInput.value = '';
+    productionDateInput.value = '';
     populatePartIdDropdown();
     resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
     fadeIn(resultsDiv);
