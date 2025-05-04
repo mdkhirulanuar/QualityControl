@@ -27,39 +27,43 @@
                     <div>
                         <label for="qcInspector">QC Inspector:</label>
                         <select id="qcInspector" name="qcInspector" required>
-                            <option value="">-- Select QC Inspector --</option>
-                            <option value="Khirul Anuar">KHIRUL ANUAR</option>
-                            <option value="Hemapria">HEMAPRIA</option>
-                            <option value="Popo">POPO</option>
-                            <option value="Dharisini">DHARISINI</option>
-                        </select>
+    <option value="">-- Select QC Inspector --</option>
+    <option value="Khirul Anuar">KHIRUL ANUAR</option>
+    <option value="Hemapria">HEMAPRIA</option>
+    <option value="Popo">POPO</option>
+    <option value="Dharisini">DHARISINI</option>
+</select>
+                    </div>
+                    <div>
+                        <label for="operatorName">Operator Name:</label>
+                        <input type="text" id="operatorName" name="operatorName">
                     </div>
                     <div>
                         <label for="machineNumber">Machine No:</label>
                         <select id="machineNumber" name="machineNumber">
-                            <option value="">-- Select Machine No --</option>
-                            <option value="M01">M01</option>
-                            <option value="M02">M02</option>
-                            <option value="M03">M03</option>
-                            <option value="M04">M04</option>
-                            <option value="M05">M05</option>
-                            <option value="M06">M06</option>
-                            <option value="M07">M07</option>
-                            <option value="M08">M08</option>
-                            <option value="M09">M09</option>
-                            <option value="M10">M10</option>
-                            <option value="M11">M11</option>
-                            <option value="M12">M12</option>
-                            <option value="M13">M13</option>
-                            <option value="M14">M14</option>
-                            <option value="M15">M15</option>
-                            <option value="M16">M16</option>
-                            <option value="M17">M17</option>
-                            <option value="M18">M18</option>
-                            <option value="M19">M19</option>
-                            <option value="M20">M20</option>
-                            <!-- Replace the above options with your actual machine numbers -->
-                        </select>
+    <option value="">-- Select Machine No --</option>
+    <option value="M01">M01</option>
+    <option value="M02">M02</option>
+    <option value="M03">M03</option>
+    <option value="M04">M04</option>
+    <option value="M05">M05</option>
+    <option value="M06">M06</option>
+    <option value="M07">M07</option>
+    <option value="M08">M08</option>
+    <option value="M09">M09</option>
+    <option value="M10">M10</option>
+    <option value="M11">M11</option>
+    <option value="M12">M12</option>
+    <option value="M13">M13</option>
+    <option value="M14">M14</option>
+    <option value="M15">M15</option>
+    <option value="M16">M16</option>
+    <option value="M17">M17</option>
+    <option value="M18">M18</option>
+    <option value="M19">M19</option>
+    <option value="M20">M20</option>
+    <!-- Replace the above options with your actual machine numbers -->
+</select>
                     </div>
                     <div>
                         <label for="partId">Part ID:</label>
@@ -112,6 +116,7 @@
 
             <div class="button-group">
                 <button type="button" id="calculateButton">Calculate Sampling Plan</button>
+                <button type="button" id="resetButton">Reset</button>
             </div>
         </form>
 
@@ -119,26 +124,23 @@
             <p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>
         </div>
 
-        <!-- Moved Reset Button Here -->
-        <button type="button" id="resetButton" style="display: block; margin: 10px auto;">Reset</button>
-
         <div id="defectsInputArea" class="form-section" style="display: none;">
             <label for="defectsFound">Number of Defects Found in Sample:</label>
             <select id="defectsFound" name="defectsFound" required>
-                <option value="" disabled selected>-- Select Number --</option>
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-                <!-- Add more options to the above as needed -->
-            </select>
+  <option value="" disabled selected>-- Select Number --</option>
+  <option value="0">0</option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+  <option value="10">10</option>
+  <!-- Add more options to the above as needed -->
+</select>
             <button type="button" id="submitDefectsButton">Submit Defects & Get Verdict</button>
         </div>
 
