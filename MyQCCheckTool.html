@@ -16,7 +16,7 @@
 <body>
     <div class="container">
         <h1>InspectWise Go</h1>
-        <center><p>InspectWise Go: Smart AQL Level II Sampling, Anywhere.</p></center>
+        <center><p>InspectWise Go: Smart Sampling Tool.</p></center>
 
         <div id="error-message" class="error-message" style="display: none;"></div>
 
@@ -100,7 +100,7 @@
                     <div>
                         <label for="aql">Acceptable Quality Level:</label>
                         <select id="aql" name="aql" required>
-                            <option value="">-- Select Quality --</option>
+                            <option value="">-- Select AQL Quality --</option>
                             <option value="1.0">High Quality (AQL 1.0%)</option>
                             <option value="2.5">Medium Quality (AQL 2.5%)</option>
                             <option value="4.0">Low Quality (AQL 4.0%)</option>
@@ -116,11 +116,11 @@
         </form>
 
         <div id="results" class="results-section">
-            <p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>
+            <p class="initial-message">Please enter batch details, select AQL quality level, and click calculate.</p>
         </div>
 
         <div id="defectsInputArea" class="form-section" style="display: none;">
-            <label for="defectsFound">Number of Defects Found in Sample:</label>
+            <label for="defectsFound">Number of Defects Found:</label>
             <select id="defectsFound" name="defectsFound" required>
                 <option value="" disabled selected>-- Select Number --</option>
                 <option value="0">0</option>
@@ -141,7 +141,7 @@
         <div id="verdictMessage" class="results-section" style="display: none;"></div>
 
         <div id="defectChecklist" class="form-section checklist-section" style="display: none;">
-            <h4>Observed Defect Types (Plastic Parts - Optional)</h4>
+            <h4>Defect Types Found (Optional)</h4>
             <div class="checklist-container">
                 <label><input type="checkbox" name="defect_type" value="Plastic - Scratches"> Plastic - Scratches</label>
                 <label><input type="checkbox" name="defect_type" value="Plastic - Short Mould"> Plastic - Short Mould</label>
