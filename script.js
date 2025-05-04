@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
     fadeIn(verdictMessageDiv); // Show verdict first
     fadeIn(defectChecklistDiv); // Show checklist after verdict
-    fadeIn(generateReportButton);
+    fadeIn(generateReportButton); // Ensure report button is visible
     fadeOut(finalReportAreaDiv);
     fadeOut(savePdfButton);
     fadeOut(printButton);
@@ -484,6 +484,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- Generate Report ---
   function generateReport() {
+    console.log('Generate Report clicked'); // Debug log
     if (!currentSamplingPlan) {
       displayError('Calculate sampling plan and submit defects first.');
       return;
@@ -558,6 +559,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeIn(finalReportAreaDiv);
     fadeIn(savePdfButton);
     fadeIn(printButton);
+    console.log('Report generated successfully'); // Debug log
   }
 
   // --- Save PDF ---
@@ -754,7 +756,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   submitDefectsButton.addEventListener('click', submitDefects);
-  generateReportButton.addEventListener('click', generateReport);
+  generateReportButton.addEventListener('click', generateReport); // Ensure this is present
   savePdfButton.addEventListener('click', saveReportAsPdf);
   printButton.addEventListener('click', printReport);
   resetButton.addEventListener('click', resetAll);
