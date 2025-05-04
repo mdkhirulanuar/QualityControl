@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const savePdfButton = document.getElementById('savePdfButton');
   const printButton = document.getElementById('printButton');
   const errorMessageDiv = document.getElementById('error-message');
+  const batchSection = document.querySelector('.batch-info');
+  const lotSection = document.querySelector('.lot-details');
+  const buttonGroup = document.querySelector('.button-group');
 
   // --- Annotation DOM Elements ---
   const annotationModal = document.getElementById('annotationModal');
@@ -151,8 +154,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     partNameInput.value !== '' &&
                     poNumberInput.value.trim() !== '' &&
                     productionDateInput.value !== '';
-    calculateButton.disabled = !isValid;
-    if (!isValid) {
+    if (isValid) {
+      fadeIn(lotSection);
+      fadeIn(buttonGroup);
+    } else {
+      fadeOut(lotSection);
+      fadeOut(buttonGroup);
       fadeOut(resultsDiv);
       fadeOut(defectsInputArea);
       fadeOut(photoCaptureArea);
@@ -169,8 +176,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function validateLotSection() {
     const numBoxes = parseInt(numBoxesInput.value, 10);
     const pcsPerBox = parseInt(pcsPerBoxInput.value, 10);
-    const isValid = numBoxes > 0 && pcsPerBox > 0 && aqlSelect.value !== '';
-    calculateButton.disabled = !isValid || !validateBatchSection();
+    const isValid = numBoxes > 0 && pcsPerBox > 0 && aqlSelect.value !== '' && validateBatchSection();
+    calculateButton.disabled = !isValid;
     if (!isValid) {
       fadeOut(resultsDiv);
       fadeOut(defectsInputArea);
@@ -193,17 +200,6 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(verdictMessageDiv);
       fadeOut(defectChecklistDiv);
       fadeOut(photoCaptureArea);
-      fadeOut(finalReportAreaDiv);
-      fadeOut(generateReportButton);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
-    }
-    return isValid;
-  }
-
-  function validatePhotoSection() {
-    const isValid = currentSamplingPlan && parseInt(defectsFoundInput.value, 10) >= 0;
-    if (!isValid) {
       fadeOut(finalReportAreaDiv);
       fadeOut(generateReportButton);
       fadeOut(savePdfButton);
@@ -301,6 +297,9 @@ document.addEventListener('DOMContentLoaded', function() {
         `).join('');
     photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
     uploadMultiplePhotosInput.disabled = capturedPhotos.length >= MAX_PHOTOS;
+    if (validateDefectsSection()) {
+      fadeIn(generateReportButton);
+    }
   }
 
   function addPhoto(base64) {
@@ -311,14 +310,12 @@ document.addEventListener('DOMContentLoaded', function() {
     capturedPhotos.push(base64);
     updatePhotoPreview();
     clearError();
-    validatePhotoSection();
     return true;
   }
 
   function removePhoto(index) {
     capturedPhotos.splice(index, 1);
     updatePhotoPreview();
-    validatePhotoSection();
     clearError();
   }
 
@@ -512,13 +509,8 @@ document.addEventListener('DOMContentLoaded', function() {
       ${samplingInstructions}
     `;
 
-    if (validateLotSection()) {
-      fadeIn(resultsDiv);
-      fadeIn(defectsInputArea);
-    } else {
-      fadeOut(resultsDiv);
-      fadeOut(defectsInputArea);
-    }
+    fadeIn(resultsDiv);
+    fadeIn(defectsInputArea);
     fadeOut(photoCaptureArea);
     fadeOut(verdictMessageDiv);
     fadeOut(defectChecklistDiv);
@@ -552,17 +544,11 @@ document.addEventListener('DOMContentLoaded', function() {
       : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
     const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
-    if (validateDefectsSection()) {
-      fadeIn(verdictMessageDiv);
-      fadeIn(defectChecklistDiv);
-      fadeIn(photoCaptureArea);
-    } else {
-      fadeOut(verdictMessageDiv);
-      fadeOut(defectChecklistDiv);
-      fadeOut(photoCaptureArea);
-    }
+    fadeIn(verdictMessageDiv);
+    fadeIn(defectChecklistDiv);
+    fadeIn(photoCaptureArea);
+    fadeIn(generateReportButton);
     fadeOut(finalReportAreaDiv);
-    fadeOut(generateReportButton);
     fadeOut(savePdfButton);
     fadeOut(printButton);
   }
@@ -640,15 +626,9 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     reportContentDiv.innerHTML = reportHTML;
-    if (validatePhotoSection()) {
-      fadeIn(finalReportAreaDiv);
-      fadeIn(savePdfButton);
-      fadeIn(printButton);
-    } else {
-      fadeOut(finalReportAreaDiv);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
-    }
+    fadeIn(finalReportAreaDiv);
+    fadeIn(savePdfButton);
+    fadeIn(printButton);
   }
 
   // --- Save PDF ---
@@ -788,7 +768,9 @@ document.addEventListener('DOMContentLoaded', function() {
     productionDateInput.value = '';
     populatePartIdDropdown();
     resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
-    fadeIn(resultsDiv);
+    fadeOut(lotSection);
+    fadeOut(buttonGroup);
+    fadeOut(resultsDiv);
     fadeOut(defectsInputArea);
     fadeOut(photoCaptureArea);
     fadeOut(verdictMessageDiv);
