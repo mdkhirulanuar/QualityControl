@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const aqlForm = document.getElementById('aqlForm');
   const qcInspectorInput = document.getElementById('qcInspector');
   const machineNumberInput = document.getElementById('machineNumber');
-  const partNameInput = document.getElementById('partName');
   const partIdInput = document.getElementById('partId');
+  const partNameInput = document.getElementById('partName');
   const poNumberInput = document.getElementById('poNumber');
   const productionDateInput = document.getElementById('productionDate');
   const numBoxesInput = document.getElementById('numBoxes');
@@ -45,16 +45,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const saveAnnotationButton = document.getElementById('saveAnnotationButton');
 
   // --- State Variables ---
-  let currentSamplingPlan = null; // Stores { codeLetter, sampleSize, accept, reject }
-  let capturedPhotos = []; // Array of photo data (base64 strings)
-  const MAX_PHOTOS = 5; // Max photos allowed
-  let fabricCanvas = null; // Fabric.js canvas instance
-  let currentPhotoIndex = null; // Index of photo being annotated
-  let annotationHistory = []; // For undo functionality
-  let currentMode = null; // Tracks annotation mode (circle, text, freehand)
-  const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately"; // UPDATE THIS with your email/WhatsApp
+  let currentSamplingPlan = null;
+  let capturedPhotos = [];
+  const MAX_PHOTOS = 5;
+  let fabricCanvas = null;
+  let currentPhotoIndex = null;
+  let annotationHistory = [];
+  let currentMode = null;
+  const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately";
 
-  // --- Copyright Notice ---
   const copyrightNotice = "Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
 
   // --- Populate Part ID Dropdown ---
@@ -73,9 +72,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedPartId = partIdInput.value;
     const part = partsList.find(p => p.partId === selectedPartId);
     partNameInput.value = part ? part.partName : '';
+    validateBatchSection();
   });
 
-  // --- AQL Data (Simplified, from your list) ---
+  // --- AQL Data ---
   const sampleSizeCodeLetters_Level_II = {
     '2-8': 'A', '9-15': 'B', '16-25': 'C', '26-50': 'D', '51-90': 'E',
     '91-150': 'F', '151-280': 'G', '281-500': 'H', '501-1200': 'J',
@@ -140,6 +140,76 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       lotSizeInput.value = '';
     }
+    validateLotSection();
+  }
+
+  // --- Validation Functions ---
+  function validateBatchSection() {
+    const isValid = qcInspectorInput.value !== '' &&
+                    machineNumberInput.value !== '' &&
+                    partIdInput.value !== '' &&
+                    partNameInput.value !== '' &&
+                    poNumberInput.value.trim() !== '' &&
+                    productionDateInput.value !== '';
+    calculateButton.disabled = !isValid;
+    if (!isValid) {
+      fadeOut(resultsDiv);
+      fadeOut(defectsInputArea);
+      fadeOut(photoCaptureArea);
+      fadeOut(verdictMessageDiv);
+      fadeOut(defectChecklistDiv);
+      fadeOut(finalReportAreaDiv);
+      fadeOut(generateReportButton);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+    }
+    return isValid;
+  }
+
+  function validateLotSection() {
+    const numBoxes = parseInt(numBoxesInput.value, 10);
+    const pcsPerBox = parseInt(pcsPerBoxInput.value, 10);
+    const isValid = numBoxes > 0 && pcsPerBox > 0 && aqlSelect.value !== '';
+    calculateButton.disabled = !isValid || !validateBatchSection();
+    if (!isValid) {
+      fadeOut(resultsDiv);
+      fadeOut(defectsInputArea);
+      fadeOut(photoCaptureArea);
+      fadeOut(verdictMessageDiv);
+      fadeOut(defectChecklistDiv);
+      fadeOut(finalReportAreaDiv);
+      fadeOut(generateReportButton);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+    }
+    return isValid;
+  }
+
+  function validateDefectsSection() {
+    const defectsFound = parseInt(defectsFoundInput.value, 10);
+    const isValid = !isNaN(defectsFound) && defectsFound >= 0 && currentSamplingPlan;
+    submitDefectsButton.disabled = !isValid;
+    if (!isValid) {
+      fadeOut(verdictMessageDiv);
+      fadeOut(defectChecklistDiv);
+      fadeOut(photoCaptureArea);
+      fadeOut(finalReportAreaDiv);
+      fadeOut(generateReportButton);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+    }
+    return isValid;
+  }
+
+  function validatePhotoSection() {
+    const isValid = currentSamplingPlan && parseInt(defectsFoundInput.value, 10) >= 0;
+    if (!isValid) {
+      fadeOut(finalReportAreaDiv);
+      fadeOut(generateReportButton);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+    }
+    return isValid;
   }
 
   // --- Calculate Sampling Plan ---
@@ -241,12 +311,14 @@ document.addEventListener('DOMContentLoaded', function() {
     capturedPhotos.push(base64);
     updatePhotoPreview();
     clearError();
+    validatePhotoSection();
     return true;
   }
 
   function removePhoto(index) {
     capturedPhotos.splice(index, 1);
     updatePhotoPreview();
+    validatePhotoSection();
     clearError();
   }
 
@@ -440,9 +512,14 @@ document.addEventListener('DOMContentLoaded', function() {
       ${samplingInstructions}
     `;
 
-    fadeIn(resultsDiv);
-    fadeIn(defectsInputArea);
-    fadeIn(photoCaptureArea);
+    if (validateLotSection()) {
+      fadeIn(resultsDiv);
+      fadeIn(defectsInputArea);
+    } else {
+      fadeOut(resultsDiv);
+      fadeOut(defectsInputArea);
+    }
+    fadeOut(photoCaptureArea);
     fadeOut(verdictMessageDiv);
     fadeOut(defectChecklistDiv);
     fadeOut(finalReportAreaDiv);
@@ -459,8 +536,9 @@ document.addEventListener('DOMContentLoaded', function() {
       displayError('Please enter a valid number of defects (0 or more).');
       fadeOut(verdictMessageDiv);
       fadeOut(defectChecklistDiv);
-      fadeOut(generateReportButton);
+      fadeOut(photoCaptureArea);
       fadeOut(finalReportAreaDiv);
+      fadeOut(generateReportButton);
       fadeOut(savePdfButton);
       fadeOut(printButton);
       return;
@@ -474,10 +552,17 @@ document.addEventListener('DOMContentLoaded', function() {
       : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
     const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
-    fadeIn(verdictMessageDiv); // Show verdict first
-    fadeIn(defectChecklistDiv); // Show checklist after verdict
-    fadeIn(generateReportButton); // Show generate report button
+    if (validateDefectsSection()) {
+      fadeIn(verdictMessageDiv);
+      fadeIn(defectChecklistDiv);
+      fadeIn(photoCaptureArea);
+    } else {
+      fadeOut(verdictMessageDiv);
+      fadeOut(defectChecklistDiv);
+      fadeOut(photoCaptureArea);
+    }
     fadeOut(finalReportAreaDiv);
+    fadeOut(generateReportButton);
     fadeOut(savePdfButton);
     fadeOut(printButton);
   }
@@ -488,7 +573,7 @@ document.addEventListener('DOMContentLoaded', function() {
       displayError('Calculate sampling plan and submit defects first.');
       return;
     }
-    const defectsFound = parseInt(defectsFoundInput.value, 10) || 0; // Default to 0 if not selected
+    const defectsFound = parseInt(defectsFoundInput.value, 10) || 0;
     if (isNaN(defectsFound) || defectsFound < 0) {
       displayError('Enter a valid number of defects found.');
       return;
@@ -555,9 +640,15 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
 
     reportContentDiv.innerHTML = reportHTML;
-    fadeIn(finalReportAreaDiv);
-    fadeIn(savePdfButton);
-    fadeIn(printButton);
+    if (validatePhotoSection()) {
+      fadeIn(finalReportAreaDiv);
+      fadeIn(savePdfButton);
+      fadeIn(printButton);
+    } else {
+      fadeOut(finalReportAreaDiv);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+    }
   }
 
   // --- Save PDF ---
@@ -712,36 +803,30 @@ document.addEventListener('DOMContentLoaded', function() {
     updatePhotoPreview();
     document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => cb.checked = false);
     clearError();
-    validateInputs();
+    validateBatchSection();
   }
 
   // --- Validation & Interactivity ---
   calculateButton.disabled = true;
+  submitDefectsButton.disabled = true;
 
-  function validateInputs() {
-    const numBoxesValid = numBoxesInput.value && parseInt(numBoxesInput.value, 10) > 0;
-    const pcsPerBoxValid = pcsPerBoxInput.value && parseInt(pcsPerBoxInput.value, 10) > 0;
-    const aqlSelected = aqlSelect.value !== '';
-    calculateButton.disabled = !(numBoxesValid && pcsPerBoxValid && aqlSelected);
-  }
-
-  numBoxesInput.addEventListener('input', () => {
-    calculateLotSize();
-    validateInputs();
-    clearError();
-  });
-  pcsPerBoxInput.addEventListener('input', () => {
-    calculateLotSize();
-    validateInputs();
-    clearError();
-  });
-  aqlSelect.addEventListener('change', validateInputs);
+  // Input event listeners for validation
+  qcInspectorInput.addEventListener('change', validateBatchSection);
+  machineNumberInput.addEventListener('change', validateBatchSection);
+  partIdInput.addEventListener('change', validateBatchSection);
+  poNumberInput.addEventListener('input', validateBatchSection);
+  productionDateInput.addEventListener('change', validateBatchSection);
+  numBoxesInput.addEventListener('input', () => { calculateLotSize(); validateLotSection(); });
+  pcsPerBoxInput.addEventListener('input', () => { calculateLotSize(); validateLotSection(); });
+  aqlSelect.addEventListener('change', validateLotSection);
+  defectsFoundInput.addEventListener('change', validateDefectsSection);
 
   calculateButton.addEventListener('click', () => {
     currentSamplingPlan = calculateSamplingPlan();
     if (currentSamplingPlan) {
       displaySamplingPlan(currentSamplingPlan);
     } else {
+      fadeOut(resultsDiv);
       fadeOut(defectsInputArea);
       fadeOut(photoCaptureArea);
       fadeOut(verdictMessageDiv);
