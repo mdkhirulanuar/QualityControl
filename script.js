@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- DOM Element Selection ---
   const aqlForm = document.getElementById('aqlForm');
   const qcInspectorInput = document.getElementById('qcInspector');
-  const operatorNameInput = document.getElementById('operatorName');
   const machineNumberInput = document.getElementById('machineNumber');
   const partNameInput = document.getElementById('partName');
   const partIdInput = document.getElementById('partId');
@@ -477,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
     fadeIn(verdictMessageDiv); // Show verdict first
     fadeIn(defectChecklistDiv); // Show checklist after verdict
-    fadeIn(generateReportButton);
+    fadeIn(generateReportButton); // Show generate report button
     fadeOut(finalReportAreaDiv);
     fadeOut(savePdfButton);
     fadeOut(printButton);
@@ -489,9 +488,9 @@ document.addEventListener('DOMContentLoaded', function() {
       displayError('Calculate sampling plan and submit defects first.');
       return;
     }
-    const defectsFound = parseInt(defectsFoundInput.value, 10);
+    const defectsFound = parseInt(defectsFoundInput.value, 10) || 0; // Default to 0 if not selected
     if (isNaN(defectsFound) || defectsFound < 0) {
-      displayError('Enter valid defects found.');
+      displayError('Enter a valid number of defects found.');
       return;
     }
 
@@ -514,7 +513,6 @@ document.addEventListener('DOMContentLoaded', function() {
       <h3>Batch Identification</h3>
       <p><strong>Report ID:</strong> ${reportId}</p>
       <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
-      <p><strong>Operator Name:</strong> ${operatorNameInput.value || 'N/A'}</p>
       <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
       <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
       <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
@@ -581,7 +579,6 @@ document.addEventListener('DOMContentLoaded', function() {
       body: [
         ['Report ID', reportId],
         ['QC Inspector', qcInspectorInput.value || 'N/A'],
-        ['Operator Name', operatorNameInput.value || 'N/A'],
         ['Machine No', machineNumberInput.value || 'N/A'],
         ['Part ID', partIdInput.value || 'N/A'],
         ['Part Name', partNameInput.value || 'N/A'],
