@@ -1,5 +1,5 @@
 /*
-    Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
+    Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
 */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentMode = null;
   const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately";
 
-  const copyrightNotice = "Copyright © 2025. This AQL Sampling Calculator Tool is the initiative of Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
+  const copyrightNotice = "Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
 
   // --- Populate Part ID Dropdown ---
   function populatePartIdDropdown() {
