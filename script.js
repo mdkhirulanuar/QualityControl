@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const aqlForm = document.getElementById('aqlForm');
   const qcInspectorInput = document.getElementById('qcInspector');
   const machineNumberInput = document.getElementById('machineNumber');
-  const partIdInput = document.getElementById('partId');
   const partNameInput = document.getElementById('partName');
+  const partIdInput = document.getElementById('partId');
   const poNumberInput = document.getElementById('poNumber');
   const productionDateInput = document.getElementById('productionDate');
   const numBoxesInput = document.getElementById('numBoxes');
@@ -59,22 +59,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const copyrightNotice = "Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
 
-  // --- Populate Part ID Dropdown ---
-  function populatePartIdDropdown() {
-    partIdInput.innerHTML = '<option value="">-- Select Part ID --</option>';
-    partsList.forEach(part => {
+  // --- Populate Part Name Dropdown ---
+  function populatePartNameDropdown() {
+    partNameInput.innerHTML = '<option value="">-- Select Part Name --</option>';
+    const uniquePartNames = [...new Set(partsList.map(part => part.partName))];
+    uniquePartNames.forEach(name => {
       const option = document.createElement('option');
-      option.value = part.partId;
-      option.textContent = part.partId;
-      partIdInput.appendChild(option);
+      option.value = name;
+      option.textContent = name;
+      partNameInput.appendChild(option);
     });
   }
 
-  // --- Auto-Populate Part Name ---
-  partIdInput.addEventListener('change', function() {
-    const selectedPartId = partIdInput.value;
-    const part = partsList.find(p => p.partId === selectedPartId);
-    partNameInput.value = part ? part.partName : '';
+  // --- Auto-Populate Part ID ---
+  partNameInput.addEventListener('change', function() {
+    const selectedPartName = partNameInput.value;
+    const part = partsList.find(p => p.partName === selectedPartName);
+    partIdInput.value = part ? part.partId : '';
     validateBatchSection();
   });
 
@@ -585,8 +586,8 @@ document.addEventListener('DOMContentLoaded', function() {
       <p><strong>Report ID:</strong> ${reportId}</p>
       <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
       <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
+<p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
       <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
-      <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
       <p><strong>PO Number:</strong> ${poNumberInput.value || 'N/A'}</p>
       <p><strong>Production Date:</strong> ${productionDateInput.value || 'N/A'}</p>
       <p><strong>Inspection Date:</strong> ${new Date().toLocaleDateString()}</p>
@@ -621,7 +622,6 @@ document.addEventListener('DOMContentLoaded', function() {
         : '<p>No photos added.</p>'
       }
 
-      <h3>Ownership</h3>
       <p>${copyrightNotice}</p>
     `;
 
@@ -766,7 +766,7 @@ document.addEventListener('DOMContentLoaded', function() {
     partNameInput.value = '';
     poNumberInput.value = '';
     productionDateInput.value = '';
-    populatePartIdDropdown();
+    populatePartNameDropdown();
     resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
     fadeOut(lotSection);
     fadeOut(buttonGroup);
@@ -795,7 +795,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Input event listeners for validation
   qcInspectorInput.addEventListener('change', validateBatchSection);
   machineNumberInput.addEventListener('change', validateBatchSection);
-  partIdInput.addEventListener('change', validateBatchSection);
+  partNameInput.addEventListener('change', validateBatchSection);
   poNumberInput.addEventListener('input', validateBatchSection);
   productionDateInput.addEventListener('change', validateBatchSection);
   numBoxesInput.addEventListener('input', () => { calculateLotSize(); validateLotSection(); });
@@ -853,6 +853,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // --- Initial Setup ---
-  populatePartIdDropdown();
+  populatePartNameDropdown();
   resetAll();
 });
