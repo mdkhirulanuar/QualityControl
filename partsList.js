@@ -45,5 +45,8 @@ const partsList = [
     { partId: "18-18231-00", partName: "GORBASE DMC TYE TD SD WE KD" },
     { partId: "18-18662-00", partName: "BTM CVR CF STD TC WE SV SD KD" },
     { partId: "18-2638-00", partName: "BODY WF1602 (M) WE" },
-    { partId: "18-2976-00", partName: "BTC TF128/168 BK (M) W/MY" }
+    { partId: "18-1978-01", partName: "STAND BODY TF16 DWI RP KD" },
+    { partId: "18-15124-00", partName: "BODY CVR TF G12/G13 BK W/MY" },
+    { partId: "18-18601-00", partName: "GOR TYG BK SD WE HT" },
+    { partId: "18-17821-00", partName: "GOR TYG DWI SD BK HT" }
 ];
