@@ -8,6 +8,7 @@ const partsList = [
     { partId: "18-14450-00", partName: "G RING 18\" WE (TYA)" },
     { partId: "18-14577-00", partName: "BASE G11 DSL (OVAL)" },
     { partId: "18-14595-00", partName: "G RING 12\" DSL (TY C)" },
+    { partId: "18-15124-00", partName: "BODY CVR TF G12/G13 BK W/MY" },
     { partId: "18-15549-00", partName: "STAND BODY G10/G11 LSL R1" },
     { partId: "18-15654-00", partName: "SPINNER 12\" & 16\" SW TYPE C" },
     { partId: "18-15658-00", partName: "REAR G LOCK 12\"&16\" SW TYPE C" },
@@ -38,15 +39,14 @@ const partsList = [
     { partId: "18-17713-00", partName: "RMC WF TC W/OSC BK (RY)" },
     { partId: "18-17715-00", partName: "NECK JOINT 12\"&16\" TYD BK" },
     { partId: "18-17762-00", partName: "RMC WF TC W/OSC LG (RY)" },
+    { partId: "18-17820-00", partName: "BASE TF G12 DWI (OVAL)" },
     { partId: "18-17958-00", partName: "BTC CF WE SV TK3 WE SV (KD)" },
     { partId: "18-17978-01", partName: "STAND BODY TF166 DWI RP KD" },
     { partId: "18-17979-00", partName: "BASE TF166 LWI RP" },
     { partId: "18-17980-01", partName: "BODY COVER TF166 BK" },
     { partId: "18-18231-00", partName: "GORBASE DMC TYE TD SD WE KD" },
+    { partId: "18-18601-00", partName: "GOR TYG BK SD WE HT" },
     { partId: "18-18662-00", partName: "BTM CVR CF STD TC WE SV SD KD" },
     { partId: "18-2638-00", partName: "BODY WF1602 (M) WE" },
-    { partId: "18-1978-01", partName: "STAND BODY TF16 DWI RP KD" },
-    { partId: "18-15124-00", partName: "BODY CVR TF G12/G13 BK W/MY" },
-    { partId: "18-18601-00", partName: "GOR TYG BK SD WE HT" },
-    { partId: "18-17821-00", partName: "GOR TYG DWI SD BK HT" }
+    { partId: "18-1978-01", partName: "STAND BODY TF16 DWI RP KD" }
 ];
