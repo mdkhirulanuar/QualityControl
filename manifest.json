@@ -2,7 +2,7 @@
   "name": "InspectWise Go",
   "short_name": "InspectWise",
   "description": "Smart Sampling Tool for QC Inspections",
-  "start_url": "https://mdkhirulanuar.github.io/QualityControl/InspectWiseGo.html",
+  "start_url":"/QualityControl/InspectWiseGo.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2575fc",
