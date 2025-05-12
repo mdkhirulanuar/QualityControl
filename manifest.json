@@ -1,34 +1,33 @@
 {
   "name": "InspectWise Go",
   "short_name": "InspectWise",
-  "description": "Smart Sampling Tool for Quality Control Inspections at KPI Electrical Manufacturing",
-  "start_url": "/QualityControl/InspectWiseGo.html",
-  "scope": "/QualityControl/",
+  "description": "Smart Sampling Tool for QC Inspections",
+  "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#2575fc",
+  "background_color": "#ffffff",
   "theme_color": "#2575fc",
   "orientation": "portrait",
-  "lang": "en-US",
-  "dir": "ltr",
   "icons": [
     {
-      "src": "/QualityControl/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/QualityControl/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "/QualityControl/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
+    },
+    {
+      "src": "icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png"
     }
-  ],
-  "prefer_related_applications": false
+  ]
 }
