@@ -174,18 +174,22 @@
         </section>
 
         <section id="photoCaptureArea" class="form-section photo-section" style="display: none;" aria-labelledby="photo-capture-heading">
-            <h3 id="photo-capture-heading">Photo Documentation (Optional)</h3>
-            <p>Add up to 5 photos to document defects. Tap a photo to annotate or remove.</p>
-            <div class="photo-options">
-                <label for="uploadMultiplePhotos" class="upload-button">Upload Photos
-                    <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;">
-                </label>
-            </div>
-            <div id="photoPreview" class="photo-preview" role="region" aria-live="polite">
-                <p>No photos added yet.</p>
-            </div>
-            <p id="photoCount" aria-live="polite">Photos: 0/5</p>
-        </section>
+    <h3 id="photo-capture-heading">Photo Documentation (Optional)</h3>
+    <p>Add up to 5 photos to document defects. Tap a photo to annotate or remove.</p>
+    <div class="photo-options">
+        <button type="button" id="uploadPhotosButton" class="upload-button">Upload Photos</button>
+        <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;" aria-hidden="true">
+    </div>
+    <div id="photoPreview" class="photo-preview" role="region" aria-live="polite">
+        <p>No photos added yet.</p>
+    </div>
+    <p id="photoCount" aria-live="polite">Photos: 0/5</p>
+</section>
+
+<!-- Add a message above the section to guide users -->
+<section id="photoGuidance" class="form-section" style="display: block;" aria-live="polite">
+    <p id="photoGuidanceMessage">Complete the batch details, lot details, and click "Calculate Sampling Plan" to enable photo uploads.</p>
+</section>
 
         <div id="annotationModal" class="modal" style="display: none;" role="dialog" aria-labelledby="annotation-heading">
             <div class="modal-content">
