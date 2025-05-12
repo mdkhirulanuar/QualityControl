@@ -8,10 +8,8 @@
     --primary-gradient-end: #6a11cb;
     --success-color: #28a745;
     --success-hover: #218838;
-    --excel-color: #17a2b8;
-    --excel-hover: #138496;
     --border-radius: 10px;
-    --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Reset and Base */
@@ -21,6 +19,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #2575fc; /* Fallback for older browsers */
     background: linear-gradient(135deg, var(--primary-gradient-end) 0%, var(--primary-gradient-start) 100%);
     color: #222;
     margin: 0;
@@ -33,6 +32,7 @@ body {
     width: 100%;
 }
 
+/* Container */
 .container {
     background: #fff;
     max-width: 480px;
@@ -47,7 +47,7 @@ body {
 }
 
 .container:hover {
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
 h1, h2 {
@@ -61,6 +61,11 @@ h1, h2 {
 p {
     line-height: 1.5;
     font-size: 1rem;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none;
 }
 
 /* Form Section */
@@ -82,7 +87,6 @@ p {
     grid-template-columns: 1fr 1fr;
     gap: 15px 20px;
     width: 100%;
-    box-sizing: border-box;
 }
 
 .form-grid > div {
@@ -100,16 +104,16 @@ label {
 
 input[type="text"],
 input[type="number"],
+input[type="date"],
 select {
     width: 100%;
-    max-width: 100%;
     box-sizing: border-box;
     padding: 12px 14px;
     border-radius: 8px;
     border: 2px solid #ddd;
     font-size: 1rem;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
     height: 44px;
     -webkit-appearance: none;
     appearance: none;
@@ -117,6 +121,7 @@ select {
 
 input[type="text"]:focus,
 input[type="number"]:focus,
+input[type="date"]:focus,
 select:focus {
     border-color: var(--primary-gradient-start);
     box-shadow: 0 0 8px rgba(37, 117, 252, 0.67);
@@ -126,26 +131,6 @@ input[readonly] {
     background-color: #e9ecef;
     cursor: not-allowed;
     color: #666;
-}
-
-/* Specific styling for Production Date to match other inputs */
-input[type="date"] {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    padding: 12px 14px;
-    border-radius: 8px;
-    border: 2px solid #ddd;
-    font-size: 1rem;
-    height: 44px;
-    -webkit-appearance: none;
-    appearance: none;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-input[type="date"]:focus {
-    border-color: var(--primary-gradient-start);
-    box-shadow: 0 0 8px rgba(37, 117, 252, 0.67);
 }
 
 /* Buttons */
@@ -203,13 +188,12 @@ button:focus {
     text-align: center;
     margin-bottom: 20px;
     box-shadow: 0 0 10px rgba(255, 77, 79, 0.67);
-    animation: shake 0.3s ease;
+    animation: fadeIn 0.3s ease;
 }
 
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-8px); }
-    40%, 80% { transform: translateX(8px); }
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }
 
 /* Results Section */
@@ -262,7 +246,6 @@ button:focus {
     border-radius: 8px;
     padding: 8px 12px;
     cursor: pointer;
-    user-select: none;
     transition: background-color 0.3s ease, border-color 0.3s ease;
     display: flex;
     align-items: center;
@@ -281,10 +264,13 @@ button:focus {
     border-color: var(--primary-gradient-start);
 }
 
-.checklist-container input[type="checkbox"]:checked + label {
+.checklist-container input[type="checkbox"]:checked + span {
     background-color: var(--primary-gradient-start);
     color: white;
     border-color: var(--primary-gradient-start);
+    padding: 8px 12px;
+    border-radius: 8px;
+    width: 100%;
 }
 
 /* Report Area */
@@ -310,25 +296,16 @@ button:focus {
     background: var(--success-hover);
 }
 
-#saveExcelButton {
-    margin-top: 20px;
-    width: auto;
-    padding: 12px 30px;
-    font-weight: 700;
-    background: var(--excel-color);
-    box-shadow: 0 6px 15px rgba(23, 162, 184, 0.4);
-    transition: background 0.3s ease;
-}
-
-#saveExcelButton:hover {
-    background: var(--excel-hover);
-}
-
+/* Dynamic Content: Prevent layout-breaking styles in user-generated content */
 #reportContent {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 1rem;
     color: #222;
     line-height: 1.5;
+    /* Prevent overflow or malicious styles */
+    max-width: 100%;
+    overflow: hidden;
+    /* Ensure script.js sanitizes any user-generated HTML/CSS */
 }
 
 #reportContent h3 {
@@ -366,6 +343,7 @@ button:focus {
     margin-bottom: 15px;
 }
 
+/* File Uploads: Ensure script.js validates file types and sizes to prevent malicious uploads */
 .upload-button {
     display: inline-block;
     width: auto;
@@ -529,7 +507,7 @@ button:focus {
         gap: 8px;
     }
     .checklist-container label {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         padding: 6px 10px;
     }
     .photo-options {
@@ -594,6 +572,7 @@ button:focus {
     #reportContent img {
         max-width: 100px !important;
         height: auto !important;
+        page-break-inside: avoid !important;
     }
     .footer {
         display: none !important;
