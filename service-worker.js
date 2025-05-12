@@ -4,20 +4,21 @@
 
 // Cache configuration
 const APP_PREFIX = 'inspectwise-go';
-const VERSION = '2025.05.12'; // Update with major releases
+const VERSION = '2025.05.12';
 const CACHE_NAME = `${APP_PREFIX}-${VERSION}`;
-const MAX_CACHE_SIZE = 50; // Max items to cache
+const MAX_CACHE_SIZE = 50;
 
 // Core assets to cache
 const CORE_ASSETS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/partsList.js',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/QualityControl/',
+  '/QualityControl/InspectWiseGo.html',
+  '/QualityControl/style.css',
+  '/QualityControl/script.js',
+  '/QualityControl/partsList.js',
+  '/QualityControl/manifest.json',
+  '/QualityControl/icon-144.png',
+  '/QualityControl/icon-192.png',
+  '/QualityControl/icon-512.png'
 ];
 
 // External assets (CDNs)
@@ -37,7 +38,7 @@ async function limitCacheSize(cacheName, maxItems) {
   const keys = await cache.keys();
   if (keys.length > maxItems) {
     await cache.delete(keys[0]);
-    return limitCacheSize(cacheName, maxItems); // Recursive cleanup
+    return limitCacheSize(cacheName, maxItems);
   }
 }
 
@@ -122,7 +123,7 @@ async function cacheFirst(request) {
     return response;
   } catch (err) {
     console.error(`ServiceWorker: Cache-first failed for ${request.url}:`, err);
-    const offlinePage = await caches.match('/index.html');
+    const offlinePage = await caches.match('/QualityControl/InspectWiseGo.html');
     if (offlinePage) {
       notifyClients('Offline mode: Serving cached content.');
       return offlinePage;
@@ -148,7 +149,7 @@ async function networkFirst(request) {
       return cached;
     }
     notifyClients('Offline and no cached parts list available.');
-    return caches.match('/index.html');
+    return caches.match('/QualityControl/InspectWiseGo.html');
   }
 }
 
@@ -168,6 +169,6 @@ async function staleWhileRevalidate(request) {
   } catch (err) {
     console.error(`ServiceWorker: Stale-while-revalidate failed for ${request.url}:`, err);
     notifyClients('Failed to load external resource.');
-    return caches.match('/index.html');
+    return caches.match('/QualityControl/InspectWiseGo.html');
   }
 }
