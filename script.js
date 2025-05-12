@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     defectsFound: document.getElementById('defectsFound'),
     submitDefectsButton: document.getElementById('submitDefectsButton'),
     photoCaptureArea: document.getElementById('photoCaptureArea'),
-    uploadPhotosButton: document.getElementById('uploadPhotosButton'),
     uploadMultiplePhotos: document.getElementById('uploadMultiplePhotos'),
     photoPreview: document.getElementById('photoPreview'),
     photoCount: document.getElementById('photoCount'),
@@ -327,11 +326,16 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.photoPreview.innerHTML = capturedPhotos.length === 0
       ? '<p>No photos added yet.</p>'
       : capturedPhotos.map((photo, index) => `
-          <img src="${photo}" alt="Photo ${index + 1}" data-index="${index}" tabindex="0">
+          <div class="photo-item" data-index="${index}">
+            <img src="${photo}" alt="Photo ${index + 1}" tabindex="0">
+            <div class="photo-actions">
+              <button class="annotate-btn" data-index="${index}">Annotate</button>
+              <button class="remove-btn" data-index="${index}">Remove</button>
+            </div>
+          </div>
         `).join('');
     elements.photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
     elements.uploadMultiplePhotos.disabled = capturedPhotos.length >= MAX_PHOTOS;
-    elements.uploadPhotosButton.disabled = capturedPhotos.length >= MAX_PHOTOS;
     if (validateDefectsSection()) fadeIn(elements.generateReportButton);
   };
 
@@ -352,36 +356,30 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleFileUpload = (files) => {
-    console.log('File input changed, files selected:', files);
-    if (files.length === 0) {
-      displayError('No files selected. Please try again.');
+    if (!navigator.onLine) {
+      displayError('Upload failed. Please check your internet connection.');
       return;
     }
     const validImages = Array.from(files).filter(file => {
-      const isImage = file.type.startsWith('image/');
+      const isValidFormat = file.type === 'image/jpeg' || file.type === 'image/png';
       const isUnderLimit = file.size < 5 * 1024 * 1024; // 5MB limit
-      if (!isImage) displayError('Only image files are supported.');
+      if (!isValidFormat) displayError('Only JPG and PNG files are supported.');
       if (!isUnderLimit) displayError('File size exceeds 5MB limit.');
-      return isImage && isUnderLimit;
+      return isValidFormat && isUnderLimit;
     });
-    if (validImages.length === 0) {
-      console.log('No valid images to process.');
-      return;
-    }
+    if (validImages.length === 0) return;
 
     validImages.forEach(file => {
-      if (capturedPhotos.length >= MAX_PHOTOS) return;
+      if (capturedPhotos.length >= MAX_PHOTOS) {
+        displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
+        return;
+      }
       const reader = new FileReader();
-      reader.onload = () => {
-        console.log('File read successfully, adding photo:', file.name);
-        addPhoto(reader.result);
-      };
-      reader.onerror = () => {
-        displayError('Error reading image file.');
-        console.error('FileReader error for file:', file.name);
-      };
+      reader.onload = () => addPhoto(reader.result);
+      reader.onerror = () => displayError('Error reading image file.');
       reader.readAsDataURL(file);
     });
+    elements.uploadMultiplePhotos.value = ''; // Reset input to allow re-uploading
   };
 
   // --- Annotation Functions ---
@@ -641,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Low Quality (AQL 4.0%)';
     doc.autoTable({
       startY: y,
-      head: [['Field', "Value']],
+      head: [['Field', 'Value']],
       body: [
         ['Lot Size', elements.lotSize.value],
         ['Inspection Level', 'General Level II'],
@@ -769,38 +767,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // File input change event
   elements.uploadMultiplePhotos.addEventListener('change', (e) => {
-    console.log('File input triggered directly via user interaction.');
     if (!navigator.onLine) {
       displayError('Upload failed. Please check your internet connection.');
       return;
     }
     handleFileUpload(e.target.files);
-    e.target.value = ''; // Reset input to allow re-uploading the same file
   });
 
-  // Fallback button for debugging
-  elements.uploadPhotosButton.addEventListener('click', () => {
-    if (capturedPhotos.length >= MAX_PHOTOS) {
-      displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
-      return;
-    }
-    console.log('Fallback button clicked, attempting to trigger file input.');
-    try {
-      elements.uploadMultiplePhotos.click();
-    } catch (e) {
-      displayError('Failed to open file picker. Please use the "Upload Photos" button above and ensure permissions are granted.');
-      console.error('Fallback file input trigger error:', e);
-    }
-  });
-
+  // Photo action event delegation
   elements.photoPreview.addEventListener('click', (e) => {
-    if (e.target.tagName === 'IMG') {
-      const index = parseInt(e.target.dataset.index, 10);
-      const action = prompt('Type "annotate" to annotate or "remove" to delete this photo.');
-      if (action?.toLowerCase() === 'annotate') {
-        initAnnotationCanvas(capturedPhotos[index], index);
-        elements.annotationModal.style.display = 'flex';
-      } else if (action?.toLowerCase() === 'remove' && confirm('Remove this photo?')) {
+    const annotateBtn = e.target.closest('.annotate-btn');
+    const removeBtn = e.target.closest('.remove-btn');
+
+    if (annotateBtn) {
+      const index = parseInt(annotateBtn.dataset.index, 10);
+      initAnnotationCanvas(capturedPhotos[index], index);
+      elements.annotationModal.style.display = 'flex';
+    } else if (removeBtn) {
+      const index = parseInt(removeBtn.dataset.index, 10);
+      if (confirm('Remove this photo?')) {
         removePhoto(index);
       }
     }
