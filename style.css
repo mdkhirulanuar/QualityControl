@@ -1,139 +1,92 @@
-/*
+/*  
     Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
 */
 
-/* CSS Variables for Consistency */
 :root {
-    --primary-gradient-start: #2575fc;
-    --primary-gradient-end: #6a11cb;
-    --success-color: #28a745;
-    --success-hover: #218838;
-    --border-radius: 10px;
-    --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    --primary-gradient-start: #4c6ef5;
+    --primary-gradient-end: #6b46c1;
+    --border-radius: 8px;
+    --background-color: #f7f9fc;
+    --text-color: #333;
+    --error-color: #dc3545;
+    --accept-color: #28a745;
+    --reject-color: #dc3545;
+    --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Reset and Base */
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background: linear-gradient(135deg, var(--primary-gradient-end) 0%, var(--primary-gradient-start) 100%);
-    color: #222;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
     padding: 20px;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    overflow-x: hidden;
-    width: 100%;
-    -webkit-font-smoothing: antialiased;
-}
-
-.container {
-    background: #fff;
-    max-width: 480px;
-    width: 100%;
-    padding: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    margin: 0 auto 40px;
-    transition: box-shadow 0.3s ease;
-}
-
-.container:focus-within {
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 h1, h2, h3 {
-    color: #3a3a3a;
-    font-weight: 700;
     margin-bottom: 15px;
+    font-weight: 600;
+}
+
+h1 {
+    font-size: 1.8rem;
     text-align: center;
-    letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+h2 {
+    font-size: 1.5rem;
+}
+
+h3 {
+    font-size: 1.2rem;
 }
 
 p {
-    line-height: 1.6;
-    font-size: 1rem;
-}
-
-/* Form Section */
-.form-section {
-    margin-bottom: 25px;
-    padding: 15px;
-    border-radius: var(--border-radius);
-    background: #f9f9fb;
-    box-shadow: inset 0 0 8px #e0e0e0;
-    transition: background-color 0.3s ease;
-}
-
-.form-section:hover {
-    background-color: #e6f0ff;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-.form-grid > div {
-    display: flex;
-    flex-direction: column;
+    margin-bottom: 10px;
 }
 
 label {
-    font-weight: 600;
+    display: block;
     margin-bottom: 5px;
-    color: #555;
-    font-size: 0.95rem;
+    font-weight: 500;
 }
 
-input[type="text"],
-input[type="number"],
-input[type="date"],
-select {
+input, select, button {
     width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 2px solid #ddd;
-    font-size: 1rem;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-}
-
-input[type="text"]:focus,
-input[type="number"]:focus,
-input[type="date"]:focus,
-select:focus {
-    border-color: var(--primary-gradient-start);
-    box-shadow: 0 0 8px rgba(37, 117, 252, 0.5);
-    outline: none;
-}
-
-input[readonly] {
-    background-color: #e9ecef;
-    cursor: not-allowed;
-}
-
-/* Buttons */
-button {
-    width: 100%;
-    padding: 14px;
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
     border-radius: var(--border-radius);
-    cursor: pointer;
-    color: white;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+input[type="date"] {
+    padding: 8px 10px;
+}
+
+input:focus, select:focus, button:focus {
+    outline: 2px solid var(--primary-gradient-start);
+    outline-offset: 2px;
+}
+
+button {
     background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end));
-    box-shadow: 0 6px 15px rgba(101, 41, 255, 0.4);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
     transition: background 0.3s ease, transform 0.1s ease;
 }
 
@@ -147,27 +100,116 @@ button:disabled {
     cursor: not-allowed;
 }
 
-button:focus {
-    outline: 2px solid var(--primary-gradient-start);
-    outline-offset: 2px;
+button.active {
+    transform: translateY(2px);
+}
+
+.form-section {
+    background: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 20px;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.batch-info, .lot-details {
+    display: none;
 }
 
 .button-group {
     display: flex;
-    gap: 15px;
     flex-wrap: wrap;
+    gap: 10px;
     justify-content: center;
+    margin-bottom: 20px;
 }
 
-.upload-button {
-    width: 100%;
+.button-group button {
     max-width: 200px;
+}
+
+#results, #defectsInputArea, #photoCaptureArea, #verdictMessage, #defectChecklist, #finalReportArea {
+    display: none;
+}
+
+#results p, #verdictMessage p {
+    padding: 10px;
+    border-radius: var(--border-radius);
+}
+
+#results ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin-bottom: 10px;
+}
+
+.accept {
+    background-color: var(--accept-color);
+    color: white;
+}
+
+.reject {
+    background-color: var(--reject-color);
+    color: white;
+}
+
+#defectChecklist ul {
+    list-style: none;
+    padding: 0;
+}
+
+#defectChecklist li {
+    margin-bottom: 10px;
+}
+
+#defectChecklist label {
+    display: inline;
+    margin-left: 5px;
+}
+
+#reportContent img {
+    max-width: 100%;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    margin: 10px 0;
+}
+
+#reportContent h3 {
+    margin-top: 20px;
+}
+
+.initial-message {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+}
+
+#photoGuidanceMessage {
+    text-align: center;
+    font-style: italic;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.photo-options {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.upload-photo-button {
+    width: 100%;
+    max-width: 250px; /* Match Generate Full Report button width */
     padding: 12px;
     font-size: 1rem;
     font-weight: 600;
     border: none;
     border-radius: var(--border-radius);
-    background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    background: linear-gradient(90deg, #4c6ef5, #6b46c1); /* Match Generate Full Report gradient */
     color: white;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(101, 41, 255, 0.3);
@@ -179,300 +221,224 @@ button:focus {
     -moz-appearance: none;
     appearance: none;
     text-align: center;
-    line-height: normal; /* Fix alignment on some browsers */
+    text-indent: -9999px; /* Hide default "Choose files" text */
 }
 
-.upload-button:hover:not(:disabled) {
-    background: linear-gradient(90deg, var(--primary-gradient-end), var(--primary-gradient-start));
+.upload-photo-button:hover:not(:disabled) {
+    background: linear-gradient(90deg, #6b46c1, #4c6ef5); /* Reverse gradient on hover */
     transform: translateY(-2px);
 }
 
-.upload-button:disabled {
+.upload-photo-button:disabled {
     background: #ccc;
     cursor: not-allowed;
 }
 
-.upload-button:focus {
-    outline: 2px solid var(--primary-gradient-start);
+.upload-photo-button:focus {
+    outline: 2px solid #4c6ef5;
     outline-offset: 2px;
 }
 
-.photo-options {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.photo-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-}
-
-.action-button {
-    padding: 10px 20px;
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: var(--border-radius);
-    background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end));
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(101, 41, 255, 0.3);
-    transition: background 0.3s ease, transform 0.1s ease;
-}
-
-.action-button:hover:not(:disabled) {
-    background: linear-gradient(90deg, var(--primary-gradient-end), var(--primary-gradient-start));
-    transform: translateY(-2px);
-}
-
-.action-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
-
-.action-button:focus {
-    outline: 2px solid var(--primary-gradient-start);
-    outline-offset: 2px;
-}
-
-#photoGuidanceMessage {
-    text-align: center;
-    font-style: italic;
-    color: #555;
-    font-size: 0.9rem;
-}
-
-/* Error Message */
-.error-message {
-    background-color: #ff4d4f;
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 15px;
-    box-shadow: 0 0 10px rgba(255, 77, 79, 0.5);
-    animation: shake 0.3s ease;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-5px); }
-    40%, 80% { transform: translateX(5px); }
-}
-
-/* Results Section */
-.results-section {
-    background: #f0f4ff;
-    border-radius: var(--border-radius);
-    padding: 15px;
-    margin-top: 15px;
-    font-weight: 600;
-    color: #1a1a1a;
-}
-
-.accept {
-    color: #155724;
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.reject {
-    color: #721c24;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-}
-
-/* Checklist Section */
-.checklist-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-}
-
-.checklist-container label {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-}
-
-.checklist-container input[type="checkbox"]:focus + span {
-    outline: 2px solid var(--primary-gradient-start);
-}
-
-.checklist-container label:hover {
-    background-color: #e6f0ff;
-}
-
-/* Report Area */
-#finalReportArea {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-#savePdfButton, #printButton {
-    background: var(--success-color);
-}
-
-#savePdfButton:hover, #printButton:hover {
-    background: var(--success-hover);
-}
-
-/* Photo Section */
 .photo-preview {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-top: 10px;
+    justify-content: center;
 }
 
-.photo-preview img {
-    width: 80px;
-    height: 80px;
+.photo-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.photo-item img {
+    max-width: 150px;
+    max-height: 150px;
     object-fit: cover;
-    border-radius: 8px;
-    border: 2px solid #ddd;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.photo-preview .photo-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 5px;
+}
+
+.photo-preview .photo-actions button {
+    padding: 6px 12px; /* Slightly larger padding for better tap targets */
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
+    color: white;
+    transition: background-color 0.2s ease;
 }
 
-.photo-preview img:hover, .photo-preview img:focus {
-    border-color: var(--primary-gradient-start);
+.photo-preview .photo-actions .annotate-btn {
+    background-color: #28a745; /* Green for Annotate */
 }
 
-/* Annotation Modal */
-.modal {
+.photo-preview .photo-actions .annotate-btn:hover {
+    background-color: #218838;
+}
+
+.photo-preview .photo-actions .remove-btn {
+    background-color: #dc3545; /* Red for Remove */
+}
+
+.photo-preview .photo-actions .remove-btn:hover {
+    background-color: #c82333;
+}
+
+#photoCount {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+#annotationModal {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
     z-index: 1000;
+    align-items: center;
+    justify-content: center;
 }
 
-.modal-content {
-    background: #fff;
+#annotationModal.show {
+    display: flex;
+}
+
+.annotation-content {
+    background: white;
     padding: 20px;
     border-radius: var(--border-radius);
+    position: relative;
     max-width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-height: 90%;
+    overflow: auto;
+}
+
+#annotationCanvas {
+    border: 1px solid #ddd;
+    display: block;
+    margin: 0 auto;
+}
+
+.annotation-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.annotation-tools button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    background: #666;
+    transition: background 0.3s ease;
+}
+
+.annotation-tools button.active {
+    background: var(--primary-gradient-start);
+}
+
+.annotation-tools button:hover:not(:disabled) {
+    background: var(--primary-gradient-end);
 }
 
 .close-modal {
     position: absolute;
     top: 10px;
-    right: 15px;
-    font-size: 24px;
+    right: 10px;
+    font-size: 1.5rem;
     cursor: pointer;
+    color: #666;
 }
 
-.annotation-tools {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 15px;
+.close-modal:hover {
+    color: #333;
 }
 
-.tool-button {
-    padding: 8px 15px;
-    font-size: 0.9rem;
-    border-radius: 5px;
-    background: #e0e0e0;
-}
-
-.tool-button:hover, .tool-button:focus {
-    background: #d0d0d0;
-}
-
-.tool-button.active {
-    background: var(--primary-gradient-start);
+#error-message {
+    display: none;
+    background: var(--error-color);
     color: white;
-}
-
-.save-button {
-    background: var(--success-color);
-}
-
-.save-button:hover, .save-button:focus {
-    background: var(--success-hover);
-}
-
-/* Footer */
-.footer {
-    margin-top: 20px;
+    padding: 10px;
+    border-radius: var(--border-radius);
     text-align: center;
-    font-size: 0.85rem;
-    color: #555;
-    border-top: 1px solid #e0e0e0;
+    margin-bottom: 20px;
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-    .form-grid {
-        grid-template-columns: 1fr;
+@media print {
+    body {
+        padding: 0;
+        background: white;
     }
+
+    .form-section, #results, #finalReportArea {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    #photoCaptureArea, #defectsInputArea, #verdictMessage, #defectChecklist, .button-group, #error-message, #photoGuidance, #annotationModal {
+        display: none !important;
+    }
+
+    #finalReportArea {
+        display: block;
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
+
+    input, select, button {
+        font-size: 0.9rem;
+    }
+
+    .form-section {
+        padding: 15px;
+    }
+
     .button-group {
         flex-direction: column;
     }
-    .checklist-container {
-        grid-template-columns: 1fr;
-    }
-    .modal-content {
-        width: 95%;
-    }
-}
 
-/* Virtual Keyboard Adjustments */
-@media (max-height: 600px) {
-    .container {
-        padding-bottom: 200px;
+    .button-group button {
+        max-width: 100%;
     }
-}
 
-/* Print Styles */
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    #finalReportArea, #finalReportArea * {
-        visibility: visible;
-    }
-    #finalReportArea {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        padding: 10px;
-        background: white;
-    }
-    #reportContent img {
-        max-width: 100px;
-        height: auto;
-    }
-    .button-group, .footer {
-        display: none;
+    .photo-item img {
+        max-width: 120px;
+        max-height: 120px;
     }
 }
