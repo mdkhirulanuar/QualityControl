@@ -930,3 +930,10 @@ document.addEventListener('DOMContentLoaded', function() {
     displayError('Failed to load parts list. Please refresh the page.', 'system');
   }
 });
+
+// --- Service Worker Messaging ---
+navigator.serviceWorker.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SERVICE_WORKER_MESSAGE') {
+    displayError(event.data.message, 'system');
+  }
+});
