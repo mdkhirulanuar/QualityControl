@@ -352,6 +352,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const handleFileUpload = (files) => {
+    console.log('File input changed, files selected:', files);
+    if (files.length === 0) {
+      displayError('No files selected. Please try again.');
+      return;
+    }
     const validImages = Array.from(files).filter(file => {
       const isImage = file.type.startsWith('image/');
       const isUnderLimit = file.size < 5 * 1024 * 1024; // 5MB limit
@@ -359,13 +364,22 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isUnderLimit) displayError('File size exceeds 5MB limit.');
       return isImage && isUnderLimit;
     });
-    if (validImages.length === 0) return;
+    if (validImages.length === 0) {
+      console.log('No valid images to process.');
+      return;
+    }
 
     validImages.forEach(file => {
       if (capturedPhotos.length >= MAX_PHOTOS) return;
       const reader = new FileReader();
-      reader.onload = () => addPhoto(reader.result);
-      reader.onerror = () => displayError('Error reading image file.');
+      reader.onload = () => {
+        console.log('File read successfully, adding photo:', file.name);
+        addPhoto(reader.result);
+      };
+      reader.onerror = () => {
+        displayError('Error reading image file.');
+        console.error('FileReader error for file:', file.name);
+      };
       reader.readAsDataURL(file);
     });
   };
@@ -627,7 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Low Quality (AQL 4.0%)';
     doc.autoTable({
       startY: y,
-      head: [['Field', 'Value']],
+      head: [['Field', "Value']],
       body: [
         ['Lot Size', elements.lotSize.value],
         ['Inspection Level', 'General Level II'],
@@ -753,40 +767,30 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.printButton.addEventListener('click', printReport);
   elements.resetButton.addEventListener('click', resetAll);
 
-  elements.uploadPhotosButton.addEventListener('click', () => {
-    if (capturedPhotos.length >= MAX_PHOTOS) {
-      displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
-      return;
-    }
-    try {
-      elements.uploadMultiplePhotos.click();
-    } catch (e) {
-      displayError('Failed to open file picker. Please ensure browser permissions are enabled.');
-      console.error('File input trigger error:', e);
-    }
-  });
-
-  elements.uploadPhotosButton.addEventListener('touchend', (e) => {
-    e.preventDefault(); // Prevent double-triggering on mobile
-    if (capturedPhotos.length >= MAX_PHOTOS) {
-      displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
-      return;
-    }
-    try {
-      elements.uploadMultiplePhotos.click();
-    } catch (e) {
-      displayError('Failed to open file picker. Please ensure browser permissions are enabled.');
-      console.error('File input trigger error:', e);
-    }
-  }, { passive: false });
-
+  // File input change event
   elements.uploadMultiplePhotos.addEventListener('change', (e) => {
+    console.log('File input triggered directly via user interaction.');
     if (!navigator.onLine) {
       displayError('Upload failed. Please check your internet connection.');
       return;
     }
     handleFileUpload(e.target.files);
     e.target.value = ''; // Reset input to allow re-uploading the same file
+  });
+
+  // Fallback button for debugging
+  elements.uploadPhotosButton.addEventListener('click', () => {
+    if (capturedPhotos.length >= MAX_PHOTOS) {
+      displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
+      return;
+    }
+    console.log('Fallback button clicked, attempting to trigger file input.');
+    try {
+      elements.uploadMultiplePhotos.click();
+    } catch (e) {
+      displayError('Failed to open file picker. Please use the "Upload Photos" button above and ensure permissions are granted.');
+      console.error('Fallback file input trigger error:', e);
+    }
   });
 
   elements.photoPreview.addEventListener('click', (e) => {
@@ -857,11 +861,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if ('permissions' in navigator) {
       navigator.permissions.query({ name: 'photos' }).then(permissionStatus => {
         if (permissionStatus.state === 'denied') {
-          displayError('Photo access is denied. Please enable permissions in your browser settings (Settings > Site Settings > Storage or Safari > Camera & Photos).');
+          displayError('Photo access is denied. Please enable permissions in your browser settings (e.g., Settings > Safari > Camera & Photos or Chrome > Site Settings > Storage).');
         } else if (permissionStatus.state === 'prompt') {
           displayError('Please grant photo access when prompted by your browser.');
         }
         permissionStatus.onchange = () => checkMobilePermissions();
+      }).catch(err => {
+        console.warn('Permission API error:', err);
+        displayError('Unable to check photo permissions. Please manually allow photo access in your browser settings.');
       });
     } else {
       console.warn('Permission API not supported. Ensure manual permission is granted.');
