@@ -5,13 +5,14 @@
 :root {
     --primary-gradient-start: #4c6ef5;
     --primary-gradient-end: #6b46c1;
-    --border-radius: 8px;
+    --border-radius: 10px; /* Slightly larger for modern look */
     --background-color: #f7f9fc;
     --text-color: #333;
     --error-color: #dc3545;
     --accept-color: #28a745;
     --reject-color: #dc3545;
-    --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    --box-shadow: 0 4px 15px rgba(101, 41, 255, 0.4); /* Enhanced glow effect */
+    --glow-shadow: 0 0 10px rgba(76, 110, 245, 0.5), 0 0 20px rgba(107, 70, 193, 0.3);
 }
 
 * {
@@ -87,17 +88,25 @@ button {
     border: none;
     cursor: pointer;
     font-weight: 600;
-    transition: background 0.3s ease, transform 0.1s ease;
+    transition: background 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+    box-shadow: var(--box-shadow), var(--glow-shadow);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    max-width: 250px;
+    margin: 0 auto;
+    display: block;
 }
 
 button:hover:not(:disabled) {
     background: linear-gradient(90deg, var(--primary-gradient-end), var(--primary-gradient-start));
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(101, 41, 255, 0.6), var(--glow-shadow);
 }
 
 button:disabled {
     background: #ccc;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 button.active {
@@ -203,51 +212,52 @@ button.active {
 
 .upload-photo-button {
     width: 100%;
-    max-width: 250px; /* Match Generate Full Report button width */
+    max-width: 250px; /* Match button width in screenshot */
     padding: 12px;
     font-size: 1rem;
     font-weight: 600;
     border: none;
     border-radius: var(--border-radius);
-    background: linear-gradient(90deg, #4c6ef5, #6b46c1); /* Match Generate Full Report gradient */
+    background: linear-gradient(90deg, #4c6ef5, #6b46c1); /* Match gradient in screenshot */
     color: white;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(101, 41, 255, 0.3);
-    transition: background 0.3s ease, transform 0.1s ease;
+    box-shadow: var(--box-shadow), var(--glow-shadow); /* Add glowing effect */
+    transition: background 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
     margin: 0 auto;
     display: block;
     touch-action: manipulation;
     text-align: center;
-    /* Override default file input styling */
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    text-indent: -9999px; /* Hide default text like "Choose files" */
-    overflow: hidden;
     position: relative;
-}
-
-.upload-photo-button::-webkit-file-upload-button {
-    display: none;
-}
-
-.upload-photo-button::file-selector-button {
-    display: none;
+    overflow: hidden;
 }
 
 .upload-photo-button:hover:not(:disabled) {
     background: linear-gradient(90deg, #6b46c1, #4c6ef5); /* Reverse gradient on hover */
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(101, 41, 255, 0.6), var(--glow-shadow);
 }
 
 .upload-photo-button:disabled {
     background: #ccc;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 .upload-photo-button:focus {
     outline: 2px solid #4c6ef5;
     outline-offset: 2px;
+}
+
+/* Hide the default file input while keeping it functional */
+.hidden-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 
 .photo-preview {
