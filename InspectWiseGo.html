@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2575fc">
 </head>
@@ -28,8 +29,7 @@
                 <div class="form-grid">
                     <div>
                         <label for="qcInspector">QC Inspector:</label>
-                        <select id="qcInspector" name="qcInspector" required>
-                            <option value="">-- Select QC Inspector --</option>
+                        <select id="qcInspector" name="qcInspector" required aria-label=">- Select QC Inspector --</option>
                             <option value="Khirul Anuar">KHIRUL ANUAR</option>
                             <option value="Hemapria">HEMAPRIA</option>
                             <option value="Popo">POPO</option>
@@ -38,7 +38,7 @@
                     </div>
                     <div>
                         <label for="machineNumber">Machine No:</label>
-                        <select id="machineNumber" name="machineNumber">
+                        <select id="machineNumber" name="machineNumber" aria-label="Select machine number">
                             <option value="">-- Select Machine No --</option>
                             <option value="M01">M01</option>
                             <option value="M02">M02</option>
@@ -64,44 +64,44 @@
                     </div>
                     <div>
                         <label for="partName">Part Name:</label>
-                        <select id="partName" name="partName">
+                        <select id="partName" name="partName" aria-label="Select part name for inspection">
                             <option value="">-- Select Part Name --</option>
                             <!-- Options populated by JavaScript -->
                         </select>
                     </div>
                     <div>
                         <label for="partId">Part ID:</label>
-                        <input type="text" id="partId" name="partId" readonly>
+                        <input type="text" id="partId" name="partId" readonly aria-readonly="true">
                     </div>
                     <div>
                         <label for="poNumber">PO Number:</label>
-                        <input type="text" id="poNumber" name="poNumber" placeholder="Enter PO Number">
+                        <input type="text" id="poNumber" name="poNumber" placeholder="Enter PO Number" aria-label="Enter purchase order number">
                     </div>
                     <div>
                         <label for="productionDate">Production Date:</label>
-                        <input type="date" id="productionDate" name="productionDate" placeholder="-- Select Production Date --">
+                        <input type="date" id="productionDate" name="productionDate" aria-label="Select production date">
                     </div>
                 </div>
             </div>
 
-            <div class="form-section lot-details">
+            <div class="form-section lot-details hidden">
                 <h2>Lot & Sampling Details</h2>
                 <div class="form-grid">
                     <div>
                         <label for="numBoxes">Number of Boxes:</label>
-                        <input type="number" id="numBoxes" name="numBoxes" min="1" inputmode="numeric" required>
+                        <input type="number" id="numBoxes" name="numBoxes" min="1" inputmode="numeric" required aria-label="Enter number of boxes">
                     </div>
                     <div>
                         <label for="pcsPerBox">Pieces per Box:</label>
-                        <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" inputmode="numeric" required>
+                        <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" inputmode="numeric" required aria-label="Enter pieces per box">
                     </div>
                     <div>
                         <label for="lotSize">Total Lot Size:</label>
-                        <input type="number" id="lotSize" name="lotSize" readonly required>
+                        <input type="number" id="lotSize" name="lotSize" readonly required aria-readonly="true">
                     </div>
                     <div>
                         <label for="aql">Acceptable Quality Level:</label>
-                        <select id="aql" name="aql" required>
+                        <select id="aql" name="aql" required aria-label="Select acceptable quality level">
                             <option value="">-- Select AQL Quality --</option>
                             <option value="1.0">High Quality (AQL 1.0%)</option>
                             <option value="2.5">Medium Quality (AQL 2.5%)</option>
@@ -111,19 +111,19 @@
                 </div>
             </div>
 
-            <div class="button-group">
-                <button type="button" id="calculateButton">Calculate Sampling Plan</button>
+            <div class="button-group hidden">
+                <button type="button" id="calculateButton" disabled>Calculate Sampling Plan</button>
                 <button type="button" id="resetButton">Reset</button>
             </div>
         </form>
 
-        <div id="results" class="results-section">
+        <div id="results" class="results-section hidden" aria-live="polite">
             <p class="initial-message">Please enter batch details, select AQL quality level, and click calculate.</p>
         </div>
 
         <div id="defectsInputArea" class="form-section hidden">
             <label for="defectsFound">Number of Defects Found:</label>
-            <select id="defectsFound" name="defectsFound" required>
+            <select id="defectsFound" name="defectsFound" required aria-label="Select number of defects found">
                 <option value="" disabled selected>-- Select Number --</option>
                 <option value="0">0</option>
                 <option value="1">1</option>
@@ -137,10 +137,10 @@
                 <option value="9">9</option>
                 <option value="10">10</option>
             </select>
-            <button type="button" id="submitDefectsButton">Submit Defects & Get Verdict</button>
+            <button type="button" id="submitDefectsButton" disabled>Submit Defects & Get Verdict</button>
         </div>
 
-        <div id="verdictMessage" class="results-section hidden"></div>
+        <div id="verdictMessage" class="results-section hidden" aria-live="assertive"></div>
 
         <div id="defectChecklist" class="form-section checklist-section hidden">
             <h4>Defect Types Found (Optional)</h4>
@@ -174,7 +174,7 @@
             <p>Add up to 5 photos to document defects. Click a photo to annotate or remove.</p>
             <div class="photo-options">
                 <label for="uploadMultiplePhotos" class="upload-button">Upload Multiple Photos
-                    <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;">
+                    <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;" aria-label="Upload multiple photos for defect documentation">
                 </label>
             </div>
             <div id="photoPreview" class="photo-preview">
@@ -186,7 +186,7 @@
         <!-- Annotation Modal -->
         <div id="annotationModal" class="modal hidden" role="dialog" aria-labelledby="modalTitle">
             <div class="modal-content">
-                <span class="close-modal">×</span>
+                <span class="close-modal" aria-label="Close annotation modal">×</span>
                 <h3 id="modalTitle">Annotate Photo</h3>
                 <div class="annotation-tools">
                     <button id="drawCircleButton" class="tool-button">Draw Circle</button>
@@ -218,8 +218,8 @@
         </footer>
     </div>
 
-    <!-- Include the parts list before the main script -->
-    <script src="partsList.js"></script>
-    <script src="script.js"></script>
+    <!-- Include the parts list and main script -->
+    <script defer src="partsList.js"></script>
+    <script defer src="script.js"></script>
 </body>
 </html>
