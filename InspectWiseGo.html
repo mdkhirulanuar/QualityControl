@@ -1,162 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#2575fc">
-  <meta name="description" content="InspectWise Go: Smart Sampling Tool for Quality Control">
-  <title>InspectWise Go - KPI Electrical</title>
-  <link rel="icon" href="/QualityControl/icon-192.png">
-  <link rel="manifest" href="/QualityControl/manifest.json">
-  <link rel="stylesheet" href="/QualityControl/style.css">
+    <!--
+        Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdnjs.cloudflare.com; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';">
+    <title>InspectWise Go</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2575fc">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqzqGVkb3sg==" crossorigin="anonymous"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js" integrity="sha512-P3z5YHtqjIxRAu1cDSvJe0kZNAMbCLzRDPkLULbyJI6i6WBr4ZCPc2iLsF6v4NXdaL5v2P2evCuJNZvY65bg6ng==" crossorigin="anonymous"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" integrity="sha512-CeA5Z4fW2pV2kJ3vL2dPZfN++7Ckpz/b/dGPtG/n6y0qO8r0nq4b/iUjM7Wzb++2M8v6V5y5G7v2z5y5z7z2z5==" crossorigin="anonymous"></script>
 </head>
 <body>
-  <header>
-    <h1>InspectWise Go</h1>
-    <p>Smart Sampling Tool for Quality Control Inspections</p>
-  </header>
+    <div class="container" role="main">
+        <header>
+            <h1>InspectWise Go</h1>
+            <p style="text-align: center;">InspectWise Go: Smart Sampling Tool</p>
+        </header>
 
-  <main>
-    <form id="aqlForm">
-      <section class="batch-info">
-        <h2>Batch Identification</h2>
-        <div class="form-group">
-          <label for="qcInspector">QC Inspector Name:</label>
-          <input type="text" id="qcInspector" required aria-required="true">
+        <div id="error-message" class="error-message" style="display: none;" role="alert"></div>
+
+        <form id="aqlForm" aria-label="Quality Control Inspection Form">
+            <section class="form-section batch-info" aria-labelledby="batch-info-heading">
+                <h2 id="batch-info-heading">Batch Identification</h2>
+                <div class="form-grid">
+                    <div>
+                        <label for="qcInspector">QC Inspector:</label>
+                        <select id="qcInspector" name="qcInspector" aria-required="true" required>
+                            <option value="">-- Select QC Inspector --</option>
+                            <option value="Khirul Anuar">KHIRUL ANUAR</option>
+                            <option value="Hemapria">HEMAPRIA</option>
+                            <option value="Popo">POPO</option>
+                            <option value="Dharisini">DHARISINI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="machineNumber">Machine No:</label>
+                        <select id="machineNumber" name="machineNumber" aria-required="true" required>
+                            <option value="">-- Select Machine No --</option>
+                            <option value="M01">M01</option>
+                            <option value="M02">M02</option>
+                            <option value="M03">M03</option>
+                            <option value="M04">M04</option>
+                            <option value="M05">M05</option>
+                            <option value="M06">M06</option>
+                            <option value="M07">M07</option>
+                            <option value="M08">M08</option>
+                            <option value="M09">M09</option>
+                            <option value="M10">M10</option>
+                            <option value="M11">M11</option>
+                            <option value="M12">M12</option>
+                            <option value="M13">M13</option>
+                            <option value="M14">M14</option>
+                            <option value="M15">M15</option>
+                            <option value="M16">M16</option>
+                            <option value="M17">M17</option>
+                            <option value="M18">M18</option>
+                            <option value="M19">M19</option>
+                            <option value="M20">M20</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="partName">Part Name:</label>
+                        <select id="partName" name="partName" aria-required="true" required>
+                            <option value="">-- Select Part Name --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="partId">Part ID:</label>
+                        <input type="text" id="partId" name="partId" readonly aria-readonly="true">
+                    </div>
+                    <div>
+                        <label for="poNumber">PO Number:</label>
+                        <input type="text" id="poNumber" name="poNumber" placeholder="Enter PO Number" aria-required="true" required>
+                    </div>
+                    <div>
+                        <label for="productionDate">Production Date:</label>
+                        <input type="date" id="productionDate" name="productionDate" aria-required="true" required>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section lot-details" aria-labelledby="lot-details-heading" style="display: none;">
+                <h2 id="lot-details-heading">Lot & Sampling Details</h2>
+                <div class="form-grid">
+                    <div>
+                        <label for="numBoxes">Number of Boxes:</label>
+                        <input type="number" id="numBoxes" name="numBoxes" min="1" inputmode="numeric" aria-required="true" required>
+                    </div>
+                    <div>
+                        <label for="pcsPerBox">Pieces per Box:</label>
+                        <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" inputmode="numeric" aria-required="true" required>
+                    </div>
+                    <div>
+                        <label for="lotSize">Total Lot Size:</label>
+                        <input type="number" id="lotSize" name="lotSize" readonly aria-readonly="true" required>
+                    </div>
+                    <div>
+                        <label for="aql">Acceptable Quality Level:</label>
+                        <select id="aql" name="aql" aria-required="true" required>
+                            <option value="">-- Select AQL Quality --</option>
+                            <option value="1.0">High Quality (AQL 1.0%)</option>
+                            <option value="2.5">Medium Quality (AQL 2.5%)</option>
+                            <option value="4.0">Low Quality (AQL 4.0%)</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <div class="button-group" style="display: none;">
+                <button type="button" id="calculateButton" disabled>Calculate Sampling Plan</button>
+                <button type="button" id="resetButton">Reset</button>
+            </div>
+        </form>
+
+        <section id="results" class="results-section" style="display: none;" aria-live="polite">
+            <p class="initial-message">Please enter batch details, select AQL quality level, and click calculate.</p>
+        </section>
+
+        <section id="defectsInputArea" class="form-section" style="display: none;" aria-labelledby="defects-heading">
+            <h3 id="defects-heading">Defect Input</h3>
+            <label for="defectsFound">Number of Defects Found:</label>
+            <select id="defectsFound" name="defectsFound" aria-required="true" required>
+                <option value="" disabled selected>-- Select Number --</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+            <button type="button" id="submitDefectsButton" disabled>Submit Defects & Get Verdict</button>
+        </section>
+
+        <section id="verdictMessage" class="results-section" style="display: none;" aria-live="assertive"></section>
+
+        <section id="defectChecklist" class="form-section checklist-section" style="display: none;" aria-labelledby="defect-checklist-heading">
+            <h3 id="defect-checklist-heading">Defect Types Found (Optional)</h3>
+            <div class="checklist-container">
+                <label><input type="checkbox" name="defect_type" value="Plastic - Scratches"> Plastic - Scratches</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Short Mould"> Plastic - Short Mould</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Painting Peel Off"> Plastic - Painting Peel Off</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Silkscreen Peel Off / Poor"> Plastic - Silkscreen Peel Off / Poor</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Weld/Joint Line Visible"> Plastic - Weld/Joint Line Visible</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Stressed Mark"> Plastic - Stressed Mark</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Bubble"> Plastic - Bubble</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Warped / Deformed"> Plastic - Warped / Deformed</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Excessive Flashes"> Plastic - Excessive Flashes</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Dirty / Stain"> Plastic - Dirty / Stain</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Oil Stain"> Plastic - Oil Stain</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Silverstreak"> Plastic - Silverstreak</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Brittle"> Plastic - Brittle</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Sink Mark"> Plastic - Sink Mark</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Flow Mark (Cosmetic)"> Plastic - Flow Mark (Cosmetic)</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Ejector Mark Visible"> Plastic - Ejector Mark Visible</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Cracked Part"> Plastic - Cracked Part</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Broken Part"> Plastic - Broken Part</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Un-shining / Poor Gloss"> Plastic - Un-shining / Poor Gloss</label>
+                <label><input type="checkbox" name="defect_type" value="Plastic - Spots / Black Dot"> Plastic - Spots / Black Dot</label>
+                <label><input type="checkbox" name="defect_type" value="Other"> Other (Specify if needed in report notes)</label>
+            </div>
+        </section>
+
+        <section id="photoCaptureArea" class="form-section photo-section" style="display: none;" aria-labelledby="photo-capture-heading">
+            <h3 id="photo-capture-heading">Photo Documentation (Optional)</h3>
+            <p>Add up to 5 photos to document defects. Tap a photo to annotate or remove.</p>
+            <div class="photo-options">
+                <label for="uploadMultiplePhotos" class="upload-button">Upload Photos
+                    <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;">
+                </label>
+            </div>
+            <div id="photoPreview" class="photo-preview" role="region" aria-live="polite">
+                <p>No photos added yet.</p>
+            </div>
+            <p id="photoCount" aria-live="polite">Photos: 0/5</p>
+        </section>
+
+        <div id="annotationModal" class="modal" style="display: none;" role="dialog" aria-labelledby="annotation-heading">
+            <div class="modal-content">
+                <span class="close-modal" role="button" aria-label="Close annotation modal">×</span>
+                <h3 id="annotation-heading">Annotate Photo</h3>
+                <div class="annotation-tools">
+                    <button id="drawCircleButton" class="tool-button" aria-label="Draw Circle">Draw Circle</button>
+                    <button id="drawTextButton" class="tool-button" aria-label="Add Text">Add Text</button>
+                    <button id="drawFreehandButton" class="tool-button" aria-label="Freehand Draw">Freehand Draw</button>
+                    <button id="undoButton" class="tool-button" aria-label="Undo">Undo</button>
+                    <button id="saveAnnotationButton" class="tool-button save-button" aria-label="Save Annotation">Save</button>
+                </div>
+                <canvas id="annotationCanvas" class="annotation-canvas" role="img" aria-label="Photo annotation canvas"></canvas>
+            </div>
         </div>
-        <div class="form-group">
-          <label for="machineNumber">Machine No:</label>
-          <input type="text" id="machineNumber" required aria-required="true">
+
+        <div class="button-group">
+            <button type="button" id="generateReportButton" style="display: none;">Generate Full Report</button>
         </div>
-        <div class="form-group">
-          <label for="partName">Part Name:</label>
-          <select id="partName" required aria-required="true"></select>
-        </div>
-        <div class="form-group">
-          <label for="partId">Part ID:</label>
-          <input type="text" id="partId" readonly>
-        </div>
-        <div class="form-group">
-          <label for="poNumber">PO Number:</label>
-          <input type="text" id="poNumber" required aria-required="true">
-        </div>
-        <div class="form-group">
-          <label for="productionDate">Production Date:</label>
-          <input type="date" id="productionDate" required aria-required="true">
-        </div>
-      </section>
 
-      <section class="lot-details">
-        <h2>Lot Details</h2>
-        <div class="form-group">
-          <label for="numBoxes">Number of Boxes:</label>
-          <input type="number" id="numBoxes" min="1" aria-describedby="numBoxesHelp">
-          <small id="numBoxesHelp">Enter the total number of boxes in the lot.</small>
-        </div>
-        <div class="form-group">
-          <label for="pcsPerBox">Pieces per Box:</label>
-          <input type="number" id="pcsPerBox" min="1" aria-describedby="pcsPerBoxHelp">
-          <small id="pcsPerBoxHelp">Enter the number of pieces per box.</small>
-        </div>
-        <div class="form-group">
-          <label for="lotSize">Total Lot Size:</label>
-          <input type="number" id="lotSize" readonly aria-describedby="lotSizeHelp">
-          <small id="lotSizeHelp">Automatically calculated as Number of Boxes × Pieces per Box.</small>
-        </div>
-        <div class="form-group">
-          <label for="aql">Acceptable Quality Level (AQL):</label>
-          <select id="aql" required aria-required="true">
-            <option value="">-- Select AQL --</option>
-            <option value="1.0">High Quality (AQL 1.0%)</option>
-            <option value="2.5">Medium Quality (AQL 2.5%)</option>
-            <option value="4.0">Low Quality (AQL 4.0%)</option>
-          </select>
-        </div>
-      </section>
+        <section id="finalReportArea" class="results-section report-area" style="display: none;" aria-labelledby="report-heading">
+            <h2 id="report-heading">Final Inspection Report</h2>
+            <div id="reportContent" role="document"></div>
+            <div class="button-group">
+                <button type="button" id="savePdfButton" style="display: none;">Save as PDF</button>
+                <button type="button" id="printButton" style="display: none;">Print Report</button>
+            </div>
+        </section>
 
-      <div class="button-group">
-        <button type="button" id="calculateButton" disabled>Calculate Sampling Plan</button>
-        <button type="button" id="resetButton">Reset</button>
-      </div>
-    </form>
-
-    <div id="error-message" class="error-message hidden" role="alert"></div>
-
-    <section id="results">
-      <p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>
-    </section>
-
-    <section id="defectsInputArea" style="display: none;">
-      <h2>Enter Inspection Results</h2>
-      <div class="form-group">
-        <label for="defectsFound">Number of Defects Found:</label>
-        <input type="number" id="defectsFound" min="0" value="0" aria-describedby="defectsFoundHelp">
-        <small id="defectsFoundHelp">Enter the total number of defects found during inspection.</small>
-      </div>
-      <button type="button" id="submitDefectsButton" disabled>Submit Defects</button>
-    </section>
-
-    <section id="photoCaptureArea" style="display: none;">
-      <h2>Photo Documentation</h2>
-      <p>Add photos of defects (max 5, 5MB each).</p>
-      <div class="form-group">
-        <label for="uploadMultiplePhotos">Upload Photos:</label>
-        <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple>
-      </div>
-      <p id="photoCount">Photos: 0/5</p>
-      <div id="photoPreview"></div>
-    </section>
-
-    <section id="defectChecklist" style="display: none;">
-      <h2>Defect Type Checklist</h2>
-      <div class="checkbox-group">
-        <label><input type="checkbox" name="defect_type" value="Scratch"> Scratch</label>
-        <label><input type="checkbox" name="defect_type" value="Dent"> Dent</label>
-        <label><input type="checkbox" name="defect_type" value="Crack"> Crack</label>
-        <label><input type="checkbox" name="defect_type" value="Misalignment"> Misalignment</label>
-        <label><input type="checkbox" name="defect_type" value="Color Variance"> Color Variance</label>
-        <label><input type="checkbox" name="defect_type" value="Other"> Other</label>
-      </div>
-    </section>
-
-    <section id="verdictMessage" style="display: none;"></section>
-
-    <button id="generateReportButton" style="display: none;">Generate Report</button>
-
-    <section id="finalReportArea" style="display: none;">
-      <h2>Final Report</h2>
-      <div id="reportContent"></div>
-      <div class="report-buttons">
-        <button id="savePdfButton" style="display: none;">Save as PDF</button>
-        <button id="printButton" style="display: none;">Print Report</button>
-      </div>
-    </section>
-  </main>
-
-  <div id="annotationModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <span class="close-modal">&times;</span>
-      <h2>Annotate Photo</h2>
-      <div class="annotation-tools">
-        <button id="drawCircleButton">Circle</button>
-        <button id="drawTextButton">Text</button>
-        <button id="drawFreehandButton">Freehand</button>
-        <button id="undoButton">Undo</button>
-        <button id="saveAnnotationButton">Save</button>
-      </div>
-      <canvas id="annotationCanvas"></canvas>
+        <footer class="footer">
+            <p>Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.</p>
+        </footer>
     </div>
-  </div>
 
-  <footer>
-    <p>&copy; 2025 KPI Electrical Manufacturing Sdn. Bhd. All rights reserved.</p>
-  </footer>
-
-  <script defer src="/QualityControl/partsList.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-  <script defer src="/QualityControl/script.js"></script>
+    <script src="partsList.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
