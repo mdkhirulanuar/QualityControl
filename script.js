@@ -320,7 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // --- Photo Handling ---
-  const updatePhotoPreview = () => {
+  // --- Photo Handling ---
+const updatePhotoPreview = () => {
     elements.photoPreview.innerHTML = capturedPhotos.length === 0
       ? '<p>No photos added yet.</p>'
       : capturedPhotos.map((photo, index) => `
@@ -329,38 +330,86 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
     elements.uploadMultiplePhotos.disabled = capturedPhotos.length >= MAX_PHOTOS;
     if (validateDefectsSection()) fadeIn(elements.generateReportButton);
-  };
+};
 
-  const addPhoto = (base64) => {
+const addPhoto = (base64) => {
     if (capturedPhotos.length >= MAX_PHOTOS) {
-      displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
-      return false;
+        displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
+        return false;
     }
     capturedPhotos.push(base64);
     updatePhotoPreview();
     clearError();
     return true;
-  };
+};
 
-  const removePhoto = (index) => {
+const removePhoto = (index) => {
     capturedPhotos.splice(index, 1);
     updatePhotoPreview();
-  };
+};
 
-  const handleFileUpload = (files) => {
-    const validImages = Array.from(files).filter(file => file.type.startsWith('image/') && file.size < 5 * 1024 * 1024);
-    if (validImages.length === 0) {
-      displayError('No valid images selected (max 5MB each).');
-      return;
-    }
-    validImages.forEach(file => {
-      if (capturedPhotos.length >= MAX_PHOTOS) return;
-      const reader = new FileReader();
-      reader.onload = () => addPhoto(reader.result);
-      reader.onerror = () => displayError('Error reading image.');
-      reader.readAsDataURL(file);
+const handleFileUpload = (files) => {
+    const validImages = Array.from(files).filter(file => {
+        const isImage = file.type.startsWith('image/');
+        const isUnderLimit = file.size < 5 * 1024 * 1024; // 5MB limit
+        if (!isImage) displayError('Only image files are supported.');
+        if (!isUnderLimit) displayError('File size exceeds 5MB limit.');
+        return isImage && isUnderLimit;
     });
-  };
+    if (validImages.length === 0) return;
+
+    validImages.forEach(file => {
+        if (capturedPhotos.length >= MAX_PHOTOS) return;
+        const reader = new FileReader();
+        reader.onload = () => addPhoto(reader.result);
+        reader.onerror = () => displayError('Error reading image file.');
+        reader.readAsDataURL(file);
+    });
+};
+
+// --- Event Listeners (Updated Photo Section) ---
+const triggerFileInput = (e) => {
+    if (e.type === 'touchend' || e.type === 'click') {
+        elements.uploadMultiplePhotos.click();
+    }
+};
+
+elements.photoOptions.querySelector('.upload-button').addEventListener('click', triggerFileInput);
+elements.photoOptions.querySelector('.upload-button').addEventListener('touchend', triggerFileInput, { passive: true });
+
+elements.uploadMultiplePhotos.addEventListener('change', (e) => {
+    if (!navigator.onLine) {
+        displayError('Upload failed. Please check your internet connection.');
+        return;
+    }
+    handleFileUpload(e.target.files);
+    e.target.value = ''; // Reset input to allow re-uploading the same file
+});
+
+// --- Fetch Event Listener for Service Worker Bypass ---
+self.addEventListener('fetch', event => {
+    if (event.request.method === 'POST' || event.request.url.includes('upload')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+    // Existing fetch logic...
+});
+
+// --- Initial Setup (Add Permission Check) ---
+const checkMobilePermissions = () => {
+    if ('permissions' in navigator) {
+        navigator.permissions.query({ name: 'photos' }).then(permissionStatus => {
+            if (permissionStatus.state === 'denied') {
+                displayError('Photo access is denied. Please enable permissions in your browser settings.');
+            }
+            permissionStatus.onchange = () => checkMobilePermissions();
+        });
+    } else {
+        console.warn('Permission API not supported. Ensure manual permission is granted.');
+    }
+};
+
+checkMobilePermissions();
 
   // --- Annotation Functions ---
   const initAnnotationCanvas = (imageSrc, index) => {
