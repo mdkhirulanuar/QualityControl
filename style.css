@@ -218,6 +218,21 @@ button.active {
     display: block;
     touch-action: manipulation;
     text-align: center;
+    /* Override default file input styling */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-indent: -9999px; /* Hide default text like "Choose files" */
+    overflow: hidden;
+    position: relative;
+}
+
+.upload-photo-button::-webkit-file-upload-button {
+    display: none;
+}
+
+.upload-photo-button::file-selector-button {
+    display: none;
 }
 
 .upload-photo-button:hover:not(:disabled) {
@@ -233,18 +248,6 @@ button.active {
 .upload-photo-button:focus {
     outline: 2px solid #4c6ef5;
     outline-offset: 2px;
-}
-
-/* Hide the default file input while keeping it functional */
-.hidden-input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
 }
 
 .photo-preview {
