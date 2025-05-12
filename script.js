@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const isValid = !isNaN(defectsFound) && defectsFound >= 0 && currentSamplingPlan;
     submitDefectsButton.disabled = !isValid;
     if (!isValid) {
-      fadeOut(verdictMessageDivCPR0
+      fadeOut(verdictMessageDiv);
       fadeOut(photoCaptureArea);
       fadeOut(finalReportAreaDiv);
       fadeOut(generateReportButton);
@@ -364,9 +364,10 @@ document.addEventListener('DOMContentLoaded', function() {
       ${samplingInstructions}
     `;
 
+    resultsDiv.setAttribute('aria-live', 'polite');
     fadeIn(resultsDiv);
     fadeIn(defectsInputArea);
-    fadeOut(photoCaptureArea);
+    fadeIn(photoCaptureArea);
     fadeOut(verdictMessageDiv);
     fadeOut(defectChecklistDiv);
     fadeOut(finalReportAreaDiv);
@@ -399,6 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
       : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
     const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
+    verdictMessageDiv.setAttribute('aria-live', 'assertive');
     fadeIn(verdictMessageDiv);
     fadeIn(defectChecklistDiv);
     fadeIn(photoCaptureArea);
@@ -629,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     const { reportId, aqlText, defectsFound } = getReportData();
     if (isNaN(defectsFound) || defectsFound < 0) {
-      displayError('Enter a valid number defects found.');
+      displayError('Enter a valid number of defects found.');
       return;
     }
 
@@ -909,4 +911,22 @@ document.addEventListener('DOMContentLoaded', function() {
     button.addEventListener('touchend', () => button.classList.remove('active'));
   });
 
-  // --- Initial Setup
+  // --- Service Worker Registration ---
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(registration => {
+        console.log('ServiceWorker registered with scope:', registration.scope);
+      })
+      .catch(err => {
+        console.error('ServiceWorker registration failed:', err);
+        displayError('Offline support may not be available.', 'system');
+      });
+  }
+
+  // --- Initial Setup ---
+  resetAll();
+  populatePartNameDropdown();
+  if (typeof partsList === 'undefined') {
+    displayError('Failed to load parts list. Please refresh the page.', 'system');
+  }
+});
