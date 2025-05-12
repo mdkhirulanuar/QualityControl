@@ -3,6 +3,13 @@
 */
 
 document.addEventListener('DOMContentLoaded', function() {
+  // --- Configuration ---
+  const config = {
+    qcMonitorContact: 'qaqc@kpielectrical.com.my or WhatsApp to +60182523255',
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    maxPhotos: 5
+  };
+
   // --- DOM Element Selection ---
   const aqlForm = document.getElementById('aqlForm');
   const qcInspectorInput = document.getElementById('qcInspector');
@@ -50,17 +57,73 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- State Variables ---
   let currentSamplingPlan = null;
   let capturedPhotos = [];
-  const MAX_PHOTOS = 5;
   let fabricCanvas = null;
   let currentPhotoIndex = null;
   let annotationHistory = [];
   let currentMode = null;
-  const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately";
-
   const copyrightNotice = "Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
+
+  // --- Helper Functions ---
+  function debounce(fn, ms) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn(...args), ms);
+    };
+  }
+
+  function displayError(message, type = 'user') {
+    errorMessageDiv.textContent = message;
+    errorMessageDiv.className = `error-message ${type}-error`;
+    errorMessageDiv.style.display = 'block';
+    errorMessageDiv.focus();
+  }
+
+  function clearError() {
+    errorMessageDiv.textContent = '';
+    errorMessageDiv.className = 'error-message hidden';
+    errorMessageDiv.style.display = 'none';
+  }
+
+  function showLoading() {
+    document.body.classList.add('loading');
+  }
+
+  function hideLoading() {
+    document.body.classList.remove('loading');
+  }
+
+  function fadeIn(element) {
+    element.style.opacity = 0;
+    element.style.display = 'block';
+    let op = 0;
+    const timer = setInterval(() => {
+      if (op >= 1) clearInterval(timer);
+      element.style.opacity = op;
+      op += 0.1;
+    }, 30);
+  }
+
+  function fadeOut(element) {
+    let op = 1;
+    const timer = setInterval(() => {
+      if (op <= 0) {
+        clearInterval(timer);
+        element.style.display = 'none';
+      }
+      element.style.opacity = op;
+      op -= 0.1;
+    }, 30);
+  }
 
   // --- Populate Part Name Dropdown ---
   function populatePartNameDropdown() {
+    if (typeof partsList === 'undefined' || !Array.isArray(partsList) || partsList.length === 0) {
+      displayError('Parts list is unavailable. Please contact support.', 'system');
+      partNameInput.innerHTML = '<option value="">-- Parts Unavailable --</option>';
+      partNameInput.disabled = true;
+      return;
+    }
     partNameInput.innerHTML = '<option value="">-- Select Part Name --</option>';
     const uniquePartNames = [...new Set(partsList.map(part => part.partName))];
     uniquePartNames.forEach(name => {
@@ -69,15 +132,22 @@ document.addEventListener('DOMContentLoaded', function() {
       option.textContent = name;
       partNameInput.appendChild(option);
     });
+    partNameInput.disabled = false;
   }
 
   // --- Auto-Populate Part ID ---
-  partNameInput.addEventListener('change', function() {
+  function handlePartNameChange() {
     const selectedPartName = partNameInput.value;
     const part = partsList.find(p => p.partName === selectedPartName);
     partIdInput.value = part ? part.partId : '';
+    const description = document.createElement('div');
+    description.id = 'part-selection';
+    description.className = 'sr-only';
+    description.textContent = `Selected part: ${selectedPartName || 'None'}`;
+    partNameInput.parentElement.appendChild(description);
+    setTimeout(() => description.remove(), 1000);
     validateBatchSection();
-  });
+  }
 
   // --- AQL Data ---
   const sampleSizeCodeLetters_Level_II = {
@@ -102,50 +172,8 @@ document.addEventListener('DOMContentLoaded', function() {
     'M': { sampleSize: 315, plans: { '1.0': { ac: 7, re: 8 }, '2.5': { ac: 14, re: 15 }, '4.0': { ac: 21, re: 22 } } },
     'N': { sampleSize: 500, plans: { '1.0': { ac: 10, re: 11 }, '2.5': { ac: 21, re: 22 }, '4.0': { ac: 21, re: 22 } } },
     'P': { sampleSize: 800, plans: { '1.0': { ac: 14, re: 15 }, '2.5': { ac: 21, re: 22 }, '4.0': { ac: 21, re: 22 } } },
-    'Q': { sampleSize: 1250, plans: { '1.0': { ac: 21, re: 22 }, '2.5': { ac: 21, re: 22 }, '4.0': { ac: 21, re: 22 } } },
-    'R': { sampleSize: 2000, plans: { '1.0': { ac: 21, re: 22 }, '2.5': { ac: 21, re: 22 }, '4.0': { ac: 21, re: 22 } } }
+    'Q': { sampleSize: 1250, plans: { '1.0': { ac: 21, re: 22 }, '2.5': { ac: 21, re: 22 }, '4.0': { ac: 21, re: 22 } } }
   };
-
-  // --- Helper Functions ---
-  function displayError(message) {
-    errorMessageDiv.textContent = message;
-    errorMessageDiv.style.display = 'block';
-  }
-
-  function clearError() {
-    errorMessageDiv.textContent = '';
-    errorMessageDiv.style.display = 'none';
-  }
-
-  function getLotSizeRange(lotSize) {
-    if (lotSize >= 2 && lotSize <= 8) return '2-8';
-    if (lotSize >= 9 && lotSize <= 15) return '9-15';
-    if (lotSize >= 16 && lotSize <= 25) return '16-25';
-    if (lotSize >= 26 && lotSize <= 50) return '26-50';
-    if (lotSize >= 51 && lotSize <= 90) return '51-90';
-    if (lotSize >= 91 && lotSize <= 150) return '91-150';
-    if (lotSize >= 151 && lotSize <= 280) return '151-280';
-    if (lotSize >= 281 && lotSize <= 500) return '281-500';
-    if (lotSize >= 501 && lotSize <= 1200) return '501-1200';
-    if (lotSize >= 1201 && lotSize <= 3200) return '1201-3200';
-    if (lotSize >= 3201 && lotSize <= 10000) return '3201-10000';
-    if (lotSize >= 10001 && lotSize <= 35000) return '10001-35000';
-    if (lotSize >= 35001 && lotSize <= 150000) return '35001-150000';
-    if (lotSize >= 150001 && lotSize <= 500000) return '150001-500000';
-    if (lotSize >= 500001) return '500001+';
-    return null;
-  }
-
-  function calculateLotSize() {
-    const numBoxes = parseInt(numBoxesInput.value, 10);
-    const pcsPerBox = parseInt(pcsPerBoxInput.value, 10);
-    if (!isNaN(numBoxes) && numBoxes > 0 && !isNaN(pcsPerBox) && pcsPerBox > 0) {
-      lotSizeInput.value = numBoxes * pcsPerBox;
-    } else {
-      lotSizeInput.value = '';
-    }
-    validateLotSection();
-  }
 
   // --- Validation Functions ---
   function validateBatchSection() {
@@ -198,8 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const isValid = !isNaN(defectsFound) && defectsFound >= 0 && currentSamplingPlan;
     submitDefectsButton.disabled = !isValid;
     if (!isValid) {
-      fadeOut(verdictMessageDiv);
-      fadeOut(defectChecklistDiv);
+      fadeOut(verdictMessageDivCPR0
       fadeOut(photoCaptureArea);
       fadeOut(finalReportAreaDiv);
       fadeOut(generateReportButton);
@@ -207,6 +234,17 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(printButton);
     }
     return isValid;
+  }
+
+  function calculateLotSize() {
+    const numBoxes = parseInt(numBoxesInput.value, 10);
+    const pcsPerBox = parseInt(pcsPerBoxInput.value, 10);
+    if (!isNaN(numBoxes) && numBoxes > 0 && !isNaN(pcsPerBox) && pcsPerBox > 0) {
+      lotSizeInput.value = numBoxes * pcsPerBox;
+    } else {
+      lotSizeInput.value = '';
+    }
+    validateLotSection();
   }
 
   // --- Calculate Sampling Plan ---
@@ -265,28 +303,109 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
-  // --- Fade In/Out Helpers ---
-  function fadeIn(element) {
-    element.style.opacity = 0;
-    element.style.display = 'block';
-    let op = 0;
-    const timer = setInterval(() => {
-      if (op >= 1) clearInterval(timer);
-      element.style.opacity = op;
-      op += 0.1;
-    }, 30);
+  function getLotSizeRange(lotSize) {
+    if (lotSize >= 2 && lotSize <= 8) return '2-8';
+    if (lotSize >= 9 && lotSize <= 15) return '9-15';
+    if (lotSize >= 16 && lotSize <= 25) return '16-25';
+    if (lotSize >= 26 && lotSize <= 50) return '26-50';
+    if (lotSize >= 51 && lotSize <= 90) return '51-90';
+    if (lotSize >= 91 && lotSize <= 150) return '91-150';
+    if (lotSize >= 151 && lotSize <= 280) return '151-280';
+    if (lotSize >= 281 && lotSize <= 500) return '281-500';
+    if (lotSize >= 501 && lotSize <= 1200) return '501-1200';
+    if (lotSize >= 1201 && lotSize <= 3200) return '1201-3200';
+    if (lotSize >= 3201 && lotSize <= 10000) return '3201-10000';
+    if (lotSize >= 10001 && lotSize <= 35000) return '10001-35000';
+    if (lotSize >= 35001 && lotSize <= 150000) return '35001-150000';
+    if (lotSize >= 150001 && lotSize <= 500000) return '150001-500000';
+    if (lotSize >= 500001) return '500001+';
+    return null;
   }
 
-  function fadeOut(element) {
-    let op = 1;
-    const timer = setInterval(() => {
-      if (op <= 0) {
-        clearInterval(timer);
-        element.style.display = 'none';
-      }
-      element.style.opacity = op;
-      op -= 0.1;
-    }, 30);
+  // --- Display Sampling Plan ---
+  function displaySamplingPlan(plan) {
+    const lotSizeVal = parseInt(lotSizeInput.value, 10);
+    let samplingInstructions = '';
+    const numBoxesVal = parseInt(numBoxesInput.value, 10);
+    const pcsPerBoxVal = parseInt(pcsPerBoxInput.value, 10);
+
+    if (isNaN(lotSizeVal) || lotSizeVal <= 0) {
+      samplingInstructions = '<p style="color: red;">Cannot calculate sampling instructions without valid lot size.</p>';
+    } else if (plan.sampleSize >= lotSizeVal) {
+      samplingInstructions = '<p><strong>Sampling Instructions:</strong> Inspect all pieces from all boxes (100% inspection required).</p>';
+    } else if (isNaN(numBoxesVal) || numBoxesVal <= 0 || isNaN(pcsPerBoxVal) || pcsPerBoxVal <= 0) {
+      samplingInstructions = '<p style="color: red;">Enter valid Number of Boxes and Pieces per Box.</p>';
+    } else {
+      const minBoxesToOpen = Math.ceil(plan.sampleSize / pcsPerBoxVal);
+      const boxesToOpen = Math.min(minBoxesToOpen, numBoxesVal);
+      const pcsPerOpenedBox = Math.ceil(plan.sampleSize / boxesToOpen);
+      const totalInspected = boxesToOpen * pcsPerOpenedBox;
+
+      samplingInstructions = `
+        <p><strong>Sampling Instructions:</strong></p>
+        <ul>
+          <li>Randomly select and open <strong>${boxesToOpen}</strong> box(es) (out of ${numBoxesVal}).</li>
+          <li>From each opened box, inspect <strong>${pcsPerOpenedBox}</strong> piece(s).</li>
+        </ul>
+        <p><small>(Total pieces inspected: ${totalInspected}${totalInspected > plan.sampleSize ? ', slightly exceeding the minimum sample size of ' + plan.sampleSize : ''})</small></p>`;
+    }
+
+    const aqlText = getAqlText(aqlSelect.value);
+
+    resultsDiv.innerHTML = `
+      <p><strong>Sampling Plan Calculated:</strong></p>
+      <p>Lot Size: ${lotSizeInput.value}</p>
+      <p>Inspection Level: General Level II (Normal)</p>
+      <p>Acceptable Quality Level: ${aqlText}</p>
+      <p>Sample Size Code Letter: <strong>${plan.codeLetter}</strong></p>
+      <p>Sample Size: <strong>${plan.sampleSize}</strong></p>
+      <p>Acceptance Number (Ac): Max ${plan.accept} defects.</p>
+      <p>Rejection Number (Re): ${plan.reject} or more defects, reject lot.</p>
+      ${samplingInstructions}
+    `;
+
+    fadeIn(resultsDiv);
+    fadeIn(defectsInputArea);
+    fadeOut(photoCaptureArea);
+    fadeOut(verdictMessageDiv);
+    fadeOut(defectChecklistDiv);
+    fadeOut(finalReportAreaDiv);
+    fadeOut(generateReportButton);
+    fadeOut(savePdfButton);
+    fadeOut(printButton);
+  }
+
+  // --- Submit Defects ---
+  function submitDefects() {
+    clearError();
+    const defectsFound = parseInt(defectsFoundInput.value, 10);
+    if (isNaN(defectsFound) || defectsFound < 0) {
+      displayError('Please enter a valid number of defects (0 or more).');
+      fadeOut(verdictMessageDiv);
+      fadeOut(defectChecklistDiv);
+      fadeOut(photoCaptureArea);
+      fadeOut(finalReportAreaDiv);
+      fadeOut(generateReportButton);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+      return;
+    }
+    if (!currentSamplingPlan) {
+      displayError('Please calculate the sampling plan first.');
+      return;
+    }
+    const verdict = defectsFound <= currentSamplingPlan.accept
+      ? `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit: ${currentSamplingPlan.accept})`
+      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
+    const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
+    verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
+    fadeIn(verdictMessageDiv);
+    fadeIn(defectChecklistDiv);
+    fadeIn(photoCaptureArea);
+    fadeIn(generateReportButton);
+    fadeOut(finalReportAreaDiv);
+    fadeOut(savePdfButton);
+    fadeOut(printButton);
   }
 
   // --- Photo Handling ---
@@ -294,18 +413,22 @@ document.addEventListener('DOMContentLoaded', function() {
     photoPreview.innerHTML = capturedPhotos.length === 0
       ? '<p>No photos added yet.</p>'
       : capturedPhotos.map((photo, index) => `
-          <img src="${photo}" alt="Photo ${index + 1}" data-index="${index}" title="Click to annotate or remove">
+          <div class="photo-item">
+            <img src="${photo}" alt="Defect Photo ${index + 1}" data-index="${index}">
+            <button class="annotate-btn" data-index="${index}" aria-label="Annotate photo ${index + 1}">Annotate</button>
+            <button class="remove-btn" data-index="${index}" aria-label="Remove photo ${index + 1}">Remove</button>
+          </div>
         `).join('');
-    photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
-    uploadMultiplePhotosInput.disabled = capturedPhotos.length >= MAX_PHOTOS;
+    photoCount.textContent = `Photos: ${capturedPhotos.length}/${config.maxPhotos}`;
+    uploadMultiplePhotosInput.disabled = capturedPhotos.length >= config.maxPhotos;
     if (validateDefectsSection()) {
       fadeIn(generateReportButton);
     }
   }
 
   function addPhoto(base64) {
-    if (capturedPhotos.length >= MAX_PHOTOS) {
-      displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
+    if (capturedPhotos.length >= config.maxPhotos) {
+      displayError(`Maximum ${config.maxPhotos} photos reached.`);
       return false;
     }
     capturedPhotos.push(base64);
@@ -321,22 +444,35 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function handleFileUpload(files) {
-    const validImages = Array.from(files).filter(file => file.type.startsWith('image/'));
+    showLoading();
+    const validImages = Array.from(files).filter(file => file.type.startsWith('image/') && file.size <= config.maxFileSize);
     if (validImages.length === 0) {
-      displayError('No valid images selected.');
+      displayError('No valid images selected (max 5MB each).');
+      hideLoading();
       return;
     }
+    const remainingSlots = config.maxPhotos - capturedPhotos.length;
+    if (validImages.length > remainingSlots) {
+      displayError(`Only ${remainingSlots} more photo(s) can be added.`);
+      validImages.splice(remainingSlots);
+    }
     validImages.forEach(file => {
-      if (capturedPhotos.length >= MAX_PHOTOS) return;
       const reader = new FileReader();
-      reader.onload = () => addPhoto(reader.result);
-      reader.onerror = () => displayError('Error reading file.');
+      reader.onload = () => {
+        addPhoto(reader.result);
+        hideLoading();
+      };
+      reader.onerror = () => {
+        displayError('Error reading file.', 'system');
+        hideLoading();
+      };
       reader.readAsDataURL(file);
     });
   }
 
   // --- Annotation Functions ---
   function initAnnotationCanvas(imageSrc, index) {
+    showLoading();
     currentPhotoIndex = index;
     const img = new Image();
     img.crossOrigin = "Anonymous";
@@ -443,8 +579,14 @@ document.addEventListener('DOMContentLoaded', function() {
         updatePhotoPreview();
         closeAnnotationModal();
       });
+
+      hideLoading();
     };
-    img.onerror = () => displayError('Error loading image for annotation.');
+    img.onerror = () => {
+      displayError('Failed to load image for annotation.', 'system');
+      closeAnnotationModal();
+      hideLoading();
+    };
     img.src = imageSrc;
   }
 
@@ -465,108 +607,33 @@ document.addEventListener('DOMContentLoaded', function() {
     annotationHistory = [];
   }
 
-  // --- Display Sampling Plan ---
-  function displaySamplingPlan(plan) {
-    const lotSizeVal = parseInt(lotSizeInput.value, 10);
-    let samplingInstructions = '';
-    const numBoxesVal = parseInt(numBoxesInput.value, 10);
-    const pcsPerBoxVal = parseInt(pcsPerBoxInput.value, 10);
-
-    if (isNaN(lotSizeVal) || lotSizeVal <= 0) {
-      samplingInstructions = '<p style="color: red;">Cannot calculate sampling instructions without valid lot size.</p>';
-    } else if (plan.sampleSize >= lotSizeVal) {
-      samplingInstructions = '<p><strong>Sampling Instructions:</strong> Inspect all pieces from all boxes (100% inspection required).</p>';
-    } else if (isNaN(numBoxesVal) || numBoxesVal <= 0 || isNaN(pcsPerBoxVal) || pcsPerBoxVal <= 0) {
-      samplingInstructions = '<p style="color: red;">Enter valid Number of Boxes and Pieces per Box.</p>';
-    } else {
-      const minBoxesToOpen = Math.ceil(plan.sampleSize / pcsPerBoxVal);
-      const boxesToOpen = Math.min(minBoxesToOpen, numBoxesVal);
-      const pcsPerOpenedBox = Math.ceil(plan.sampleSize / boxesToOpen);
-      const totalInspected = boxesToOpen * pcsPerOpenedBox;
-
-      samplingInstructions = `
-        <p><strong>Sampling Instructions:</strong></p>
-        <ul>
-          <li>Randomly select and open <strong>${boxesToOpen}</strong> box(es) (out of ${numBoxesVal}).</li>
-          <li>From each opened box, inspect <strong>${pcsPerOpenedBox}</strong> piece(s).</li>
-        </ul>
-        <p><small>(Total pieces inspected: ${totalInspected}${totalInspected > plan.sampleSize ? ', slightly exceeding the minimum sample size of ' + plan.sampleSize : ''})</small></p>`;
-    }
-
-    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                    `AQL ${aqlSelect.value}%`;
-
-    resultsDiv.innerHTML = `
-      <p><strong>Sampling Plan Calculated:</strong></p>
-      <p>Lot Size: ${lotSizeInput.value}</p>
-      <p>Inspection Level: General Level II (Normal)</p>
-      <p>Acceptable Quality Level: ${aqlText}</p>
-      <p>Sample Size Code Letter: <strong>${plan.codeLetter}</strong></p>
-      <p>Sample Size: <strong>${plan.sampleSize}</strong></p>
-      <p>Acceptance Number (Ac): Max ${plan.accept} defects.</p>
-      <p>Rejection Number (Re): ${plan.reject} or more defects, reject lot.</p>
-      ${samplingInstructions}
-    `;
-
-    fadeIn(resultsDiv);
-    fadeIn(defectsInputArea);
-    fadeOut(photoCaptureArea);
-    fadeOut(verdictMessageDiv);
-    fadeOut(defectChecklistDiv);
-    fadeOut(finalReportAreaDiv);
-    fadeOut(generateReportButton);
-    fadeOut(savePdfButton);
-    fadeOut(printButton);
+  // --- Report Generation ---
+  function getReportData() {
+    const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
+    const aqlText = getAqlText(aqlSelect.value);
+    const defectsFound = parseInt(defectsFoundInput.value, 10) || 0;
+    return { reportId, aqlText, defectsFound };
   }
 
-  // --- Submit Defects ---
-  function submitDefects() {
-    clearError();
-    const defectsFound = parseInt(defectsFoundInput.value, 10);
-    if (isNaN(defectsFound) || defectsFound < 0) {
-      displayError('Please enter a valid number of defects (0 or more).');
-      fadeOut(verdictMessageDiv);
-      fadeOut(defectChecklistDiv);
-      fadeOut(photoCaptureArea);
-      fadeOut(finalReportAreaDiv);
-      fadeOut(generateReportButton);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
-      return;
-    }
-    if (!currentSamplingPlan) {
-      displayError('Please calculate the sampling plan first.');
-      return;
-    }
-    const verdict = defectsFound <= currentSamplingPlan.accept
-      ? `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit: ${currentSamplingPlan.accept})`
-      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
-    const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
-    verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
-    fadeIn(verdictMessageDiv);
-    fadeIn(defectChecklistDiv);
-    fadeIn(photoCaptureArea);
-    fadeIn(generateReportButton);
-    fadeOut(finalReportAreaDiv);
-    fadeOut(savePdfButton);
-    fadeOut(printButton);
+  function getAqlText(aqlValue) {
+    return aqlValue === '1.0' ? 'High Quality (AQL 1.0%)' :
+           aqlValue === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+           aqlValue === '4.0' ? 'Low Quality (AQL 4.0%)' :
+           `AQL ${aqlValue}%`;
   }
 
-  // --- Generate Report ---
   function generateReport() {
     if (!currentSamplingPlan) {
       displayError('Calculate sampling plan and submit defects first.');
       return;
     }
-    const defectsFound = parseInt(defectsFoundInput.value, 10) || 0;
+    const { reportId, aqlText, defectsFound } = getReportData();
     if (isNaN(defectsFound) || defectsFound < 0) {
-      displayError('Enter a valid number of defects found.');
+      displayError('Enter a valid number defects found.');
       return;
     }
 
-    const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
+    showLoading();
     const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
     const verdictColor = verdictText === 'ACCEPT' ? 'green' : 'red';
     const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
@@ -576,17 +643,12 @@ document.addEventListener('DOMContentLoaded', function() {
       ? `<p style="color: orange; font-weight: bold;">Note: 100% inspection required/performed.</p>`
       : '';
 
-    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                    `AQL ${aqlSelect.value}%`;
-
     const reportHTML = `
       <h3>Batch Identification</h3>
       <p><strong>Report ID:</strong> ${reportId}</p>
       <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
       <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
-<p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
+      <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
       <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
       <p><strong>PO Number:</strong> ${poNumberInput.value || 'N/A'}</p>
       <p><strong>Production Date:</strong> ${productionDateInput.value || 'N/A'}</p>
@@ -617,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ${capturedPhotos.length > 0
         ? capturedPhotos.map((photo, index) => `
             <p>Photo ${index + 1}:</p>
-            <img src="${photo}" style="max-width: 200px; border-radius: 8px;">
+            <img src="${photo}" style="max-width: 200px; border-radius: 8px;" alt="Defect Photo ${index + 1}">
           `).join('')
         : '<p>No photos added.</p>'
       }
@@ -625,25 +687,28 @@ document.addEventListener('DOMContentLoaded', function() {
       <p>${copyrightNotice}</p>
     `;
 
-    reportContentDiv.innerHTML = reportHTML;
+    reportContentDiv.innerHTML = DOMPurify.sanitize(reportHTML);
     fadeIn(finalReportAreaDiv);
     fadeIn(savePdfButton);
     fadeIn(printButton);
+    hideLoading();
   }
 
   // --- Save PDF ---
   function saveReportAsPdf() {
+    showLoading();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const margin = 10;
     let y = 20;
+
+    const { reportId, aqlText } = getReportData();
 
     doc.setFontSize(16);
     doc.text("Quality Control Inspection Report", margin, y);
     y += 10;
 
     doc.setFontSize(12);
-    const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
     doc.autoTable({
       startY: y,
       head: [['Field', 'Value']],
@@ -651,8 +716,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ['Report ID', reportId],
         ['QC Inspector', qcInspectorInput.value || 'N/A'],
         ['Machine No', machineNumberInput.value || 'N/A'],
-        ['Part ID', partIdInput.value || 'N/A'],
         ['Part Name', partNameInput.value || 'N/A'],
+        ['Part ID', partIdInput.value || 'N/A'],
         ['PO Number', poNumberInput.value || 'N/A'],
         ['Production Date', productionDateInput.value || 'N/A'],
         ['Inspection Date', new Date().toLocaleDateString()],
@@ -664,10 +729,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     doc.text("Sampling Details & Plan", margin, y);
     y += 5;
-    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                    `AQL ${aqlSelect.value}%`;
     doc.autoTable({
       startY: y,
       head: [['Field', 'Value']],
@@ -750,7 +811,8 @@ document.addEventListener('DOMContentLoaded', function() {
     doc.text(copyrightNotice, margin, y, { maxWidth: 190 });
 
     doc.save(`${reportId}.pdf`);
-    alert(`PDF report saved. Please send the PDF with Report ID ${reportId} to ${qcMonitorContact}.`);
+    alert(`PDF report saved. Please send the PDF with Report ID ${reportId} to ${config.qcMonitorContact}.`);
+    hideLoading();
   }
 
   // --- Print Report ---
@@ -788,19 +850,19 @@ document.addEventListener('DOMContentLoaded', function() {
     validateBatchSection();
   }
 
-  // --- Validation & Interactivity ---
-  calculateButton.disabled = true;
-  submitDefectsButton.disabled = true;
+  // --- Event Listeners ---
+  const debouncedValidateBatchSection = debounce(validateBatchSection, 300);
+  const debouncedValidateLotSection = debounce(validateLotSection, 300);
+  const debouncedCalculateLotSize = debounce(calculateLotSize, 300);
 
-  // Input event listeners for validation
-  qcInspectorInput.addEventListener('change', validateBatchSection);
-  machineNumberInput.addEventListener('change', validateBatchSection);
-  partNameInput.addEventListener('change', validateBatchSection);
-  poNumberInput.addEventListener('input', validateBatchSection);
-  productionDateInput.addEventListener('change', validateBatchSection);
-  numBoxesInput.addEventListener('input', () => { calculateLotSize(); validateLotSection(); });
-  pcsPerBoxInput.addEventListener('input', () => { calculateLotSize(); validateLotSection(); });
-  aqlSelect.addEventListener('change', validateLotSection);
+  qcInspectorInput.addEventListener('change', debouncedValidateBatchSection);
+  machineNumberInput.addEventListener('change', debouncedValidateBatchSection);
+  partNameInput.addEventListener('change', handlePartNameChange);
+  poNumberInput.addEventListener('input', debouncedValidateBatchSection);
+  productionDateInput.addEventListener('change', debouncedValidateBatchSection);
+  numBoxesInput.addEventListener('input', debouncedCalculateLotSize);
+  pcsPerBoxInput.addEventListener('input', debouncedCalculateLotSize);
+  aqlSelect.addEventListener('change', debouncedValidateLotSection);
   defectsFoundInput.addEventListener('change', validateDefectsSection);
 
   calculateButton.addEventListener('click', () => {
@@ -826,45 +888,25 @@ document.addEventListener('DOMContentLoaded', function() {
   printButton.addEventListener('click', printReport);
   resetButton.addEventListener('click', resetAll);
 
-  // --- Photo Event Listeners ---
   uploadMultiplePhotosInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
 
   photoPreview.addEventListener('click', (e) => {
-    if (e.target.tagName === 'IMG') {
-      const index = parseInt(e.target.dataset.index, 10);
-      const action = prompt('Type "annotate" to annotate or "remove" to delete this photo.');
-      if (action && action.toLowerCase() === 'annotate') {
-        initAnnotationCanvas(capturedPhotos[index], index);
-        annotationModal.style.display = 'flex';
-      } else if (action && action.toLowerCase() === 'remove') {
-        if (confirm('Remove this photo?')) {
-          removePhoto(index);
-        }
+    const index = parseInt(e.target.dataset.index, 10);
+    if (e.target.classList.contains('annotate-btn')) {
+      initAnnotationCanvas(capturedPhotos[index], index);
+      annotationModal.style.display = 'flex';
+    } else if (e.target.classList.contains('remove-btn')) {
+      if (confirm('Remove this photo?')) {
+        removePhoto(index);
       }
     }
   });
 
   closeModal.addEventListener('click', closeAnnotationModal);
 
-  // --- Mobile Touch Enhancements ---
   document.querySelectorAll('button').forEach(button => {
     button.addEventListener('touchstart', () => button.classList.add('active'));
     button.addEventListener('touchend', () => button.classList.remove('active'));
   });
 
-  // --- Initial Setup ---
-  populatePartNameDropdown();
-  resetAll();
-});
-
-// --- Register Service Worker for PWA ---
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(function(registration) {
-        console.log('ServiceWorker registered with scope:', registration.scope);
-      }, function(err) {
-        console.log('ServiceWorker registration failed:', err);
-      });
-  });
-}
+  // --- Initial Setup
