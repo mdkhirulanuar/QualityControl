@@ -758,7 +758,12 @@ document.addEventListener('DOMContentLoaded', () => {
       displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
       return;
     }
-    elements.uploadMultiplePhotos.click();
+    try {
+      elements.uploadMultiplePhotos.click();
+    } catch (e) {
+      displayError('Failed to open file picker. Please ensure browser permissions are enabled.');
+      console.error('File input trigger error:', e);
+    }
   });
 
   elements.uploadPhotosButton.addEventListener('touchend', (e) => {
@@ -767,7 +772,12 @@ document.addEventListener('DOMContentLoaded', () => {
       displayError(`Maximum ${MAX_PHOTOS} photos reached.`);
       return;
     }
-    elements.uploadMultiplePhotos.click();
+    try {
+      elements.uploadMultiplePhotos.click();
+    } catch (e) {
+      displayError('Failed to open file picker. Please ensure browser permissions are enabled.');
+      console.error('File input trigger error:', e);
+    }
   }, { passive: false });
 
   elements.uploadMultiplePhotos.addEventListener('change', (e) => {
@@ -814,10 +824,6 @@ document.addEventListener('DOMContentLoaded', () => {
     displayError('You are offline. Some features may be limited.');
   });
 
-  // --- Initial Setup ---
-  populatePartNameDropdown();
-  resetAll();
-
   // --- Register Service Worker ---
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js')
@@ -825,19 +831,47 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.error('ServiceWorker registration failed:', err));
   }
 
+  // --- Service Worker Fetch Event to Bypass Cache for Uploads ---
+  self.addEventListener('fetch', event => {
+    if (event.request.method === 'POST' || event.request.url.includes('upload') || event.request.url.includes('file')) {
+      event.respondWith(fetch(event.request));
+      return;
+    }
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(response => {
+          if (!response || response.status !== 200 || response.type !== 'basic') return response;
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+          return response;
+        }).catch(() => caches.match('/index.html'));
+      })
+    );
+  });
+
   // --- Permission Check for Mobile ---
   const checkMobilePermissions = () => {
     if ('permissions' in navigator) {
       navigator.permissions.query({ name: 'photos' }).then(permissionStatus => {
         if (permissionStatus.state === 'denied') {
-          displayError('Photo access is denied. Please enable permissions in your browser settings.');
+          displayError('Photo access is denied. Please enable permissions in your browser settings (Settings > Site Settings > Storage or Safari > Camera & Photos).');
+        } else if (permissionStatus.state === 'prompt') {
+          displayError('Please grant photo access when prompted by your browser.');
         }
         permissionStatus.onchange = () => checkMobilePermissions();
       });
     } else {
       console.warn('Permission API not supported. Ensure manual permission is granted.');
+      displayError('Please manually allow photo access in your browser settings.');
     }
   };
 
   checkMobilePermissions();
+
+  // --- Initial Setup ---
+  populatePartNameDropdown();
+  resetAll();
 });
