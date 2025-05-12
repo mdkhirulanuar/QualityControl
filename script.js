@@ -1,939 +1,328 @@
-/*
-    Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
-*/
+// Utility Functions
+function displayError(message, type = 'user') {
+  const errorDiv = document.getElementById('error-message');
+  errorDiv.textContent = message;
+  errorDiv.className = `error-message ${type === 'system' ? 'system' : ''} ${type === 'user' ? 'user' : ''}`;
+  errorDiv.classList.remove('hidden');
+  setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+}
 
-document.addEventListener('DOMContentLoaded', function() {
-  // --- Configuration ---
-  const config = {
-    qcMonitorContact: 'qaqc@kpielectrical.com.my or WhatsApp to +60182523255',
-    maxFileSize: 5 * 1024 * 1024, // 5MB
-    maxPhotos: 5
-  };
+function updatePhotoCount() {
+  const count = document.getElementById('photoCount');
+  count.textContent = `Photos: ${photoPreviews.length}/5`;
+}
 
-  // --- DOM Element Selection ---
-  const aqlForm = document.getElementById('aqlForm');
-  const qcInspectorInput = document.getElementById('qcInspector');
-  const machineNumberInput = document.getElementById('machineNumber');
-  const partNameInput = document.getElementById('partName');
+// Initial Setup
+document.addEventListener('DOMContentLoaded', () => {
+  const partSelect = document.getElementById('partName');
   const partIdInput = document.getElementById('partId');
-  const poNumberInput = document.getElementById('poNumber');
-  const productionDateInput = document.getElementById('productionDate');
-  const numBoxesInput = document.getElementById('numBoxes');
-  const pcsPerBoxInput = document.getElementById('pcsPerBox');
-  const lotSizeInput = document.getElementById('lotSize');
-  const aqlSelect = document.getElementById('aql');
   const calculateButton = document.getElementById('calculateButton');
   const resetButton = document.getElementById('resetButton');
-  const resultsDiv = document.getElementById('results');
-  const defectsInputArea = document.getElementById('defectsInputArea');
-  const defectsFoundInput = document.getElementById('defectsFound');
   const submitDefectsButton = document.getElementById('submitDefectsButton');
-  const photoCaptureArea = document.getElementById('photoCaptureArea');
-  const uploadMultiplePhotosInput = document.getElementById('uploadMultiplePhotos');
-  const photoPreview = document.getElementById('photoPreview');
-  const photoCount = document.getElementById('photoCount');
-  const verdictMessageDiv = document.getElementById('verdictMessage');
-  const defectChecklistDiv = document.getElementById('defectChecklist');
   const generateReportButton = document.getElementById('generateReportButton');
-  const finalReportAreaDiv = document.getElementById('finalReportArea');
-  const reportContentDiv = document.getElementById('reportContent');
   const savePdfButton = document.getElementById('savePdfButton');
   const printButton = document.getElementById('printButton');
-  const errorMessageDiv = document.getElementById('error-message');
-  const batchSection = document.querySelector('.batch-info');
-  const lotSection = document.querySelector('.lot-details');
-  const buttonGroup = document.querySelector('.button-group');
+  const uploadInput = document.getElementById('uploadMultiplePhotos');
+  const photoPreview = document.getElementById('photoPreview');
+  let photoPreviews = [];
+  let canvas = null;
+  let samplingPlan = null;
+  let defectsFound = 0;
 
-  // --- Annotation DOM Elements ---
-  const annotationModal = document.getElementById('annotationModal');
-  const annotationCanvas = document.getElementById('annotationCanvas');
-  const closeModal = document.querySelector('.close-modal');
-  const drawCircleButton = document.getElementById('drawCircleButton');
-  const drawTextButton = document.getElementById('drawTextButton');
-  const drawFreehandButton = document.getElementById('drawFreehandButton');
-  const undoButton = document.getElementById('undoButton');
-  const saveAnnotationButton = document.getElementById('saveAnnotationButton');
-
-  // --- State Variables ---
-  let currentSamplingPlan = null;
-  let capturedPhotos = [];
-  let fabricCanvas = null;
-  let currentPhotoIndex = null;
-  let annotationHistory = [];
-  let currentMode = null;
-  const copyrightNotice = "Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
-
-  // --- Helper Functions ---
-  function debounce(fn, ms) {
-    let timeout;
-    return (...args) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => fn(...args), ms);
-    };
-  }
-
-  function displayError(message, type = 'user') {
-    errorMessageDiv.textContent = message;
-    errorMessageDiv.className = `error-message ${type}-error`;
-    errorMessageDiv.style.display = 'block';
-    errorMessageDiv.focus();
-  }
-
-  function clearError() {
-    errorMessageDiv.textContent = '';
-    errorMessageDiv.className = 'error-message hidden';
-    errorMessageDiv.style.display = 'none';
-  }
-
-  function showLoading() {
-    document.body.classList.add('loading');
-  }
-
-  function hideLoading() {
-    document.body.classList.remove('loading');
-  }
-
-  function fadeIn(element) {
-    element.style.opacity = 0;
-    element.style.display = 'block';
-    let op = 0;
-    const timer = setInterval(() => {
-      if (op >= 1) clearInterval(timer);
-      element.style.opacity = op;
-      op += 0.1;
-    }, 30);
-  }
-
-  function fadeOut(element) {
-    let op = 1;
-    const timer = setInterval(() => {
-      if (op <= 0) {
-        clearInterval(timer);
-        element.style.display = 'none';
+  // Function to populate part dropdown
+  function populatePartDropdown() {
+    try {
+      // Check if partsList is available (global or imported)
+      if (typeof partsList === 'undefined') {
+        fetch('/QualityControl/partsList.js')
+          .then(response => response.text())
+          .then(script => {
+            const tempScript = document.createElement('script');
+            tempScript.textContent = script;
+            document.body.appendChild(tempScript);
+            document.body.removeChild(tempScript); // Clean up
+            if (partsList && Array.isArray(partsList)) {
+              partSelect.innerHTML = '<option value="">-- Select Part --</option>';
+              partsList.forEach(part => {
+                const option = document.createElement('option');
+                option.value = part.name;
+                option.textContent = part.name;
+                partSelect.appendChild(option);
+              });
+            } else {
+              displayError('Failed to load parts list. Please refresh the page.', 'system');
+              partSelect.innerHTML = '<option value="">-- Parts Unavailable --</option>';
+            }
+          })
+          .catch(err => {
+            console.error('Error loading partsList.js:', err);
+            displayError('Failed to load parts list. Please refresh the page.', 'system');
+            partSelect.innerHTML = '<option value="">-- Parts Unavailable --</option>';
+          });
+      } else if (partsList && Array.isArray(partsList)) {
+        partSelect.innerHTML = '<option value="">-- Select Part --</option>';
+        partsList.forEach(part => {
+          const option = document.createElement('option');
+          option.value = part.name;
+          option.textContent = part.name;
+          partSelect.appendChild(option);
+        });
+      } else {
+        displayError('Failed to load parts list. Please refresh the page.', 'system');
+        partSelect.innerHTML = '<option value="">-- Parts Unavailable --</option>';
       }
-      element.style.opacity = op;
-      op -= 0.1;
-    }, 30);
-  }
-
-  // --- Populate Part Name Dropdown ---
-  function populatePartNameDropdown() {
-    if (typeof partsList === 'undefined' || !Array.isArray(partsList) || partsList.length === 0) {
-      displayError('Parts list is unavailable. Please contact support.', 'system');
-      partNameInput.innerHTML = '<option value="">-- Parts Unavailable --</option>';
-      partNameInput.disabled = true;
-      return;
+    } catch (err) {
+      console.error('Error populating part dropdown:', err);
+      displayError('Failed to load parts list. Please refresh the page.', 'system');
+      partSelect.innerHTML = '<option value="">-- Parts Unavailable --</option>';
     }
-    partNameInput.innerHTML = '<option value="">-- Select Part Name --</option>';
-    const uniquePartNames = [...new Set(partsList.map(part => part.partName))];
-    uniquePartNames.forEach(name => {
-      const option = document.createElement('option');
-      option.value = name;
-      option.textContent = name;
-      partNameInput.appendChild(option);
+
+    // Event listener for part selection
+    partSelect.addEventListener('change', () => {
+      const selectedPart = partsList.find(part => part.name === partSelect.value);
+      partIdInput.value = selectedPart ? selectedPart.id : '';
+      calculateButton.disabled = !partSelect.value || !document.getElementById('aql').value || !document.getElementById('numBoxes').value || !document.getElementById('pcsPerBox').value;
     });
-    partNameInput.disabled = false;
   }
 
-  // --- Auto-Populate Part ID ---
-  function handlePartNameChange() {
-    const selectedPartName = partNameInput.value;
-    const part = partsList.find(p => p.partName === selectedPartName);
-    partIdInput.value = part ? part.partId : '';
-    const description = document.createElement('div');
-    description.id = 'part-selection';
-    description.className = 'sr-only';
-    description.textContent = `Selected part: ${selectedPartName || 'None'}`;
-    partNameInput.parentElement.appendChild(description);
-    setTimeout(() => description.remove(), 1000);
-    validateBatchSection();
-  }
+  populatePartDropdown();
 
-  // --- AQL Data ---
-  const sampleSizeCodeLetters_Level_II = {
-    '2-8': 'A', '9-15': 'B', '16-25': 'C', '26-50': 'D', '51-90': 'E',
-    '91-150': 'F', '151-280': 'G', '281-500': 'H', '501-1200': 'J',
-    '1201-3200': 'K', '3201-10000': 'L', '10001-35000': 'M',
-    '35001-150000': 'N', '150001-500000': 'P', '500001+': 'Q'
-  };
+  // Calculate Sampling Plan
+  calculateButton.addEventListener('click', () => {
+    const numBoxes = parseInt(document.getElementById('numBoxes').value);
+    const pcsPerBox = parseInt(document.getElementById('pcsPerBox').value);
+    const lotSize = numBoxes * pcsPerBox;
+    document.getElementById('lotSize').value = lotSize;
 
-  const aqlMasterTable_Simplified = {
-    'A': { sampleSize: 2, plans: { '1.0': { ac: 0, re: 1 }, '2.5': { ac: 0, re: 1 }, '4.0': { ac: 0, re: 1 } } },
-    'B': { sampleSize: 3, plans: { '1.0': { ac: 0, re: 1 }, '2.5': { ac: 0, re: 1 }, '4.0': { ac: 0, re: 1 } } },
-    'C': { sampleSize: 5, plans: { '1.0': { ac: 0, re: 1 }, '2.5': { ac: 0, re: 1 }, '4.0': { ac: 0, re: 1 } } },
-    'D': { sampleSize: 8, plans: { '1.0': { ac: 0, re: 1 }, '2.5': { ac: 0, re: 1 }, '4.0': { ac: 1, re: 2 } } },
-    'E': { sampleSize: 13, plans: { '1.0': { ac: 0, re: 1 }, '2.5': { ac: 1, re: 2 }, '4.0': { ac: 1, re: 2 } } },
-    'F': { sampleSize: 20, plans: { '1.0': { ac: 0, re: 1 }, '2.5': { ac: 1, re: 2 }, '4.0': { ac: 2, re: 3 } } },
-    'G': { sampleSize: 32, plans: { '1.0': { ac: 1, re: 2 }, '2.5': { ac: 2, re: 3 }, '4.0': { ac: 3, re: 4 } } },
-    'H': { sampleSize: 50, plans: { '1.0': { ac: 1, re: 2 }, '2.5': { ac: 3, re: 4 }, '4.0': { ac: 5, re: 6 } } },
-    'J': { sampleSize: 80, plans: { '1.0': { ac: 2, re: 3 }, '2.5': { ac: 5, re: 6 }, '4.0': { ac: 7, re: 8 } } },
-    'K': { sampleSize: 125, plans: { '1.0': { ac: 3, re: 4 }, '2.5': { ac: 7, re: 8 }, '4.0': { ac: 10, re: 11 } } },
-    'L': { sampleSize: 200, plans: { '1.0': { ac: 5, re: 6 }, '2.5': { ac: 10, re: 11 }, '4.0': { ac: 14, re: 15 } } },
-    'M': { sampleSize: 315, plans: { '1.0': { ac: 7, re: 8 }, '2.5': { ac: 14, re: 15 }, '4.0': { ac: 21, re: 22 } } },
-    'N': { sampleSize: 500, plans: { '1.0': { ac: 10, re: 11 }, '2.5': { ac: 21, re: 22 }, '4.0': { ac: 21, re: 22 } } },
-    'P': { sampleSize: 800, plans: { '1.0': { ac: 14, re: 15 }, '2.5': { ac: 21, re: 22 }, '4.0': { ac: 21, re: 22 } } },
-    'Q': { sampleSize: 1250, plans: { '1.0': { ac: 21, re: 22 }, '2.5': { ac: 21, re: 22 }, '4.0': { ac: 21, re: 22 } } }
-  };
+    const aql = parseFloat(document.getElementById('aql').value);
+    const sampleSize = calculateSamplingPlan(lotSize, aql);
+    const acceptLimit = Math.ceil(sampleSize * (aql / 100));
 
-  // --- Validation Functions ---
-  function validateBatchSection() {
-    const isValid = qcInspectorInput.value !== '' &&
-                    machineNumberInput.value !== '' &&
-                    partIdInput.value !== '' &&
-                    partNameInput.value !== '' &&
-                    poNumberInput.value.trim() !== '' &&
-                    productionDateInput.value !== '';
-    if (isValid) {
-      fadeIn(lotSection);
-      fadeIn(buttonGroup);
-    } else {
-      fadeOut(lotSection);
-      fadeOut(buttonGroup);
-      fadeOut(resultsDiv);
-      fadeOut(defectsInputArea);
-      fadeOut(photoCaptureArea);
-      fadeOut(verdictMessageDiv);
-      fadeOut(defectChecklistDiv);
-      fadeOut(finalReportAreaDiv);
-      fadeOut(generateReportButton);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
-    }
-    return isValid;
-  }
-
-  function validateLotSection() {
-    const numBoxes = parseInt(numBoxesInput.value, 10);
-    const pcsPerBox = parseInt(pcsPerBoxInput.value, 10);
-    const isValid = numBoxes > 0 && pcsPerBox > 0 && aqlSelect.value !== '' && validateBatchSection();
-    calculateButton.disabled = !isValid;
-    if (!isValid) {
-      fadeOut(resultsDiv);
-      fadeOut(defectsInputArea);
-      fadeOut(photoCaptureArea);
-      fadeOut(verdictMessageDiv);
-      fadeOut(defectChecklistDiv);
-      fadeOut(finalReportAreaDiv);
-      fadeOut(generateReportButton);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
-    }
-    return isValid;
-  }
-
-  function validateDefectsSection() {
-    const defectsFound = parseInt(defectsFoundInput.value, 10);
-    const isValid = !isNaN(defectsFound) && defectsFound >= 0 && currentSamplingPlan;
-    submitDefectsButton.disabled = !isValid;
-    if (!isValid) {
-      fadeOut(verdictMessageDiv);
-      fadeOut(photoCaptureArea);
-      fadeOut(finalReportAreaDiv);
-      fadeOut(generateReportButton);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
-    }
-    return isValid;
-  }
-
-  function calculateLotSize() {
-    const numBoxes = parseInt(numBoxesInput.value, 10);
-    const pcsPerBox = parseInt(pcsPerBoxInput.value, 10);
-    if (!isNaN(numBoxes) && numBoxes > 0 && !isNaN(pcsPerBox) && pcsPerBox > 0) {
-      lotSizeInput.value = numBoxes * pcsPerBox;
-    } else {
-      lotSizeInput.value = '';
-    }
-    validateLotSection();
-  }
-
-  // --- Calculate Sampling Plan ---
-  function calculateSamplingPlan() {
-    clearError();
-    const lotSize = parseInt(lotSizeInput.value, 10);
-    const aqlValue = aqlSelect.value;
-
-    if (isNaN(lotSize) || lotSize <= 0) {
-      displayError('Please enter valid Number of Boxes and Pieces per Box.');
-      return null;
-    }
-    if (lotSize < 2) {
-      displayError('Lot Size must be 2 or greater.');
-      return null;
-    }
-    if (!['1.0', '2.5', '4.0'].includes(aqlValue)) {
-      displayError('Please select High (1.0%), Medium (2.5%), or Low (4.0%) AQL.');
-      return null;
-    }
-
-    const lotRange = getLotSizeRange(lotSize);
-    if (!lotRange) {
-      displayError('Lot size outside standard range.');
-      return null;
-    }
-    const codeLetter = sampleSizeCodeLetters_Level_II[lotRange];
-    if (!codeLetter) {
-      displayError(`Could not determine Sample Size Code Letter for Lot Size ${lotSize}.`);
-      return null;
-    }
-
-    const planData = aqlMasterTable_Simplified[codeLetter];
-    if (!planData || !planData.plans) {
-      displayError(`AQL data not found for Code Letter ${codeLetter}.`);
-      return null;
-    }
-
-    const sampleSize = planData.sampleSize;
-    const planDetails = planData.plans[aqlValue];
-
-    if (!planDetails || typeof planDetails.ac === 'undefined' || typeof planDetails.re === 'undefined') {
-      displayError(`Ac/Re values not found for Code Letter ${codeLetter} and AQL ${aqlValue}.`);
-      return null;
-    }
-
-    if (sampleSize >= lotSize) {
-      console.warn(`Sample Size (${sampleSize}) equals/exceeds Lot Size (${lotSize}).`);
-    }
-
-    return {
-      codeLetter: codeLetter,
-      sampleSize: sampleSize,
-      accept: planDetails.ac,
-      reject: planDetails.re
-    };
-  }
-
-  function getLotSizeRange(lotSize) {
-    if (lotSize >= 2 && lotSize <= 8) return '2-8';
-    if (lotSize >= 9 && lotSize <= 15) return '9-15';
-    if (lotSize >= 16 && lotSize <= 25) return '16-25';
-    if (lotSize >= 26 && lotSize <= 50) return '26-50';
-    if (lotSize >= 51 && lotSize <= 90) return '51-90';
-    if (lotSize >= 91 && lotSize <= 150) return '91-150';
-    if (lotSize >= 151 && lotSize <= 280) return '151-280';
-    if (lotSize >= 281 && lotSize <= 500) return '281-500';
-    if (lotSize >= 501 && lotSize <= 1200) return '501-1200';
-    if (lotSize >= 1201 && lotSize <= 3200) return '1201-3200';
-    if (lotSize >= 3201 && lotSize <= 10000) return '3201-10000';
-    if (lotSize >= 10001 && lotSize <= 35000) return '10001-35000';
-    if (lotSize >= 35001 && lotSize <= 150000) return '35001-150000';
-    if (lotSize >= 150001 && lotSize <= 500000) return '150001-500000';
-    if (lotSize >= 500001) return '500001+';
-    return null;
-  }
-
-  // --- Display Sampling Plan ---
-  function displaySamplingPlan(plan) {
-    const lotSizeVal = parseInt(lotSizeInput.value, 10);
-    let samplingInstructions = '';
-    const numBoxesVal = parseInt(numBoxesInput.value, 10);
-    const pcsPerBoxVal = parseInt(pcsPerBoxInput.value, 10);
-
-    if (isNaN(lotSizeVal) || lotSizeVal <= 0) {
-      samplingInstructions = '<p style="color: red;">Cannot calculate sampling instructions without valid lot size.</p>';
-    } else if (plan.sampleSize >= lotSizeVal) {
-      samplingInstructions = '<p><strong>Sampling Instructions:</strong> Inspect all pieces from all boxes (100% inspection required).</p>';
-    } else if (isNaN(numBoxesVal) || numBoxesVal <= 0 || isNaN(pcsPerBoxVal) || pcsPerBoxVal <= 0) {
-      samplingInstructions = '<p style="color: red;">Enter valid Number of Boxes and Pieces per Box.</p>';
-    } else {
-      const minBoxesToOpen = Math.ceil(plan.sampleSize / pcsPerBoxVal);
-      const boxesToOpen = Math.min(minBoxesToOpen, numBoxesVal);
-      const pcsPerOpenedBox = Math.ceil(plan.sampleSize / boxesToOpen);
-      const totalInspected = boxesToOpen * pcsPerOpenedBox;
-
-      samplingInstructions = `
-        <p><strong>Sampling Instructions:</strong></p>
-        <ul>
-          <li>Randomly select and open <strong>${boxesToOpen}</strong> box(es) (out of ${numBoxesVal}).</li>
-          <li>From each opened box, inspect <strong>${pcsPerOpenedBox}</strong> piece(s).</li>
-        </ul>
-        <p><small>(Total pieces inspected: ${totalInspected}${totalInspected > plan.sampleSize ? ', slightly exceeding the minimum sample size of ' + plan.sampleSize : ''})</small></p>`;
-    }
-
-    const aqlText = getAqlText(aqlSelect.value);
-
-    resultsDiv.innerHTML = `
-      <p><strong>Sampling Plan Calculated:</strong></p>
-      <p>Lot Size: ${lotSizeInput.value}</p>
-      <p>Inspection Level: General Level II (Normal)</p>
-      <p>Acceptable Quality Level: ${aqlText}</p>
-      <p>Sample Size Code Letter: <strong>${plan.codeLetter}</strong></p>
-      <p>Sample Size: <strong>${plan.sampleSize}</strong></p>
-      <p>Acceptance Number (Ac): Max ${plan.accept} defects.</p>
-      <p>Rejection Number (Re): ${plan.reject} or more defects, reject lot.</p>
-      ${samplingInstructions}
+    samplingPlan = { sampleSize, acceptLimit };
+    document.getElementById('results').innerHTML = `
+      <h2>Sampling Plan</h2>
+      <p>Sample Size: ${sampleSize}</p>
+      <p>Acceptable Defects: ${acceptLimit}</p>
     `;
+    document.getElementById('defectsInputArea').style.display = 'block';
+    submitDefectsButton.disabled = false;
+    document.getElementById('photoCaptureArea').style.display = 'block';
+    document.getElementById('defectChecklist').style.display = 'block';
+  });
 
-    resultsDiv.setAttribute('aria-live', 'polite');
-    fadeIn(resultsDiv);
-    fadeIn(defectsInputArea);
-    fadeIn(photoCaptureArea);
-    fadeOut(verdictMessageDiv);
-    fadeOut(defectChecklistDiv);
-    fadeOut(finalReportAreaDiv);
-    fadeOut(generateReportButton);
-    fadeOut(savePdfButton);
-    fadeOut(printButton);
-  }
+  // Reset Form
+  resetButton.addEventListener('click', () => {
+    document.getElementById('aqlForm').reset();
+    document.getElementById('lotSize').value = '';
+    document.getElementById('partId').value = '';
+    document.getElementById('results').innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
+    document.getElementById('defectsInputArea').style.display = 'none';
+    document.getElementById('photoCaptureArea').style.display = 'none';
+    document.getElementById('defectChecklist').style.display = 'none';
+    document.getElementById('verdictMessage').style.display = 'none';
+    document.getElementById('generateReportButton').style.display = 'none';
+    document.getElementById('finalReportArea').style.display = 'none';
+    photoPreviews = [];
+    photoPreview.innerHTML = '';
+    updatePhotoCount();
+    calculateButton.disabled = true;
+    submitDefectsButton.disabled = true;
+    if (canvas) canvas.clear();
+  });
 
-  // --- Submit Defects ---
-  function submitDefects() {
-    clearError();
-    const defectsFound = parseInt(defectsFoundInput.value, 10);
-    if (isNaN(defectsFound) || defectsFound < 0) {
-      displayError('Please enter a valid number of defects (0 or more).');
-      fadeOut(verdictMessageDiv);
-      fadeOut(defectChecklistDiv);
-      fadeOut(photoCaptureArea);
-      fadeOut(finalReportAreaDiv);
-      fadeOut(generateReportButton);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
+  // Submit Defects
+  submitDefectsButton.addEventListener('click', () => {
+    defectsFound = parseInt(document.getElementById('defectsFound').value);
+    const verdict = defectsFound <= samplingPlan.acceptLimit ? 'Lot Accepted' : 'Lot Rejected';
+    document.getElementById('verdictMessage').innerHTML = `<h2>Verdict</h2><p>${verdict}</p>`;
+    document.getElementById('verdictMessage').style.display = 'block';
+    generateReportButton.style.display = 'block';
+  });
+
+  // Photo Upload Handler
+  uploadInput.addEventListener('change', function (e) {
+    const files = Array.from(e.target.files);
+    if (files.length + photoPreviews.length > 5) {
+      displayError('Maximum 5 photos allowed.', 'user');
       return;
     }
-    if (!currentSamplingPlan) {
-      displayError('Please calculate the sampling plan first.');
-      return;
-    }
-    const verdict = defectsFound <= currentSamplingPlan.accept
-      ? `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit: ${currentSamplingPlan.accept})`
-      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
-    const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
-    verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
-    verdictMessageDiv.setAttribute('aria-live', 'assertive');
-    fadeIn(verdictMessageDiv);
-    fadeIn(defectChecklistDiv);
-    fadeIn(photoCaptureArea);
-    fadeIn(generateReportButton);
-    fadeOut(finalReportAreaDiv);
-    fadeOut(savePdfButton);
-    fadeOut(printButton);
-  }
-
-  // --- Photo Handling ---
-  function updatePhotoPreview() {
-    photoPreview.innerHTML = capturedPhotos.length === 0
-      ? '<p>No photos added yet.</p>'
-      : capturedPhotos.map((photo, index) => `
-          <div class="photo-item">
-            <img src="${photo}" alt="Defect Photo ${index + 1}" data-index="${index}">
-            <button class="annotate-btn" data-index="${index}" aria-label="Annotate photo ${index + 1}">Annotate</button>
-            <button class="remove-btn" data-index="${index}" aria-label="Remove photo ${index + 1}">Remove</button>
-          </div>
-        `).join('');
-    photoCount.textContent = `Photos: ${capturedPhotos.length}/${config.maxPhotos}`;
-    uploadMultiplePhotosInput.disabled = capturedPhotos.length >= config.maxPhotos;
-    if (validateDefectsSection()) {
-      fadeIn(generateReportButton);
-    }
-  }
-
-  function addPhoto(base64) {
-    if (capturedPhotos.length >= config.maxPhotos) {
-      displayError(`Maximum ${config.maxPhotos} photos reached.`);
-      return false;
-    }
-    capturedPhotos.push(base64);
-    updatePhotoPreview();
-    clearError();
-    return true;
-  }
-
-  function removePhoto(index) {
-    capturedPhotos.splice(index, 1);
-    updatePhotoPreview();
-    clearError();
-  }
-
-  function handleFileUpload(files) {
-    showLoading();
-    const validImages = Array.from(files).filter(file => file.type.startsWith('image/') && file.size <= config.maxFileSize);
-    if (validImages.length === 0) {
-      displayError('No valid images selected (max 5MB each).');
-      hideLoading();
-      return;
-    }
-    const remainingSlots = config.maxPhotos - capturedPhotos.length;
-    if (validImages.length > remainingSlots) {
-      displayError(`Only ${remainingSlots} more photo(s) can be added.`);
-      validImages.splice(remainingSlots);
-    }
-    validImages.forEach(file => {
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        displayError('File size exceeds 5MB.', 'user');
+        return;
+      }
       const reader = new FileReader();
-      reader.onload = () => {
-        addPhoto(reader.result);
-        hideLoading();
-      };
-      reader.onerror = () => {
-        displayError('Error reading file.', 'system');
-        hideLoading();
+      reader.onload = function (event) {
+        const img = new Image();
+        img.onload = function () {
+          const preview = document.createElement('div');
+          preview.className = 'photo-preview';
+          preview.innerHTML = `<img src="${event.target.result}" alt="Preview"> <button class="delete-photo">×</button> <button class="annotate-photo">Annotate</button>`;
+          photoPreviews.push({ img, element: preview });
+          photoPreview.appendChild(preview);
+          updatePhotoCount();
+          // Add event listener for annotate button
+          preview.querySelector('.annotate-photo').addEventListener('click', () => showAnnotationModal(event.target.result));
+          preview.querySelector('.delete-photo').addEventListener('click', () => {
+            photoPreview.removeChild(preview);
+            photoPreviews = photoPreviews.filter(p => p.element !== preview);
+            updatePhotoCount();
+          });
+        };
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
-  }
+  });
 
-  // --- Annotation Functions ---
-  function initAnnotationCanvas(imageSrc, index) {
-    showLoading();
-    currentPhotoIndex = index;
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = function() {
-      const maxWidth = 500;
-      const maxHeight = 400;
-      let width = img.width;
-      let height = img.height;
+  // Generate Report
+  generateReportButton.addEventListener('click', () => {
+    const qcInspector = document.getElementById('qcInspector').value;
+    const machineNumber = document.getElementById('machineNumber').value;
+    const partName = partSelect.value;
+    const partId = partIdInput.value;
+    const poNumber = document.getElementById('poNumber').value;
+    const productionDate = document.getElementById('productionDate').value;
+    const numBoxes = document.getElementById('numBoxes').value;
+    const pcsPerBox = document.getElementById('pcsPerBox').value;
+    const lotSize = document.getElementById('lotSize').value;
+    const aql = document.getElementById('aql').value;
+    const defects = defectsFound;
+    const verdict = defectsFound <= samplingPlan.acceptLimit ? 'Accepted' : 'Rejected';
+    const defectTypes = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+      .map(cb => cb.value)
+      .join(', ') || 'None';
 
-      if (width > maxWidth) {
-        height = (maxWidth / width) * height;
-        width = maxWidth;
-      }
-      if (height > maxHeight) {
-        width = (maxHeight / height) * width;
-        height = maxHeight;
-      }
-
-      annotationCanvas.width = width;
-      annotationCanvas.height = height;
-
-      fabricCanvas = new fabric.Canvas('annotationCanvas', {
-        width: width,
-        height: height
-      });
-
-      fabric.Image.fromURL(imageSrc, function(imgObj) {
-        imgObj.set({ selectable: false, evented: false });
-        imgObj.scaleToWidth(width);
-        imgObj.scaleToHeight(height);
-        fabricCanvas.add(imgObj);
-        fabricCanvas.sendToBack(imgObj);
-      });
-
-      currentMode = null;
-      annotationHistory = [];
-      updateToolButtons();
-
-      drawCircleButton.addEventListener('click', () => {
-        currentMode = currentMode === 'circle' ? null : 'circle';
-        fabricCanvas.isDrawingMode = false;
-        updateToolButtons();
-      });
-
-      drawTextButton.addEventListener('click', () => {
-        currentMode = currentMode === 'text' ? null : 'text';
-        fabricCanvas.isDrawingMode = false;
-        updateToolButtons();
-      });
-
-      drawFreehandButton.addEventListener('click', () => {
-        currentMode = currentMode === 'freehand' ? null : 'freehand';
-        fabricCanvas.isDrawingMode = currentMode === 'freehand';
-        fabricCanvas.freeDrawingBrush.color = '#ff0000';
-        fabricCanvas.freeDrawingBrush.width = 2;
-        updateToolButtons();
-      });
-
-      fabricCanvas.on('mouse:down', (options) => {
-        if (currentMode === 'circle') {
-          const pointer = fabricCanvas.getPointer(options.e);
-          const circle = new fabric.Circle({
-            left: pointer.x - 20,
-            top: pointer.y - 20,
-            radius: 20,
-            fill: '',
-            stroke: '#ff0000',
-            strokeWidth: 2,
-            originX: 'center',
-            originY: 'center'
-          });
-          fabricCanvas.add(circle);
-          annotationHistory.push(circle);
-        } else if (currentMode === 'text') {
-          const pointer = fabricCanvas.getPointer(options.e);
-          const text = new fabric.IText('Enter text', {
-            left: pointer.x,
-            top: pointer.y,
-            fill: '#ff0000',
-            fontSize: 16,
-            fontFamily: 'Arial'
-          });
-          fabricCanvas.add(text);
-          fabricCanvas.setActiveObject(text);
-          annotationHistory.push(text);
-        }
-      });
-
-      fabricCanvas.on('path:created', (e) => {
-        annotationHistory.push(e.path);
-      });
-
-      undoButton.addEventListener('click', () => {
-        if (annotationHistory.length > 0) {
-          const lastAction = annotationHistory.pop();
-          fabricCanvas.remove(lastAction);
-          fabricCanvas.renderAll();
-        }
-      });
-
-      saveAnnotationButton.addEventListener('click', () => {
-        const annotatedImage = fabricCanvas.toDataURL('image/jpeg');
-        capturedPhotos[currentPhotoIndex] = annotatedImage;
-        updatePhotoPreview();
-        closeAnnotationModal();
-      });
-
-      hideLoading();
-    };
-    img.onerror = () => {
-      displayError('Failed to load image for annotation.', 'system');
-      closeAnnotationModal();
-      hideLoading();
-    };
-    img.src = imageSrc;
-  }
-
-  function updateToolButtons() {
-    drawCircleButton.classList.toggle('active', currentMode === 'circle');
-    drawTextButton.classList.toggle('active', currentMode === 'text');
-    drawFreehandButton.classList.toggle('active', currentMode === 'freehand');
-  }
-
-  function closeAnnotationModal() {
-    annotationModal.style.display = 'none';
-    if (fabricCanvas) {
-      fabricCanvas.dispose();
-      fabricCanvas = null;
-    }
-    currentPhotoIndex = null;
-    currentMode = null;
-    annotationHistory = [];
-  }
-
-  // --- Report Generation ---
-  function getReportData() {
-    const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
-    const aqlText = getAqlText(aqlSelect.value);
-    const defectsFound = parseInt(defectsFoundInput.value, 10) || 0;
-    return { reportId, aqlText, defectsFound };
-  }
-
-  function getAqlText(aqlValue) {
-    return aqlValue === '1.0' ? 'High Quality (AQL 1.0%)' :
-           aqlValue === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-           aqlValue === '4.0' ? 'Low Quality (AQL 4.0%)' :
-           `AQL ${aqlValue}%`;
-  }
-
-  function generateReport() {
-    if (!currentSamplingPlan) {
-      displayError('Calculate sampling plan and submit defects first.');
-      return;
-    }
-    const { reportId, aqlText, defectsFound } = getReportData();
-    if (isNaN(defectsFound) || defectsFound < 0) {
-      displayError('Enter a valid number of defects found.');
-      return;
-    }
-
-    showLoading();
-    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
-    const verdictColor = verdictText === 'ACCEPT' ? 'green' : 'red';
-    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
-      .map(cb => cb.value);
-    const lotSizeVal = parseInt(lotSizeInput.value, 10);
-    const inspectionNote = lotSizeVal && currentSamplingPlan.sampleSize >= lotSizeVal
-      ? `<p style="color: orange; font-weight: bold;">Note: 100% inspection required/performed.</p>`
-      : '';
-
-    const reportHTML = `
-      <h3>Batch Identification</h3>
-      <p><strong>Report ID:</strong> ${reportId}</p>
-      <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
-      <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
-      <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
-      <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
-      <p><strong>PO Number:</strong> ${poNumberInput.value || 'N/A'}</p>
-      <p><strong>Production Date:</strong> ${productionDateInput.value || 'N/A'}</p>
-      <p><strong>Inspection Date:</strong> ${new Date().toLocaleDateString()}</p>
-      <p><strong>Inspection Time:</strong> ${new Date().toLocaleTimeString()}</p>
-
-      <h3>Sampling Details & Plan</h3>
-      <p><strong>Total Lot Size:</strong> ${lotSizeInput.value}</p>
-      <p><strong>Inspection Level:</strong> General Level II (Normal)</p>
-      <p><strong>Acceptable Quality Level:</strong> ${aqlText}</p>
-      <p><strong>Sample Size Code Letter:</strong> ${currentSamplingPlan.codeLetter}</p>
-      <p><strong>Sample Size Inspected:</strong> ${currentSamplingPlan.sampleSize}</p>
-      ${inspectionNote}
-      <p><strong>Acceptance Number (Ac):</strong> ${currentSamplingPlan.accept}</p>
-      <p><strong>Rejection Number (Re):</strong> ${currentSamplingPlan.reject}</p>
-
-      <h3>Inspection Results</h3>
-      <p><strong>Number of Defects Found:</strong> ${defectsFound}</p>
-      <p><strong>Verdict:</strong> <strong style="color: ${verdictColor};">${verdictText}</strong></p>
-
-      <h3>Observed Defect Types</h3>
-      ${selectedDefects.length > 0
-        ? `<ul>${selectedDefects.map(defect => `<li>${defect}</li>`).join('')}</ul>`
-        : '<p>No specific defect types recorded.</p>'
-      }
-
-      <h3>Photo Documentation</h3>
-      ${capturedPhotos.length > 0
-        ? capturedPhotos.map((photo, index) => `
-            <p>Photo ${index + 1}:</p>
-            <img src="${photo}" style="max-width: 200px; border-radius: 8px;" alt="Defect Photo ${index + 1}">
-          `).join('')
-        : '<p>No photos added.</p>'
-      }
-
-      <p>${copyrightNotice}</p>
+    const reportContent = `
+      <h2>Inspection Report</h2>
+      <p><strong>QC Inspector:</strong> ${qcInspector}</p>
+      <p><strong>Machine No:</strong> ${machineNumber}</p>
+      <p><strong>Part Name:</strong> ${partName}</p>
+      <p><strong>Part ID:</strong> ${partId}</p>
+      <p><strong>PO Number:</strong> ${poNumber}</p>
+      <p><strong>Production Date:</strong> ${productionDate}</p>
+      <p><strong>Number of Boxes:</strong> ${numBoxes}</p>
+      <p><strong>Pieces per Box:</strong> ${pcsPerBox}</p>
+      <p><strong>Total Lot Size:</strong> ${lotSize}</p>
+      <p><strong>AQL:</strong> ${aql}%</p>
+      <p><strong>Sample Size:</strong> ${samplingPlan.sampleSize}</p>
+      <p><strong>Acceptable Defects:</strong> ${samplingPlan.acceptLimit}</p>
+      <p><strong>Defects Found:</strong> ${defects}</p>
+      <p><strong>Verdict:</strong> ${verdict}</p>
+      <p><strong>Defect Types:</strong> ${defectTypes}</p>
+      <h3>Photos</h3>
+      ${photoPreviews.map((p, i) => `<img src="${p.element.querySelector('img').src}" alt="Photo ${i + 1}" style="max-width: 200px;">`).join('')}
     `;
+    document.getElementById('reportContent').innerHTML = reportContent;
+    document.getElementById('finalReportArea').style.display = 'block';
+    savePdfButton.style.display = 'block';
+    printButton.style.display = 'block';
+  });
 
-    reportContentDiv.innerHTML = DOMPurify.sanitize(reportHTML);
-    fadeIn(finalReportAreaDiv);
-    fadeIn(savePdfButton);
-    fadeIn(printButton);
-    hideLoading();
-  }
-
-  // --- Save PDF ---
-  function saveReportAsPdf() {
-    showLoading();
+  // Save as PDF
+  savePdfButton.addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const margin = 10;
-    let y = 20;
-
-    const { reportId, aqlText } = getReportData();
-
-    doc.setFontSize(16);
-    doc.text("Quality Control Inspection Report", margin, y);
-    y += 10;
-
+    const reportContent = document.getElementById('reportContent').innerHTML;
     doc.setFontSize(12);
-    doc.autoTable({
-      startY: y,
-      head: [['Field', 'Value']],
-      body: [
-        ['Report ID', reportId],
-        ['QC Inspector', qcInspectorInput.value || 'N/A'],
-        ['Machine No', machineNumberInput.value || 'N/A'],
-        ['Part Name', partNameInput.value || 'N/A'],
-        ['Part ID', partIdInput.value || 'N/A'],
-        ['PO Number', poNumberInput.value || 'N/A'],
-        ['Production Date', productionDateInput.value || 'N/A'],
-        ['Inspection Date', new Date().toLocaleDateString()],
-        ['Inspection Time', new Date().toLocaleTimeString()]
-      ],
-      theme: 'grid'
-    });
-    y = doc.lastAutoTable.finalY + 10;
+    doc.text(reportContent.replace(/<[^>]+>/g, ' '), 10, 10); // Basic text conversion
+    doc.save('inspection-report.pdf');
+  });
 
-    doc.text("Sampling Details & Plan", margin, y);
-    y += 5;
-    doc.autoTable({
-      startY: y,
-      head: [['Field', 'Value']],
-      body: [
-        ['Total Lot Size', lotSizeInput.value],
-        ['Inspection Level', 'General Level II (Normal)'],
-        ['Acceptable Quality Level', aqlText],
-        ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
-        ['Sample Size Inspected', currentSamplingPlan.sampleSize],
-        ...(currentSamplingPlan.sampleSize >= parseInt(lotSizeInput.value, 10) ? [['Note', '100% inspection required/performed.']] : []),
-        ['Acceptance Number (Ac)', currentSamplingPlan.accept],
-        ['Rejection Number (Re)', currentSamplingPlan.reject]
-      ],
-      theme: 'grid'
-    });
-    y = doc.lastAutoTable.finalY + 10;
-
-    doc.text("Inspection Results", margin, y);
-    y += 5;
-    doc.autoTable({
-      startY: y,
-      head: [['Field', 'Value']],
-      body: [
-        ['Number of Defects Found', defectsFoundInput.value],
-        ['Verdict', parseInt(defectsFoundInput.value, 10) <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT']
-      ],
-      theme: 'grid'
-    });
-    y = doc.lastAutoTable.finalY + 10;
-
-    doc.text("Observed Defect Types", margin, y);
-    y += 7;
-    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
-      .map(cb => cb.value);
-    if (selectedDefects.length > 0) {
-      selectedDefects.forEach(defect => {
-        if (y > 260) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.text(`- ${defect}`, margin, y);
-        y += 7;
-      });
-    } else {
-      doc.text("No specific defect types recorded.", margin, y);
-      y += 7;
-    }
-    y += 10;
-
-    doc.text("Photo Documentation", margin, y);
-    y += 7;
-    if (capturedPhotos.length > 0) {
-      capturedPhotos.forEach((photo, index) => {
-        if (y > 260) {
-          doc.addPage();
-          y = 20;
-        }
-        doc.text(`Photo ${index + 1}:`, margin, y);
-        y += 5;
-        try {
-          doc.addImage(photo, 'JPEG', margin, y, 50, 50);
-          y += 55;
-        } catch (err) {
-          doc.text("(Photo could not be included)", margin, y);
-          y += 7;
-        }
-      });
-    } else {
-      doc.text("No photos added.", margin, y);
-      y += 7;
-    }
-    y += 10;
-
-    if (y > 260) {
-      doc.addPage();
-      y = 20;
-    }
-    doc.text("Ownership", margin, y);
-    y += 7;
-    doc.text(copyrightNotice, margin, y, { maxWidth: 190 });
-
-    doc.save(`${reportId}.pdf`);
-    alert(`PDF report saved. Please send the PDF with Report ID ${reportId} to ${config.qcMonitorContact}.`);
-    hideLoading();
-  }
-
-  // --- Print Report ---
-  function printReport() {
+  // Print Report
+  printButton.addEventListener('click', () => {
     window.print();
-  }
-
-  // --- Reset ---
-  function resetAll() {
-    aqlForm.reset();
-    lotSizeInput.value = '';
-    partIdInput.value = '';
-    partNameInput.value = '';
-    poNumberInput.value = '';
-    productionDateInput.value = '';
-    populatePartNameDropdown();
-    resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
-    fadeOut(lotSection);
-    fadeOut(buttonGroup);
-    fadeOut(resultsDiv);
-    fadeOut(defectsInputArea);
-    fadeOut(photoCaptureArea);
-    fadeOut(verdictMessageDiv);
-    fadeOut(defectChecklistDiv);
-    fadeOut(finalReportAreaDiv);
-    fadeOut(generateReportButton);
-    fadeOut(savePdfButton);
-    fadeOut(printButton);
-    currentSamplingPlan = null;
-    defectsFoundInput.value = '';
-    capturedPhotos = [];
-    updatePhotoPreview();
-    document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => cb.checked = false);
-    clearError();
-    validateBatchSection();
-  }
-
-  // --- Event Listeners ---
-  const debouncedValidateBatchSection = debounce(validateBatchSection, 300);
-  const debouncedValidateLotSection = debounce(validateLotSection, 300);
-  const debouncedCalculateLotSize = debounce(calculateLotSize, 300);
-
-  qcInspectorInput.addEventListener('change', debouncedValidateBatchSection);
-  machineNumberInput.addEventListener('change', debouncedValidateBatchSection);
-  partNameInput.addEventListener('change', handlePartNameChange);
-  poNumberInput.addEventListener('input', debouncedValidateBatchSection);
-  productionDateInput.addEventListener('change', debouncedValidateBatchSection);
-  numBoxesInput.addEventListener('input', debouncedCalculateLotSize);
-  pcsPerBoxInput.addEventListener('input', debouncedCalculateLotSize);
-  aqlSelect.addEventListener('change', debouncedValidateLotSection);
-  defectsFoundInput.addEventListener('change', validateDefectsSection);
-
-  calculateButton.addEventListener('click', () => {
-    currentSamplingPlan = calculateSamplingPlan();
-    if (currentSamplingPlan) {
-      displaySamplingPlan(currentSamplingPlan);
-    } else {
-      fadeOut(resultsDiv);
-      fadeOut(defectsInputArea);
-      fadeOut(photoCaptureArea);
-      fadeOut(verdictMessageDiv);
-      fadeOut(defectChecklistDiv);
-      fadeOut(finalReportAreaDiv);
-      fadeOut(generateReportButton);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
-    }
   });
 
-  submitDefectsButton.addEventListener('click', submitDefects);
-  generateReportButton.addEventListener('click', generateReport);
-  savePdfButton.addEventListener('click', saveReportAsPdf);
-  printButton.addEventListener('click', printReport);
-  resetButton.addEventListener('click', resetAll);
-
-  uploadMultiplePhotosInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
-
-  photoPreview.addEventListener('click', (e) => {
-    const index = parseInt(e.target.dataset.index, 10);
-    if (e.target.classList.contains('annotate-btn')) {
-      initAnnotationCanvas(capturedPhotos[index], index);
-      annotationModal.style.display = 'flex';
-    } else if (e.target.classList.contains('remove-btn')) {
-      if (confirm('Remove this photo?')) {
-        removePhoto(index);
-      }
-    }
-  });
-
-  closeModal.addEventListener('click', closeAnnotationModal);
-
-  document.querySelectorAll('button').forEach(button => {
-    button.addEventListener('touchstart', () => button.classList.add('active'));
-    button.addEventListener('touchend', () => button.classList.remove('active'));
-  });
-
-  // --- Service Worker Registration ---
+  // Service Worker Messaging
   if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/QualityControl/service-worker.js')
-    .then(registration => {
-      console.log('ServiceWorker registered with scope:', registration.scope);
-    })
-    .catch(err => {
-      console.error('ServiceWorker registration failed:', err);
-      displayError('Offline support may not be available.', 'system');
+    navigator.serviceWorker.register('/QualityControl/service-worker.js')
+      .then(registration => {
+        console.log('ServiceWorker registered with scope:', registration.scope);
+      })
+      .catch(err => {
+        console.error('ServiceWorker registration failed:', err);
+        displayError('Offline support may not be available.', 'system');
+      });
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'SERVICE_WORKER_MESSAGE') {
+        displayError(event.data.message, 'system');
+      }
     });
-}
-
-  // --- Initial Setup ---
-  resetAll();
-  populatePartNameDropdown();
-  if (typeof partsList === 'undefined') {
-    displayError('Failed to load parts list. Please refresh the page.', 'system');
   }
-});
 
-// --- Service Worker Messaging ---
-navigator.serviceWorker.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SERVICE_WORKER_MESSAGE') {
-    displayError(event.data.message, 'system');
+  // Calculate Sampling Plan Function
+  function calculateSamplingPlan(lotSize, aql) {
+    const aqlLevels = {
+      '1.0': { sizes: [2, 8, 32, 125, 500, 1200, 3200, 10000], samples: [2, 5, 14, 32, 80, 125, 200, 315] },
+      '2.5': { sizes: [2, 8, 32, 125, 500, 1200, 3200, 10000], samples: [3, 13, 32, 50, 125, 200, 315, 500] },
+      '4.0': { sizes: [2, 8, 32, 125, 500, 1200, 3200, 10000], samples: [5, 20, 50, 80, 200, 315, 500, 800] }
+    };
+    const aqlData = aqlLevels[aql];
+    for (let i = 0; i < aqlData.sizes.length; i++) {
+      if (lotSize <= aqlData.sizes[i]) return aqlData.samples[i];
+    }
+    return aqlData.samples[aqlData.samples.length - 1];
   }
+
+  // Form Validation and Button Enable/Disable
+  ['qcInspector', 'machineNumber', 'poNumber', 'productionDate', 'numBoxes', 'pcsPerBox', 'aql'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      calculateButton.disabled = !partSelect.value || !document.getElementById('aql').value || !document.getElementById('numBoxes').value || !document.getElementById('pcsPerBox').value;
+    });
+  });
+
+  // Modal Control Functions
+  function showAnnotationModal(imageSrc) {
+    const modal = document.getElementById('annotationModal');
+    modal.style.display = 'block';
+    if (!canvas) {
+      canvas = new fabric.Canvas('annotationCanvas', {
+        height: 400,
+        width: 400,
+        backgroundColor: '#fff'
+      });
+      // Tool setup (basic example)
+      document.getElementById('drawCircleButton').addEventListener('click', () => {
+        canvas.add(new fabric.Circle({ radius: 20, fill: 'red', left: 100, top: 100 }));
+      });
+      document.getElementById('drawTextButton').addEventListener('click', () => {
+        canvas.add(new fabric.IText('Text Here', { left: 100, top: 100 }));
+      });
+      document.getElementById('drawFreehandButton').addEventListener('click', () => {
+        canvas.isDrawingMode = true;
+        canvas.freeDrawingBrush.width = 5;
+        canvas.freeDrawingBrush.color = 'black';
+      });
+      document.getElementById('undoButton').addEventListener('click', () => {
+        canvas.remove(canvas.getObjects().pop());
+      });
+      document.getElementById('saveAnnotationButton').addEventListener('click', () => {
+        const dataURL = canvas.toDataURL();
+        const previewImg = photoPreviews.find(p => p.element.querySelector('.annotate-photo') === event.target).element.querySelector('img');
+        previewImg.src = dataURL;
+        hideAnnotationModal();
+      });
+    }
+    // Load the image into the canvas
+    fabric.Image.fromURL(imageSrc, function (img) {
+      img.scaleToWidth(400);
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+    });
+  }
+
+  function hideAnnotationModal() {
+    const modal = document.getElementById('annotationModal');
+    modal.style.display = 'none';
+    if (canvas) canvas.isDrawingMode = false; // Disable drawing mode when closing
+  }
+
+  // Close modal on X click
+  document.querySelector('.close-modal').addEventListener('click', hideAnnotationModal);
+
+  // Prevent automatic modal on load
+  window.addEventListener('load', () => {
+    const modal = document.getElementById('annotationModal');
+    if (modal.style.display !== 'none') modal.style.display = 'none';
+  });
 });
