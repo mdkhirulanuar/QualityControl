@@ -159,6 +159,52 @@ button:focus {
     justify-content: center;
 }
 
+.upload-button {
+    width: 100%;
+    max-width: 200px;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(101, 41, 255, 0.3);
+    transition: background 0.3s ease, transform 0.1s ease;
+    margin: 0 auto;
+    display: block;
+    touch-action: manipulation; /* Improves touch responsiveness */
+}
+
+.upload-button:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--primary-gradient-end), var(--primary-gradient-start));
+    transform: translateY(-2px);
+}
+
+.upload-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.upload-button:focus {
+    outline: 2px solid var(--primary-gradient-start);
+    outline-offset: 2px;
+}
+
+.photo-options {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+#photoGuidanceMessage {
+    text-align: center;
+    font-style: italic;
+    color: #555;
+    font-size: 0.9rem;
+}
+
 /* Error Message */
 .error-message {
     background-color: #ff4d4f;
