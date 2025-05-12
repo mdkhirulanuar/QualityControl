@@ -913,15 +913,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // --- Service Worker Registration ---
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(registration => {
-        console.log('ServiceWorker registered with scope:', registration.scope);
-      })
-      .catch(err => {
-        console.error('ServiceWorker registration failed:', err);
-        displayError('Offline support may not be available.', 'system');
-      });
-  }
+  navigator.serviceWorker.register('/QualityControl/service-worker.js')
+    .then(registration => {
+      console.log('ServiceWorker registered with scope:', registration.scope);
+    })
+    .catch(err => {
+      console.error('ServiceWorker registration failed:', err);
+      displayError('Offline support may not be available.', 'system');
+    });
+}
 
   // --- Initial Setup ---
   resetAll();
