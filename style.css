@@ -178,10 +178,6 @@ button:focus {
     -webkit-appearance: none; /* Remove default styling on iOS */
     -moz-appearance: none;
     appearance: none;
-}
-
-/* Specific styles for file input to ensure consistency */
-input[type="file"].upload-button {
     text-align: center;
     line-height: normal; /* Fix alignment on some browsers */
 }
@@ -207,6 +203,40 @@ input[type="file"].upload-button {
     align-items: center;
     gap: 10px;
     margin-bottom: 15px;
+}
+
+.photo-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.action-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end));
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(101, 41, 255, 0.3);
+    transition: background 0.3s ease, transform 0.1s ease;
+}
+
+.action-button:hover:not(:disabled) {
+    background: linear-gradient(90deg, var(--primary-gradient-end), var(--primary-gradient-start));
+    transform: translateY(-2px);
+}
+
+.action-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.action-button:focus {
+    outline: 2px solid var(--primary-gradient-start);
+    outline-offset: 2px;
 }
 
 #photoGuidanceMessage {
