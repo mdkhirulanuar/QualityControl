@@ -1,4 +1,4 @@
-/*  
+/*
     Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
 */
 
@@ -217,11 +217,7 @@ button.active {
     margin: 0 auto;
     display: block;
     touch-action: manipulation;
-    -webkit-appearance: none; /* Remove default styling on iOS */
-    -moz-appearance: none;
-    appearance: none;
     text-align: center;
-    text-indent: -9999px; /* Hide default "Choose files" text */
 }
 
 .upload-photo-button:hover:not(:disabled) {
@@ -237,6 +233,18 @@ button.active {
 .upload-photo-button:focus {
     outline: 2px solid #4c6ef5;
     outline-offset: 2px;
+}
+
+/* Hide the default file input while keeping it functional */
+.hidden-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 
 .photo-preview {
