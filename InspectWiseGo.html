@@ -177,7 +177,10 @@
     <h3 id="photo-capture-heading">Photo Documentation (Optional)</h3>
     <p>Add up to 5 photos to document defects. Use buttons below each photo to annotate or remove.</p>
     <div class="photo-options">
-        <input type="file" id="uploadMultiplePhotos" accept="image/jpeg,image/png" multiple class="upload-photo-button" aria-label="Upload photos (max 5, JPG/PNG only)">
+        <label for="uploadMultiplePhotos" class="upload-photo-button" aria-label="Upload multiple photos (max 5, JPG/PNG only)">
+            Upload Multiple Photos
+        </label>
+        <input type="file" id="uploadMultiplePhotos" accept="image/jpeg,image/png" multiple class="hidden-input" aria-hidden="true">
     </div>
     <div id="photoPreview" class="photo-preview" role="region" aria-live="polite">
         <p>No photos added yet.</p>
