@@ -174,7 +174,16 @@ button:focus {
     transition: background 0.3s ease, transform 0.1s ease;
     margin: 0 auto;
     display: block;
-    touch-action: manipulation; /* Improves touch responsiveness */
+    touch-action: manipulation;
+    -webkit-appearance: none; /* Remove default styling on iOS */
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Specific styles for file input to ensure consistency */
+input[type="file"].upload-button {
+    text-align: center;
+    line-height: normal; /* Fix alignment on some browsers */
 }
 
 .upload-button:hover:not(:disabled) {
@@ -194,7 +203,9 @@ button:focus {
 
 .photo-options {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 15px;
 }
 
