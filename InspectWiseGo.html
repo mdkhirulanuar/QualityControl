@@ -175,17 +175,19 @@
 
         <section id="photoCaptureArea" class="form-section photo-section" style="display: none;" aria-labelledby="photo-capture-heading">
     <h3 id="photo-capture-heading">Photo Documentation (Optional)</h3>
-    <p>Add up to 5 photos to document defects. Tap a photo to annotate or remove.</p>
+    <p>Add up to 5 photos to document defects. Use the buttons below to annotate or remove photos.</p>
     <div class="photo-options">
-        <!-- Direct file input styled as a button -->
-        <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple class="upload-button" aria-label="Upload photos from device">
-        <!-- Fallback button for debugging -->
-        <button type="button" id="uploadPhotosButton" class="upload-button" style="margin-top: 10px;">Fallback Upload</button>
+        <!-- Styled file input as the primary upload button -->
+        <input type="file" id="uploadMultiplePhotos" accept="image/jpeg,image/png" multiple class="upload-button" aria-label="Upload photos (max 5, JPG or PNG only)">
     </div>
     <div id="photoPreview" class="photo-preview" role="region" aria-live="polite">
         <p>No photos added yet.</p>
     </div>
     <p id="photoCount" aria-live="polite">Photos: 0/5</p>
+    <div id="photoActions" class="photo-actions" style="display: none; margin-top: 10px;">
+        <button type="button" id="annotateButton" class="action-button" disabled>Annotate</button>
+        <button type="button" id="removeButton" class="action-button" disabled>Remove</button>
+    </div>
 </section>
 
 <section id="photoGuidance" class="form-section" style="display: block;" aria-live="polite">
