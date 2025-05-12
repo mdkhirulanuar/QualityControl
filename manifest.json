@@ -2,8 +2,7 @@
   "name": "InspectWise Go",
   "short_name": "InspectWise",
   "description": "Smart Sampling Tool for QC Inspections",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url":"/QualityControl/InspectWiseGo.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2575fc",
@@ -17,16 +16,6 @@
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-72.png",
-      "sizes": "72x72",
       "type": "image/png"
     }
   ]
