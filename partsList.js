@@ -1,8 +1,3 @@
-/*
-    Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
-*/
-
-// Parts list for InspectWise Go, sorted alphabetically by partName
 const partsList = [
     { partId: "18-14577-00", partName: "BASE G11 DSL (OVAL)" },
     { partId: "18-18600-00", partName: "BASE TF G12 BK (OVAL)" },
@@ -56,8 +51,3 @@ const partsList = [
     { partId: "18-17978-01", partName: "STAND BODY TF166 DWI RP KD" },
     { partId: "18-17401-03", partName: "SW PANEL SFG12 W/NUT LWI KD" }
 ];
-
-// Ensure module compatibility
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = partsList;
-}
