@@ -8,21 +8,10 @@
     --primary-gradient-end: #6a11cb;
     --success-color: #28a745;
     --success-hover: #218838;
+    --excel-color: #17a2b8;
+    --excel-hover: #138496;
     --border-radius: 10px;
     --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    --bg-color: #fff;
-    --text-color: #222;
-    --input-bg: #f9f9fb;
-    --border-color: #aaa;
-    --label-color: #333;
-}
-
-[data-theme="dark"] {
-    --bg-color: #222;
-    --text-color: #fff;
-    --input-bg: #333;
-    --border-color: #666;
-    --label-color: #ddd;
 }
 
 /* Reset and Base */
@@ -33,7 +22,7 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, var(--primary-gradient-end) 0%, var(--primary-gradient-start) 100%);
-    color: var(--text-color);
+    color: #222;
     margin: 0;
     padding: 20px;
     min-height: 100vh;
@@ -45,7 +34,7 @@ body {
 }
 
 .container {
-    background: var(--bg-color);
+    background: #fff;
     max-width: 480px;
     width: 100%;
     padding: 15px;
@@ -62,7 +51,7 @@ body {
 }
 
 h1, h2 {
-    color: var(--text-color);
+    color: #3a3a3a;
     font-weight: 700;
     margin-bottom: 20px;
     text-align: center;
@@ -74,43 +63,12 @@ p {
     font-size: 1rem;
 }
 
-/* Progress Bar */
-.progress-bar {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.step {
-    flex: 1;
-    text-align: center;
-    padding: 10px;
-    background: #ddd;
-    border-radius: 5px;
-    font-size: 0.9rem;
-}
-
-.step.active {
-    background: var(--primary-gradient-start);
-    color: white;
-}
-
-/* Offline Status */
-.offline-status {
-    background: #ff9800;
-    color: white;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
 /* Form Section */
 .form-section {
     margin-bottom: 30px;
     padding: 15px 10px;
     border-radius: var(--border-radius);
-    background: var(--input-bg);
+    background: #f9f9fb;
     box-shadow: inset 0 0 8px #e0e0e0;
     transition: background-color 0.3s ease;
 }
@@ -136,32 +94,30 @@ p {
 label {
     font-weight: 600;
     margin-bottom: 6px;
-    color: var(--label-color);
+    color: #555;
     font-size: 0.95rem;
 }
 
 input[type="text"],
 input[type="number"],
-select,
-input[type="search"] {
+select {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     padding: 12px 14px;
     border-radius: 8px;
-    border: 2px solid var(--border-color);
-    font-size: 16px;
+    border: 2px solid #ddd;
+    font-size: 1rem;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     word-wrap: break-word;
-    min-height: 48px;
+    height: 44px;
     -webkit-appearance: none;
     appearance: none;
 }
 
 input[type="text"]:focus,
 input[type="number"]:focus,
-select:focus,
-input[type="search"]:focus {
+select:focus {
     border-color: var(--primary-gradient-start);
     box-shadow: 0 0 8px rgba(37, 117, 252, 0.67);
 }
@@ -172,10 +128,30 @@ input[readonly] {
     color: #666;
 }
 
+/* Specific styling for Production Date to match other inputs */
+input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    font-size: 1rem;
+    height: 44px;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="date"]:focus {
+    border-color: var(--primary-gradient-start);
+    box-shadow: 0 0 8px rgba(37, 117, 252, 0.67);
+}
+
 /* Buttons */
 button {
     width: 100%;
-    padding: 16px 20px;
+    padding: 14px 0;
     font-size: 1rem;
     font-weight: 700;
     border: none;
@@ -244,7 +220,7 @@ button:focus {
     box-shadow: inset 0 0 10px #c3d0ff;
     margin-top: 20px;
     font-weight: 600;
-    color: var(--text-color);
+    color: #1a1a1a;
     transition: background-color 0.3s ease;
 }
 
@@ -280,21 +256,9 @@ button:focus {
     margin-top: 10px;
 }
 
-.checklist-container details {
-    margin-bottom: 10px;
-}
-
-.checklist-container summary {
-    font-weight: 600;
-    padding: 8px;
-    cursor: pointer;
-    background: var(--input-bg);
-    border-radius: 5px;
-}
-
 .checklist-container label {
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
+    background: #fff;
+    border: 1px solid #ddd;
     border-radius: 8px;
     padding: 8px 12px;
     cursor: pointer;
@@ -308,9 +272,8 @@ button:focus {
 }
 
 .checklist-container input[type="checkbox"] {
-    transform: scale(1.5);
+    transform: scale(1.2);
     cursor: pointer;
-    margin-right: 10px;
 }
 
 .checklist-container label:hover {
@@ -326,7 +289,7 @@ button:focus {
 
 /* Report Area */
 #finalReportArea {
-    background: var(--bg-color);
+    background: #fff;
     border-radius: 12px;
     padding: 25px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
@@ -347,15 +310,29 @@ button:focus {
     background: var(--success-hover);
 }
 
+#saveExcelButton {
+    margin-top: 20px;
+    width: auto;
+    padding: 12px 30px;
+    font-weight: 700;
+    background: var(--excel-color);
+    box-shadow: 0 6px 15px rgba(23, 162, 184, 0.4);
+    transition: background 0.3s ease;
+}
+
+#saveExcelButton:hover {
+    background: var(--excel-hover);
+}
+
 #reportContent {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 1rem;
-    color: var(--text-color);
+    color: #222;
     line-height: 1.5;
 }
 
 #reportContent h3 {
-    color: var(--text-color);
+    color: #3a3a3a;
     margin-top: 20px;
     margin-bottom: 10px;
     font-weight: 700;
@@ -375,7 +352,7 @@ button:focus {
 
 /* Photo Section */
 .photo-section {
-    background: var(--input-bg);
+    background: #f9f9fb;
     padding: 15px;
     border-radius: var(--border-radius);
     margin-bottom: 20px;
@@ -419,14 +396,13 @@ button:focus {
 }
 
 .photo-preview img {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     object-fit: cover;
     border-radius: 8px;
-    border: 2px solid var(--border-color);
+    border: 2px solid #ddd;
     cursor: pointer;
     transition: border-color 0.3s ease;
-    padding: 8px;
 }
 
 .photo-preview img:hover {
@@ -435,27 +411,9 @@ button:focus {
 
 #photoCount {
     font-weight: 600;
-    color: var(--label-color);
+    color: #555;
     margin-top: 10px;
     text-align: center;
-}
-
-.photo-actions {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-color);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    display: flex;
-    gap: 10px;
-}
-
-.photo-actions button {
-    padding: 10px 20px;
-    min-height: 44px;
 }
 
 /* Annotation Modal */
@@ -473,10 +431,10 @@ button:focus {
 }
 
 .modal-content {
-    background: var(--bg-color);
+    background: #fff;
     padding: 20px;
     border-radius: var(--border-radius);
-    width: 95%;
+    width: 90%;
     max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
@@ -489,11 +447,11 @@ button:focus {
     right: 15px;
     font-size: 24px;
     cursor: pointer;
-    color: var(--label-color);
+    color: #555;
 }
 
 .close-modal:hover {
-    color: var(--text-color);
+    color: #000;
 }
 
 .annotation-tools {
@@ -502,12 +460,6 @@ button:focus {
     gap: 10px;
     margin-bottom: 15px;
     justify-content: center;
-}
-
-.annotation-tools input[type="color"],
-.annotation-tools input[type="range"] {
-    width: auto;
-    padding: 5px;
 }
 
 .tool-button {
@@ -542,7 +494,7 @@ button:focus {
 .annotation-canvas {
     width: 100%;
     max-width: 100%;
-    border: 1px solid var(--border-color);
+    border: 1px solid #ddd;
     border-radius: 5px;
 }
 
@@ -551,21 +503,9 @@ button:focus {
     margin-top: 30px;
     text-align: center;
     font-size: 0.85rem;
-    color: var(--label-color);
+    color: #555;
     padding: 10px 0;
     border-top: 1px solid #e0e0e0;
-}
-
-/* Screen Reader Only */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
 }
 
 /* Responsive */
@@ -600,8 +540,8 @@ button:focus {
         width: 100%;
     }
     .photo-preview img {
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
     }
     .modal-content {
         width: 95%;
@@ -617,12 +557,45 @@ button:focus {
     }
 }
 
-/* Print Styles */
-@media print {
-    #finalReportArea { display: block; }
-    .container, .button-group, .footer, .progress-bar, #error-message, #defectsInputArea, #photoCaptureArea, #defectChecklist, #verdictMessage, #offlineStatus {
-        display: none !important;
+/* Virtual Keyboard Adjustments */
+@media (max-height: 500px) {
+    .container {
+        padding-bottom: 150px;
     }
 }
 
-
+/* Print Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #finalReportArea, #finalReportArea * {
+        visibility: visible;
+    }
+    #finalReportArea {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 10px !important;
+        background: white !important;
+        color: black !important;
+    }
+    .button-group, .container form, .results-section:not(#finalReportArea), #error-message, #defectsInputArea, #photoCaptureArea, #defectChecklist, #verdictMessage {
+        display: none !important;
+    }
+    #reportContent {
+        font-size: 12pt !important;
+        line-height: 1.4 !important;
+        color: black !important;
+    }
+    #reportContent img {
+        max-width: 100px !important;
+        height: auto !important;
+    }
+    .footer {
+        display: none !important;
+    }
+}
