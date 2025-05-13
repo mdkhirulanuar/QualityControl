@@ -3,12 +3,34 @@
 */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Modules
-    populatePartNameDropdown(); // From samplingPlan.js
-    initFormValidation();       // From formValidation.js
-    initSamplingPlan();         // From samplingPlan.js
-    initPhotoHandler();         // From photoHandler.js
-    initReportGenerator();      // From reportGenerator.js
+    console.log('DOMContentLoaded fired');
+    
+    // Wait for partsList to be available
+    const maxAttempts = 50; // 5 seconds (50 * 100ms)
+    let attempts = 0;
+    const waitForPartsList = setInterval(() => {
+        attempts++;
+        if (window.partsList) {
+            clearInterval(waitForPartsList);
+            console.log('partsList loaded:', window.partsList);
+            console.log('Calling populatePartNameDropdown...');
+            try {
+                populatePartNameDropdown();
+                initFormValidation();
+                initSamplingPlan();
+                initPhotoHandler();
+                initReportGenerator();
+            } catch (error) {
+                console.error('Error initializing app:', error);
+            }
+        } else if (attempts >= maxAttempts) {
+            clearInterval(waitForPartsList);
+            console.error('Failed to load partsList after 5 seconds. Please ensure partsList.js is loaded correctly.');
+            alert('Error: Unable to load part names. Please refresh the page or check your internet connection.');
+        } else {
+            console.log('Waiting for partsList... (Attempt ' + attempts + ')');
+        }
+    }, 100);
 
     // PWA Installation Prompt
     let deferredPrompt;
@@ -45,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('touchend', () => button.classList.remove('active'));
     });
 
-    // Fade In/Out Utility Functions (Moved from utils.js)
+    // Fade In/Out Utility Functions
     window.fadeIn = function(element) {
         element.style.opacity = 0;
         element.style.display = 'block';
@@ -83,3 +105,8 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+
+
+2/2
+
