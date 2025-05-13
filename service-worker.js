@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inspectwise-go-v2';
+const CACHE_NAME = 'inspectwise-go-v4'; // Changed from 'inspectwise-go-v3'
 const OFFLINE_URLS = [
     '/',
     '/InspectWiseGo.html',
