@@ -51,6 +51,3 @@ const partsList = [
     { partId: "18-17978-01", partName: "STAND BODY TF166 DWI RP KD" },
     { partId: "18-17401-03", partName: "SW PANEL SFG12 W/NUT LWI KD" }
 ];
-
-// Expose partsList globally
-window.partsList = partsList;
