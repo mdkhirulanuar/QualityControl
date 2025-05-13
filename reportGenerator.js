@@ -1,267 +1,192 @@
-/*
-    Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
-*/
-import { fadeIn, fadeOut } from './utils.js';
-import { currentSamplingPlan } from './samplingPlan.js';
-
-const copyrightNotice = "Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
-const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately";
-
-export function initReportGenerator() {
+function initReportGenerator() {
     const generateReportButton = document.getElementById('generateReportButton');
-    const finalReportAreaDiv = document.getElementById('finalReportArea');
-    const reportContentDiv = document.getElementById('reportContent');
+    const finalReportArea = document.getElementById('finalReportArea');
+    const reportContent = document.getElementById('reportContent');
     const savePdfButton = document.getElementById('savePdfButton');
     const printButton = document.getElementById('printButton');
-    const errorMessageDiv = document.getElementById('error-message');
-    const partIdInput = document.getElementById('partId');
-    const qcInspectorInput = document.getElementById('qcInspector');
-    const machineNumberInput = document.getElementById('machineNumber');
-    const partNameInput = document.getElementById('partName');
-    const poNumberInput = document.getElementById('poNumber');
-    const productionDateInput = document.getElementById('productionDate');
-    const lotSizeInput = document.getElementById('lotSize');
-    const aqlSelect = document.getElementById('aql');
-    const defectsFoundInput = document.getElementById('defectsFound');
+    const aqlForm = document.getElementById('aqlForm');
 
-    function displayError(message) {
-        errorMessageDiv.textContent = message;
-        errorMessageDiv.style.display = 'block';
-        logError(message, {});
-    }
+    generateReportButton.addEventListener('click', () => {
+        const qcInspector = document.getElementById('qcInspector').value;
+        const machineNumber = document.getElementById('machineNumber').value;
+        const partName = document.getElementById('partName').value;
+        const partId = document.getElementById('partId').value;
+        const poNumber = document.getElementById('poNumber').value;
+        const productionDate = document.getElementById('productionDate').value;
+        const lotSize = document.getElementById('lotSize').value;
+        const aql = document.getElementById('aql').value;
+        const sampleSize = aqlForm.dataset.sampleSize;
+        const acceptNumber = aqlForm.dataset.acceptNumber;
+        const rejectNumber = aqlForm.dataset.rejectNumber;
+        const defectsFound = aqlForm.dataset.defectsFound;
+        const verdict = aqlForm.dataset.verdict;
 
-    function clearError() {
-        errorMessageDiv.textContent = '';
-        errorMessageDiv.style.display = 'none';
-    }
+        const defectTypes = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+            .map(checkbox => checkbox.value);
 
-    function logError(message, details) {
-        const errorLog = JSON.parse(localStorage.getItem('errorLog') || '[]');
-        errorLog.push({ timestamp: new Date().toISOString(), message, details });
-        localStorage.setItem('errorLog', JSON.stringify(errorLog));
-        console.error(message, details);
-    }
+        const photos = window.photos || [];
 
-    function generateReport() {
-        if (!currentSamplingPlan) {
-            displayError('Calculate sampling plan and submit defects first.');
-            return;
-        }
-        const defectsFound = parseInt(defectsFoundInput.value, 10) || 0;
-        if (isNaN(defectsFound) || defectsFound < 0) {
-            displayError('Enter a valid number of defects found.');
-            return;
-        }
-
-        const reportId = Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')};
-        const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
-        const verdictColor = verdictText === 'ACCEPT' ? 'green' : 'red';
-        const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
-            .map(cb => cb.value);
-        const lotSizeVal = parseInt(lotSizeInput.value, 10);
-        const inspectionNote = lotSizeVal && currentSamplingPlan.sampleSize >= lotSizeVal
-            ? <p style="color: orange; font-weight: bold;">Note: 100% inspection required/performed.</p>
-            : '';
-
-        const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                        aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                        aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                        AQL ${aqlSelect.value}%;
-
-        const reportHTML = 
-            <h3>Batch Identification</h3>
-            <p><strong>Report ID:</strong> ${reportId}</p>
-            <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
-            <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
-            <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
-            <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
-            <p><strong>PO Number:</strong> ${poNumberInput.value || 'N/A'}</p>
-            <p><strong>Production Date:</strong> ${productionDateInput.value || 'N/A'}</p>
-            <p><strong>Inspection Date:</strong> ${new Date().toLocaleDateString()}</p>
-            <p><strong>Inspection Time:</strong> ${new Date().toLocaleTimeString()}</p>
-
-            <h3>Sampling Details & Plan</h3>
-            <p><strong>Total Lot Size:</strong> ${lotSizeInput.value}</p>
-            <p><strong>Inspection Level:</strong> General Level II (Normal)</p>
-            <p><strong>Acceptable Quality Level:</strong> ${aqlText}</p>
-            <p><strong>Sample Size Code Letter:</strong> ${currentSamplingPlan.codeLetter}</p>
-            <p><strong>Sample Size Inspected:</strong> ${currentSamplingPlan.sampleSize}</p>
-            ${inspectionNote}
-            <p><strong>Acceptance Number (Ac):</strong> ${currentSamplingPlan.accept}</p>
-            <p><strong>Rejection Number (Re):</strong> ${currentSamplingPlan.reject}</p>
-
-            <h3>Inspection Results</h3>
-            <p><strong>Number of Defects Found:</strong> ${defectsFound}</p>
-            <p><strong>Verdict:</strong> <strong style="color: ${verdictColor};">${verdictText}</strong></p>
-
-            <h3>Observed Defect Types</h3>
-            ${selectedDefects.length > 0
-                ? <ul>${selectedDefects.map(defect => <li>${defect}</li>).join('')}</ul>
-                : '<p>No specific defect types recorded.</p>'
-            }
-
-            <h3>Photo Documentation</h3>
-            ${capturedPhotos.length > 0
-                ? capturedPhotos.map((photo, index) => 
-                    <p>Photo ${index + 1}:</p>
-                    <img src="${photo}" style="max-width: 200px; border-radius: 8px;">
-                  ).join('')
-                : '<p>No photos added.</p>'
-            }
-
-            <p>${copyrightNotice}</p>
+        reportContent.innerHTML = 
+            <h3>Inspection Report</h3>
+            <p><strong>QC Inspector:</strong> ${DOMPurify.sanitize(qcInspector)}</p>
+            <p><strong>Machine No:</strong> ${DOMPurify.sanitize(machineNumber)}</p>
+            <p><strong>Part Name:</strong> ${DOMPurify.sanitize(partName)}</p>
+            <p><strong>Part ID:</strong> ${DOMPurify.sanitize(partId)}</p>
+            <p><strong>PO Number:</strong> ${DOMPurify.sanitize(poNumber)}</p>
+            <p><strong>Production Date:</strong> ${DOMPurify.sanitize(productionDate)}</p>
+            <p><strong>Lot Size:</strong> ${lotSize}</p>
+            <p><strong>AQL Level:</strong> ${aql}%</p>
+            <p><strong>Sample Size:</strong> ${sampleSize}</p>
+            <p><strong>Accept Number:</strong> ${acceptNumber}</p>
+            <p><strong>Reject Number:</strong> ${rejectNumber}</p>
+            <p><strong>Defects Found:</strong> ${defectsFound}</p>
+            <p><strong>Verdict:</strong> <span class="${verdict.toLowerCase()}">${verdict}</span></p>
+            <h4>Defect Types Found:</h4>
+            <ul>${defectTypes.length > 0 ? defectTypes.map(type => <li>${DOMPurify.sanitize(type)}</li>).join('') : '<li>None</li>'}</ul>
+            <h4>Photos:</h4>
+            <div class="report-photos">
+                ${photos.length > 0 ? photos.map(photo => <img src="${photo.src}" alt="Inspection Photo" style="max-width: 100%;">).join('') : '<p>No photos added.</p>'}
+            </div>
         ;
 
-        reportContentDiv.innerHTML = reportHTML;
-        fadeIn(finalReportAreaDiv);
-        fadeIn(savePdfButton);
-        fadeIn(printButton);
-    }
+        fadeIn(finalReportArea);
+        savePdfButton.style.display = 'block';
+        printButton.style.display = 'block';
 
-    async function saveReportAsPdf() {
+        // Update progress bar
+        document.querySelectorAll('.step')[2].classList.remove('active');
+        document.querySelectorAll('.step')[3].classList.add('active');
+    });
+
+    savePdfButton.addEventListener('click', () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const margin = 10;
-        let y = 20;
+        const pageHeight = doc.internal.pageSize.height;
+        let yPosition = 20;
 
         doc.setFontSize(16);
-        doc.text("Quality Control Inspection Report", margin, y);
-        y += 10;
+        doc.text('Inspection Report', 10, yPosition);
+        yPosition += 10;
 
         doc.setFontSize(12);
-        const reportId = Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')};
-        doc.autoTable({
-            startY: y,
-            head: [['Field', 'Value']],
-            body: [
-                ['Report ID', reportId],
-                ['QC Inspector', qcInspectorInput.value || 'N/A'],
-                ['Machine No', machineNumberInput.value || 'N/A'],
-                ['Part ID', partIdInput.value || 'N/A'],
-                ['Part Name', partNameInput.value || 'N/A'],
-                ['PO Number', poNumberInput.value || 'N/A'],
-                ['Production Date', productionDateInput.value || 'N/A'],
-                ['Inspection Date', new Date().toLocaleDateString()],
-                ['Inspection Time', new Date().toLocaleTimeString()]
-            ],
-            theme: 'grid'
-        });
-        y = doc.lastAutoTable.finalY + 10;
+        doc.text(QC Inspector: ${DOMPurify.sanitize(document.getElementById('qcInspector').value)}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Machine No: ${DOMPurify.sanitize(document.getElementById('machineNumber').value)}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Part Name: ${DOMPurify.sanitize(document.getElementById('partName').value)}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Part ID: ${DOMPurify.sanitize(document.getElementById('partId').value)}, 10, yPosition);
+        yPosition += 10;
+        doc.text(PO Number: ${DOMPurify.sanitize(document.getElementById('poNumber').value)}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Production Date: ${DOMPurify.sanitize(document.getElementById('productionDate').value)}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Lot Size: ${document.getElementById('lotSize').value}, 10, yPosition);
+        yPosition += 10;
+        doc.text(AQL Level: ${document.getElementById('aql').value}%, 10, yPosition);
+        yPosition += 10;
+        doc.text(Sample Size: ${aqlForm.dataset.sampleSize}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Accept Number: ${aqlForm.dataset.acceptNumber}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Reject Number: ${aqlForm.dataset.rejectNumber}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Defects Found: ${aqlForm.dataset.defectsFound}, 10, yPosition);
+        yPosition += 10;
+        doc.text(Verdict: ${aqlForm.dataset.verdict}, 10, yPosition);
+        yPosition += 10;
 
-        doc.text("Sampling Details & Plan", margin, y);
-        y += 5;
-        const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                        aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                        aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
-                        AQL ${aqlSelect.value}%;
-        doc.autoTable({
-            startY: y,
-            head: [['Field', 'Value']],
-            body: [
-                ['Total Lot Size', lotSizeInput.value],
-                ['Inspection Level', 'General Level II (Normal)'],
-                ['Acceptable Quality Level', aqlText],
-                ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
-                ['Sample Size Inspected', currentSamplingPlan.sampleSize],
-                ...(currentSamplingPlan.sampleSize >= parseInt(lotSizeInput.value, 10) ? [['Note', '100% inspection required/performed.']] : []),
-                ['Acceptance Number (Ac)', currentSamplingPlan.accept],
-                ['Rejection Number (Re)', currentSamplingPlan.reject]
-            ],
-            theme: 'grid'
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        doc.text("Inspection Results", margin, y);
-        y += 5;
-        doc.autoTable({
-            startY: y,
-            head: [['Field', 'Value']],
-            body: [
-                ['Number of Defects Found', defectsFoundInput.value],
-                ['Verdict', parseInt(defectsFoundInput.value, 10) <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT']
-            ],
-            theme: 'grid'
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        doc.text("Observed Defect Types", margin, y);
-        y += 7;
-        const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
-            .map(cb => cb.value);
-        if (selectedDefects.length > 0) {
-            selectedDefects.forEach(defect => {
-                if (y > 260) {
+        doc.text('Defect Types Found:', 10, yPosition);
+        yPosition += 10;
+        const defectTypes = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+            .map(checkbox => checkbox.value);
+        if (defectTypes.length > 0) {
+            defectTypes.forEach(type => {
+                if (yPosition > pageHeight - 20) {
                     doc.addPage();
-                    y = 20;
+                    yPosition = 20;
                 }
-                doc.text(- ${defect}, margin, y);
-                y += 7;
+                doc.text(- ${DOMPurify.sanitize(type)}, 10, yPosition);
+                yPosition += 10;
             });
         } else {
-            doc.text("No specific defect types recorded.", margin, y);
-            y += 7;
+            doc.text('- None', 10, yPosition);
+            yPosition += 10;
         }
-        y += 10;
 
-        doc.text("Photo Documentation", margin, y);
-        y += 7;
-        if (capturedPhotos.length > 0) {
-            capturedPhotos.forEach((photo, index) => {
-                if (y > 260) {
+        const photos = window.photos || [];
+        if (photos.length > 0) {
+            doc.text('Photos:', 10, yPosition);
+            yPosition += 10;
+            photos.forEach((photo, index) => {
+                if (yPosition > pageHeight - 100) {
                     doc.addPage();
-                    y = 20;
+                    yPosition = 20;
                 }
-                doc.text(Photo ${index + 1}:, margin, y);
-                y += 5;
                 try {
-                    doc.addImage(photo, 'JPEG', margin, y, 50, 50);
-                    y += 55;
-                } catch (err) {
-                    doc.text("(Photo could not be included)", margin, y);
-                    y += 7;
-                    logError('Failed to add image to PDF', { index, error: err.message });
+                    doc.addImage(photo.src, 'PNG', 10, yPosition, 50, 50);
+                    yPosition += 60;
+                } catch (error) {
+                    console.error('Error adding image to PDF:', error);
                 }
             });
-        } else {
-            doc.text("No photos added.", margin, y);
-            y += 7;
         }
-        y += 10;
 
-        if (y > 260) {
-            doc.addPage();
-            y = 20;
-        }
-        doc.text("Ownership", margin, y);
-        y += 7;
-        doc.text(copyrightNotice, margin, y, { maxWidth: 190 });
+        doc.save(Inspection_Report_${new Date().toISOString().split('T')[0]}.pdf);
+    });
 
-        const pdfBlob = doc.output('blob');
-        const file = new File([pdfBlob], ${reportId}.pdf, { type: 'application/pdf' });
-
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: Inspection Report ${reportId},
-                    text: Please review the inspection report with ID ${reportId}.
-                });
-            } catch (err) {
-                logError('Web Share API error', { error: err.message });
-                doc.save(${reportId}.pdf);
-                alert(PDF saved. Please send to ${qcMonitorContact}.);
-            }
-        } else {
-            doc.save(${reportId}.pdf);
-            alert(PDF saved. Please send to ${qcMonitorContact}.);
-        }
-    }
-
-    function printReport() {
+    printButton.addEventListener('click', () => {
         window.print();
-    }
+    });
 
-    generateReportButton.addEventListener('click', generateReport);
-    savePdfButton.addEventListener('click', saveReportAsPdf);
-    printButton.addEventListener('click', printReport);
+    // Offline Data Storage
+    if ('indexedDB' in window) {
+        const dbPromise = idb.openDB('inspectWiseDB', 1, {
+            upgrade(db) {
+                if (!db.objectStoreNames.contains('formData')) {
+                    db.createObjectStore('formData', { keyPath: 'id' });
+                }
+            }
+        });
+
+        aqlForm.addEventListener('input', async () => {
+            const formData = {
+                id: 'current',
+                qcInspector: document.getElementById('qcInspector').value,
+                machineNumber: document.getElementById('machineNumber').value,
+                partName: document.getElementById('partName').value,
+                partId: document.getElementById('partId').value,
+                poNumber: document.getElementById('poNumber').value,
+                productionDate: document.getElementById('productionDate').value,
+                numBoxes: document.getElementById('numBoxes').value,
+                pcsPerBox: document.getElementById('pcsPerBox').value,
+                aql: document.getElementById('aql').value
+            };
+
+            const db = await dbPromise;
+            const tx = db.transaction('formData', 'readwrite');
+            await tx.store.put(formData);
+            await tx.done;
+        });
+
+        // Load saved data on page load
+        (async () => {
+            const db = await dbPromise;
+            const savedData = await db.get('formData', 'current');
+            if (savedData) {
+                document.getElementById('qcInspector').value = savedData.qcInspector || '';
+                document.getElementById('machineNumber').value = savedData.machineNumber || '';
+                document.getElementById('partName').value = savedData.partName || '';
+                document.getElementById('partId').value = savedData.partId || '';
+                document.getElementById('poNumber').value = savedData.poNumber || '';
+                document.getElementById('productionDate').value = savedData.productionDate || '';
+                document.getElementById('numBoxes').value = savedData.numBoxes || '';
+                document.getElementById('pcsPerBox').value = savedData.pcsPerBox || '';
+                document.getElementById('aql').value = savedData.aql || '';
+            }
+        })();
+    }
 }
+
+// Expose globally
+window.initReportGenerator = initReportGenerator;
