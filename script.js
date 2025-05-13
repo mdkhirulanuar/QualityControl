@@ -1,19 +1,14 @@
 /*
     Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
 */
-import { initFormValidation } from './formValidation.js';
-import { initSamplingPlan, populatePartNameDropdown } from './samplingPlan.js';
-import { initPhotoHandler } from './photoHandler.js';
-import { initReportGenerator } from './reportGenerator.js';
-import { fadeIn, fadeOut } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Modules
-    populatePartNameDropdown();
-    initFormValidation();
-    initSamplingPlan();
-    initPhotoHandler();
-    initReportGenerator();
+    populatePartNameDropdown(); // From samplingPlan.js
+    initFormValidation();       // From formValidation.js
+    initSamplingPlan();         // From samplingPlan.js
+    initPhotoHandler();         // From photoHandler.js
+    initReportGenerator();      // From reportGenerator.js
 
     // PWA Installation Prompt
     let deferredPrompt;
@@ -49,6 +44,32 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('touchstart', () => button.classList.add('active'));
         button.addEventListener('touchend', () => button.classList.remove('active'));
     });
+
+    // Fade In/Out Utility Functions (Moved from utils.js)
+    window.fadeIn = function(element) {
+        element.style.opacity = 0;
+        element.style.display = 'block';
+        let opacity = 0;
+        const timer = setInterval(() => {
+            if (opacity >= 1) {
+                clearInterval(timer);
+            }
+            element.style.opacity = opacity;
+            opacity += 0.1;
+        }, 50);
+    };
+
+    window.fadeOut = function(element) {
+        let opacity = 1;
+        const timer = setInterval(() => {
+            if (opacity <= 0) {
+                clearInterval(timer);
+                element.style.display = 'none';
+            }
+            element.style.opacity = opacity;
+            opacity -= 0.1;
+        }, 50);
+    };
 });
 
 // Register Service Worker
