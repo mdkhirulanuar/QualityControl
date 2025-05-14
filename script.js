@@ -831,15 +831,15 @@ document.addEventListener('DOMContentLoaded', function() {
   if (isNaN(defectsFound) || !currentSamplingPlan) return;
 
   const isRejected = defectsFound > currentSamplingPlan.accept;
-  const verdict = isRejected ? 'REJECTED ❌' : 'ACCEPTED ✅';
+  const verdict = isRejected ? 'REJECTED 🔴' : 'ACCEPTED 🟢';
   const message = isRejected
-    ? `This batch is REJECTED ❌ due to ${defectsFound} defects, exceeding rejection threshold (≥ ${currentSamplingPlan.reject}).`
-    : `This batch is ACCEPTED ✅ as it has ${defectsFound} defects, within acceptance limit (≤ ${currentSamplingPlan.accept}).`;
+    ? `This batch is REJECTED due to ${defectsFound} defects, exceeding rejection threshold (≥ ${currentSamplingPlan.reject}).This batch require 100% inspection.`
+    : `This batch is ACCEPTED as it has ${defectsFound} defects, within acceptance limit (≤ ${currentSamplingPlan.accept}).`;
 
   verdictMessageDiv.innerHTML = `
     <div class="${isRejected ? 'reject' : 'accept'}">
       <strong>${verdict}</strong><br>${message}
-      ${isRejected ? `<br><small>If rejected, contact QC Monitor at ${qcMonitorContact}</small>` : ''}
+      ${isRejected ? `<br><small>Notify QC Executive immediately for further action</small>` : ''}
     </div>
   `;
 
