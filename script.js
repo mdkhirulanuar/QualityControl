@@ -299,8 +299,15 @@ document.addEventListener('DOMContentLoaded', function() {
     photoCount.textContent = `Photos: ${capturedPhotos.length}/${MAX_PHOTOS}`;
     uploadMultiplePhotosInput.disabled = capturedPhotos.length >= MAX_PHOTOS;
     if (validateDefectsSection()) {
+  const defectsFound = parseInt(defectsFoundInput.value, 10);
+  if (defectsFound > currentSamplingPlan.accept) {
+    if (capturedPhotos.length > 0) {
       fadeIn(generateReportButton);
+    } else {
+      generateReportButton.style.display = 'none';
     }
+  }
+}
   }
 
   function addPhoto(base64) {
@@ -819,8 +826,34 @@ document.addEventListener('DOMContentLoaded', function() {
       fadeOut(printButton);
     }
   });
+ submitDefectsButton.addEventListener('click', () => {
+  const defectsFound = parseInt(defectsFoundInput.value, 10);
+  if (isNaN(defectsFound) || !currentSamplingPlan) return;
 
-  submitDefectsButton.addEventListener('click', submitDefects);
+  const isRejected = defectsFound > currentSamplingPlan.accept;
+  const verdict = isRejected ? 'REJECTED ❌' : 'ACCEPTED ✅';
+  const message = isRejected
+    ? `This batch is REJECTED ❌ due to ${defectsFound} defects, exceeding rejection threshold (≥ ${currentSamplingPlan.reject}).`
+    : `This batch is ACCEPTED ✅ as it has ${defectsFound} defects, within acceptance limit (≤ ${currentSamplingPlan.accept}).`;
+
+  verdictMessageDiv.innerHTML = `
+    <div class="${isRejected ? 'reject' : 'accept'}">
+      <strong>${verdict}</strong><br>${message}
+      ${isRejected ? `<br><small>If rejected, contact QC Monitor at ${qcMonitorContact}</small>` : ''}
+    </div>
+  `;
+
+  fadeIn(verdictMessageDiv);
+  fadeIn(defectChecklistDiv); // always show defect checklist
+
+  if (isRejected) {
+    fadeIn(photoCaptureArea);
+    generateReportButton.style.display = 'none'; // wait for photo
+  } else {
+    fadeOut(photoCaptureArea);
+    fadeIn(generateReportButton); // immediately allow report generation
+  }
+});
   generateReportButton.addEventListener('click', generateReport);
   savePdfButton.addEventListener('click', saveReportAsPdf);
   printButton.addEventListener('click', printReport);
