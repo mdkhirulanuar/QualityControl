@@ -1,5 +1,7 @@
+import { elements } from './domRefs.js';
+import { fadeOut, displayError, clearError } from './ui.js';
+import { state } from './state.js';
 import { sampleSizeCodeLetters_Level_II, aqlMasterTable_Simplified } from './config.js';
-import { displayError, clearError } from './ui.js';
 
 export function getLotSizeRange(lotSize) {
   if (lotSize >= 2 && lotSize <= 8) return '2-8';
@@ -20,8 +22,10 @@ export function getLotSizeRange(lotSize) {
   return null;
 }
 
-export function calculateSamplingPlan(lotSize, aqlValue) {
+export function calculateSamplingPlan() {
   clearError();
+  const lotSize = parseInt(elements.lotSizeInput.value, 10);
+  const aqlValue = elements.aqlSelect.value;
 
   if (isNaN(lotSize) || lotSize < 2) {
     displayError('Lot Size must be 2 or greater.');
@@ -29,40 +33,27 @@ export function calculateSamplingPlan(lotSize, aqlValue) {
   }
 
   if (!['1.0', '2.5', '4.0'].includes(aqlValue)) {
-    displayError('Please select High (1.0%), Medium (2.5%), or Low (4.0%) AQL.');
+    displayError('Please select a valid AQL level.');
     return null;
   }
 
   const lotRange = getLotSizeRange(lotSize);
-  if (!lotRange) {
-    displayError('Lot size outside standard AQL range.');
-    return null;
-  }
-
   const codeLetter = sampleSizeCodeLetters_Level_II[lotRange];
-  if (!codeLetter) {
-    displayError(`Code Letter not found for Lot Size: ${lotSize}`);
-    return null;
-  }
-
   const planData = aqlMasterTable_Simplified[codeLetter];
-  if (!planData || !planData.plans) {
-    displayError(`No AQL plan found for Code Letter ${codeLetter}`);
-    return null;
-  }
-
-  const sampleSize = planData.sampleSize;
-  const plan = planData.plans[aqlValue];
+  const plan = planData?.plans[aqlValue];
 
   if (!plan || typeof plan.ac === 'undefined' || typeof plan.re === 'undefined') {
-    displayError(`Ac/Re not defined for AQL ${aqlValue} and Code ${codeLetter}`);
+    displayError(`No sampling plan found for AQL ${aqlValue} / Code ${codeLetter}`);
     return null;
   }
 
-  return {
-    codeLetter,
-    sampleSize,
+  // Update shared state
+  state.currentSamplingPlan = {
+    codeLetter: codeLetter,
+    sampleSize: planData.sampleSize,
     accept: plan.ac,
     reject: plan.re
   };
+
+  return state.currentSamplingPlan;
 }
