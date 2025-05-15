@@ -1,8 +1,9 @@
 import { elements } from './domRefs.js';
-import { capturedPhotos } from './photo.js';
+import { state } from './state.js';
 import { copyrightNotice, qcMonitorContact } from './config.js';
 
-export function displayVerdict(defectsFound, plan) {
+export function displayVerdict(defectsFound) {
+  const plan = state.currentSamplingPlan;
   const isRejected = defectsFound > plan.accept;
   const verdict = isRejected ? 'REJECTED 🔴' : 'ACCEPTED 🟢';
   const message = isRejected
@@ -28,22 +29,31 @@ export function displayVerdict(defectsFound, plan) {
   }
 }
 
-export function generateReportHTML(reportId, plan, defectsFound, selectedDefects, aqlValue) {
-  const aqlText =
-    aqlValue === '1.0' ? 'High Quality (AQL 1.0%)' :
-    aqlValue === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-    aqlValue === '4.0' ? 'Low Quality (AQL 4.0%)' :
-    `AQL ${aqlValue}%`;
+export function generateReport() {
+  if (!state.currentSamplingPlan) return;
 
-  const lotSize = parseInt(elements.lotSizeInput.value, 10);
-  const inspectionNote = lotSize && plan.sampleSize >= lotSize
-    ? `<p style="color: orange; font-weight: bold;">Note: 100% inspection required/performed.</p>`
-    : '';
-
-  const verdictText = defectsFound <= plan.accept ? 'ACCEPT' : 'REJECT';
+  const defectsFound = parseInt(elements.defectsFoundInput.value, 10) || 0;
+  const verdictText = defectsFound <= state.currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
   const verdictColor = verdictText === 'ACCEPT' ? 'green' : 'red';
+  const reportId = `Report_${elements.partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
 
-  return `
+  const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked')).map(cb => cb.value);
+  const lotSize = parseInt(elements.lotSizeInput.value, 10);
+  const aqlValue = elements.aqlSelect.value;
+
+  const aqlText = aqlValue === '1.0' ? 'High (1.0%)' :
+                  aqlValue === '2.5' ? 'Medium (2.5%)' :
+                  aqlValue === '4.0' ? 'Low (4.0%)' :
+                  `AQL ${aqlValue}%`;
+
+  const inspectionNote = state.currentSamplingPlan.sampleSize >= lotSize
+    ? `<p style="color: orange; font-weight: bold;">Note: 100% inspection required/performed.</p>` : '';
+
+  const photoSection = state.capturedPhotos.length > 0
+    ? state.capturedPhotos.map((photo, i) => `<p>Photo ${i + 1}:</p><img src="${photo}" style="max-width: 200px; border-radius: 8px;">`).join('')
+    : '<p>No photos added.</p>';
+
+  const reportHTML = `
     <h3>Batch Identification</h3>
     <p><strong>Report ID:</strong> ${reportId}</p>
     <p><strong>QC Inspector:</strong> ${elements.qcInspectorInput.value}</p>
@@ -58,42 +68,35 @@ export function generateReportHTML(reportId, plan, defectsFound, selectedDefects
     <h3>Sampling Details & Plan</h3>
     <p><strong>Total Lot Size:</strong> ${lotSize}</p>
     <p><strong>Inspection Level:</strong> General Level II (Normal)</p>
-    <p><strong>Acceptable Quality Level:</strong> ${aqlText}</p>
-    <p><strong>Sample Size Code Letter:</strong> ${plan.codeLetter}</p>
-    <p><strong>Sample Size Inspected:</strong> ${plan.sampleSize}</p>
+    <p><strong>AQL Level:</strong> ${aqlText}</p>
+    <p><strong>Sample Size Code:</strong> ${state.currentSamplingPlan.codeLetter}</p>
+    <p><strong>Sample Size Inspected:</strong> ${state.currentSamplingPlan.sampleSize}</p>
     ${inspectionNote}
-    <p><strong>Acceptance Number (Ac):</strong> ${plan.accept}</p>
-    <p><strong>Rejection Number (Re):</strong> ${plan.reject}</p>
+    <p><strong>Acceptance Number (Ac):</strong> ${state.currentSamplingPlan.accept}</p>
+    <p><strong>Rejection Number (Re):</strong> ${state.currentSamplingPlan.reject}</p>
 
     <h3>Inspection Results</h3>
-    <p><strong>Number of Defects Found:</strong> ${defectsFound}</p>
-    <p><strong>Verdict:</strong> <strong style="color: ${verdictColor};">${verdictText}</strong></p>
+    <p><strong>Defects Found:</strong> ${defectsFound}</p>
+    <p><strong>Verdict:</strong> <span style="color: ${verdictColor}; font-weight: bold;">${verdictText}</span></p>
 
-    <h3>Observed Defect Types</h3>
+    <h3>Defect Types</h3>
     ${selectedDefects.length > 0
       ? `<ul>${selectedDefects.map(defect => `<li>${defect}</li>`).join('')}</ul>`
       : '<p>No specific defect types recorded.</p>'}
 
     <h3>Photo Documentation</h3>
-    ${capturedPhotos.length > 0
-      ? capturedPhotos.map((photo, index) => `
-          <p>Photo ${index + 1}:</p>
-          <img src="${photo}" style="max-width: 200px; border-radius: 8px;">
-        `).join('')
-      : '<p>No photos added.</p>'}
+    ${photoSection}
 
     <p>${copyrightNotice}</p>
   `;
-}
 
-export function renderReportToPage(html) {
-  elements.reportContentDiv.innerHTML = html;
+  elements.reportContentDiv.innerHTML = reportHTML;
   elements.finalReportAreaDiv.style.display = 'block';
   elements.savePdfButton.style.display = 'block';
   elements.printButton.style.display = 'block';
 }
 
-export function saveReportAsPdf(reportId, plan, defectsFound, selectedDefects, aqlValue) {
+export function saveReportAsPdf() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const margin = 10;
@@ -103,6 +106,17 @@ export function saveReportAsPdf(reportId, plan, defectsFound, selectedDefects, a
   doc.text("Quality Control Inspection Report", margin, y);
   y += 10;
 
+  const reportId = `Report_${elements.partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
+  const aqlValue = elements.aqlSelect.value;
+
+  const aqlText = aqlValue === '1.0' ? 'High (1.0%)' :
+                  aqlValue === '2.5' ? 'Medium (2.5%)' :
+                  aqlValue === '4.0' ? 'Low (4.0%)' :
+                  `AQL ${aqlValue}%`;
+
+  const lotSize = parseInt(elements.lotSizeInput.value, 10);
+  const defectsFound = parseInt(elements.defectsFoundInput.value, 10) || 0;
+
   doc.setFontSize(12);
   doc.autoTable({
     startY: y,
@@ -111,100 +125,53 @@ export function saveReportAsPdf(reportId, plan, defectsFound, selectedDefects, a
       ['Report ID', reportId],
       ['QC Inspector', elements.qcInspectorInput.value],
       ['Machine No', elements.machineNumberInput.value],
-      ['Part ID', elements.partIdInput.value],
       ['Part Name', elements.partNameInput.value],
+      ['Part ID', elements.partIdInput.value],
       ['PO Number', elements.poNumberInput.value],
       ['Production Date', elements.productionDateInput.value],
       ['Inspection Date', new Date().toLocaleDateString()],
-      ['Inspection Time', new Date().toLocaleTimeString()]
+      ['Inspection Time', new Date().toLocaleTimeString()],
+      ['Lot Size', lotSize],
+      ['AQL Level', aqlText],
+      ['Sample Size Code', state.currentSamplingPlan.codeLetter],
+      ['Sample Size Inspected', state.currentSamplingPlan.sampleSize],
+      ...(state.currentSamplingPlan.sampleSize >= lotSize ? [['Note', '100% inspection required']] : []),
+      ['Ac', state.currentSamplingPlan.accept],
+      ['Re', state.currentSamplingPlan.reject],
+      ['Defects Found', defectsFound],
+      ['Verdict', defectsFound <= state.currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT']
     ],
     theme: 'grid'
   });
-  y = doc.lastAutoTable.finalY + 10;
 
-  doc.text("Sampling Details & Plan", margin, y);
-  y += 5;
+  let yAfter = doc.lastAutoTable.finalY + 10;
+  doc.setFontSize(12);
+  doc.text("Observed Defect Types", margin, yAfter);
+  yAfter += 7;
 
-  const aqlText =
-    aqlValue === '1.0' ? 'High Quality (AQL 1.0%)' :
-    aqlValue === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-    aqlValue === '4.0' ? 'Low Quality (AQL 4.0%)' :
-    `AQL ${aqlValue}%`;
-
-  const lotSize = parseInt(elements.lotSizeInput.value, 10);
-
-  doc.autoTable({
-    startY: y,
-    head: [['Field', 'Value']],
-    body: [
-      ['Total Lot Size', lotSize],
-      ['Inspection Level', 'General Level II (Normal)'],
-      ['Acceptable Quality Level', aqlText],
-      ['Sample Size Code Letter', plan.codeLetter],
-      ['Sample Size Inspected', plan.sampleSize],
-      ...(plan.sampleSize >= lotSize ? [['Note', '100% inspection required/performed.']] : []),
-      ['Acceptance Number (Ac)', plan.accept],
-      ['Rejection Number (Re)', plan.reject]
-    ],
-    theme: 'grid'
-  });
-  y = doc.lastAutoTable.finalY + 10;
-
-  doc.text("Inspection Results", margin, y);
-  y += 5;
-  doc.autoTable({
-    startY: y,
-    head: [['Field', 'Value']],
-    body: [
-      ['Number of Defects Found', defectsFound],
-      ['Verdict', defectsFound <= plan.accept ? 'ACCEPT' : 'REJECT']
-    ],
-    theme: 'grid'
-  });
-  y = doc.lastAutoTable.finalY + 10;
-
-  doc.text("Observed Defect Types", margin, y);
-  y += 7;
+  const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked')).map(cb => cb.value);
   if (selectedDefects.length > 0) {
     selectedDefects.forEach(defect => {
-      if (y > 260) { doc.addPage(); y = 20; }
-      doc.text(`- ${defect}`, margin, y);
-      y += 7;
-    });
-  } else {
-    doc.text("No specific defect types recorded.", margin, y);
-    y += 7;
-  }
-
-  y += 10;
-  doc.text("Photo Documentation", margin, y);
-  y += 7;
-  if (capturedPhotos.length > 0) {
-    capturedPhotos.forEach((photo, index) => {
-      if (y > 260) { doc.addPage(); y = 20; }
-      doc.text(`Photo ${index + 1}:`, margin, y);
-      y += 5;
-      try {
-        doc.addImage(photo, 'JPEG', margin, y, 50, 50);
-        y += 55;
-      } catch (err) {
-        doc.text("(Photo could not be included)", margin, y);
-        y += 7;
+      if (yAfter > 270) {
+        doc.addPage(); yAfter = 20;
       }
+      doc.text(`- ${defect}`, margin, yAfter);
+      yAfter += 6;
     });
   } else {
-    doc.text("No photos added.", margin, y);
-    y += 7;
+    doc.text("No specific defect types recorded.", margin, yAfter);
+    yAfter += 6;
   }
 
-  y += 10;
-  if (y > 260) { doc.addPage(); y = 20; }
-  doc.text("Ownership", margin, y);
-  y += 7;
-  doc.text(copyrightNotice, margin, y, { maxWidth: 190 });
+  yAfter += 8;
+  doc.text("Ownership", margin, yAfter);
+  yAfter += 6;
+  doc.text(copyrightNotice, margin, yAfter, {
+    maxWidth: 190
+  });
 
   doc.save(`${reportId}.pdf`);
-  alert(`PDF report saved. Please send the PDF with Report ID ${reportId} to ${qcMonitorContact}.`);
+  alert(`PDF report saved.\nPlease send to ${qcMonitorContact}`);
 }
 
 export function printReport() {
