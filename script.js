@@ -638,28 +638,127 @@ document.addEventListener('DOMContentLoaded', function() {
     fadeIn(printButton);
   }
 
-  // Full saveReportAsPdf() function for InspectWise Go function saveReportAsPdf() { const { jsPDF } = window.jspdf; const doc = new jsPDF(); const margin = 10; let y = 20;
+  // --- Save PDF ---
+  function saveReportAsPdf() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const margin = 10;
+    let y = 20;
 
-const reportId = Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}; const defectsFound = parseInt(defectsFoundInput.value, 10) || 0; const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPTED ✅' : 'REJECTED ❌'; const verdictColor = verdictText.includes('REJECTED') ? [200, 0, 0] : [0, 128, 0]; const aqlText = getAqlText(aqlSelect.value);
+    doc.setFontSize(16);
+    doc.text("Quality Control Inspection Report", margin, y);
+    y += 10;
 
-// Header doc.setFontSize(18); doc.setTextColor(13, 59, 98); doc.text("InspectWise Go™ – QC Inspection Report", margin, y); y += 6; doc.setLineWidth(0.5); doc.line(margin, y, 200, y); y += 6;
+    doc.setFontSize(12);
+    const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
+    doc.autoTable({
+      startY: y,
+      head: [['Field', 'Value']],
+      body: [
+        ['Report ID', reportId],
+        ['QC Inspector', qcInspectorInput.value || 'N/A'],
+        ['Machine No', machineNumberInput.value || 'N/A'],
+        ['Part ID', partIdInput.value || 'N/A'],
+        ['Part Name', partNameInput.value || 'N/A'],
+        ['PO Number', poNumberInput.value || 'N/A'],
+        ['Production Date', productionDateInput.value || 'N/A'],
+        ['Inspection Date', new Date().toLocaleDateString()],
+        ['Inspection Time', new Date().toLocaleTimeString()]
+      ],
+      theme: 'grid'
+    });
+    y = doc.lastAutoTable.finalY + 10;
 
-// Batch Identification doc.autoTable({ startY: y, head: [["Batch Identification", ""]], body: [ ["Report ID", reportId], ["QC Inspector", qcInspectorInput.value || 'N/A'], ["Machine No", machineNumberInput.value || 'N/A'], ["Part Name", partNameInput.value || 'N/A'], ["Part ID", partIdInput.value || 'N/A'], ["PO Number", poNumberInput.value || 'N/A'], ["Production Date", productionDateInput.value || 'N/A'], ["Inspection Date", new Date().toLocaleDateString()], ["Inspection Time", new Date().toLocaleTimeString()] ], theme: 'grid', headStyles: { fillColor: [13, 59, 98], textColor: 255 }, columnStyles: { 0: { fontStyle: 'bold', cellWidth: 60 } } }); y = doc.lastAutoTable.finalY + 5;
+    doc.text("Sampling Details & Plan", margin, y);
+    y += 5;
+    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
+                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
+                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+                    `AQL ${aqlSelect.value}%`;
+    doc.autoTable({
+      startY: y,
+      head: [['Field', 'Value']],
+      body: [
+        ['Total Lot Size', lotSizeInput.value],
+        ['Inspection Level', 'General Level II (Normal)'],
+        ['Acceptable Quality Level', aqlText],
+        ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
+        ['Sample Size Inspected', currentSamplingPlan.sampleSize],
+        ...(currentSamplingPlan.sampleSize >= parseInt(lotSizeInput.value, 10) ? [['Note', '100% inspection required/performed.']] : []),
+        ['Acceptance Number (Ac)', currentSamplingPlan.accept],
+        ['Rejection Number (Re)', currentSamplingPlan.reject]
+      ],
+      theme: 'grid'
+    });
+    y = doc.lastAutoTable.finalY + 10;
 
-// Sampling Plan doc.autoTable({ startY: y, head: [["Sampling Details & Plan", ""]], body: [ ["Number of Boxes", numBoxesInput.value], ["Pcs per Box", pcsPerBoxInput.value], ["Total Lot Size", lotSizeInput.value], ["Inspection Level", "General Level II (Normal)"], ["Acceptable Quality Level", aqlText], ["Sample Size Code Letter", currentSamplingPlan.codeLetter], ["Sample Size", currentSamplingPlan.sampleSize], ["Acceptance Number (Ac)", currentSamplingPlan.accept], ["Rejection Number (Re)", currentSamplingPlan.reject] ], theme: 'grid', headStyles: { fillColor: [13, 59, 98], textColor: 255 }, columnStyles: { 0: { fontStyle: 'bold', cellWidth: 70 } } }); y = doc.lastAutoTable.finalY + 5;
+    doc.text("Inspection Results", margin, y);
+    y += 5;
+    doc.autoTable({
+      startY: y,
+      head: [['Field', 'Value']],
+      body: [
+        ['Number of Defects Found', defectsFoundInput.value],
+        ['Verdict', parseInt(defectsFoundInput.value, 10) <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT']
+      ],
+      theme: 'grid'
+    });
+    y = doc.lastAutoTable.finalY + 10;
 
-// Verdict doc.setTextColor(...verdictColor); doc.setFontSize(12); doc.text(Verdict: ${verdictText}, margin, y); y += 10; doc.setTextColor(0);
+    doc.text("Observed Defect Types", margin, y);
+    y += 7;
+    const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
+      .map(cb => cb.value);
+    if (selectedDefects.length > 0) {
+      selectedDefects.forEach(defect => {
+        if (y > 260) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`- ${defect}`, margin, y);
+        y += 7;
+      });
+    } else {
+      doc.text("No specific defect types recorded.", margin, y);
+      y += 7;
+    }
+    y += 10;
 
-// Observed Defects const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked')) .map(cb => cb.value); doc.text("Observed Defect Types:", margin, y); y += 6; if (selectedDefects.length > 0) { selectedDefects.forEach(def => { doc.text(- ${def}, margin + 5, y); y += 6; }); } else { doc.text("No specific defect types recorded.", margin + 5, y); y += 6; }
+    doc.text("Photo Documentation", margin, y);
+    y += 7;
+    if (capturedPhotos.length > 0) {
+      capturedPhotos.forEach((photo, index) => {
+        if (y > 260) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`Photo ${index + 1}:`, margin, y);
+        y += 5;
+        try {
+          doc.addImage(photo, 'JPEG', margin, y, 50, 50);
+          y += 55;
+        } catch (err) {
+          doc.text("(Photo could not be included)", margin, y);
+          y += 7;
+        }
+      });
+    } else {
+      doc.text("No photos added.", margin, y);
+      y += 7;
+    }
+    y += 10;
 
-// Photos y += 4; doc.text("Photo Documentation:", margin, y); y += 6; capturedPhotos.forEach((photo, index) => { if (y > 250) { doc.addPage(); y = 20; } try { doc.rect(margin, y, 54, 54); // frame doc.addImage(photo, 'JPEG', margin + 2, y + 2, 50, 50); y += 56; doc.text(Photo ${index + 1}, margin, y); y += 6; } catch (e) { doc.text("(Photo could not be added)", margin, y); y += 6; } });
+    if (y > 260) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.text("Ownership", margin, y);
+    y += 7;
+    doc.text(copyrightNotice, margin, y, { maxWidth: 190 });
 
-// Signature block (print only) if (window.matchMedia && window.matchMedia('print').matches) { if (y > 250) { doc.addPage(); y = 20; } doc.text("QA Executive Approval (for printed copy only):", margin, y); y += 5; doc.line(margin, y, margin + 80, y); doc.text("Signature", margin, y + 5); y += 10; }
-
-// Footer always at bottom const footerY = doc.internal.pageSize.height - 10; doc.setFontSize(9); doc.setTextColor(100); doc.text("© 2025 KPI Electrical Mfg. Sdn. Bhd. — Generated by InspectWise Go™", margin, footerY);
-
-// Save doc.save(${reportId}.pdf); }
-
+    doc.save(`${reportId}.pdf`);
+    alert(`PDF report saved. Please send the PDF with Report ID ${reportId} to ${qcMonitorContact}.`);
+  }
 
   // --- Print Report ---
   function printReport() {
