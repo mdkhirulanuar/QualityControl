@@ -217,8 +217,12 @@
         </footer>
     </div>
 
-    <!-- Scripts -->
-    <script src="partsList.js" defer></script>
-    <script type="module" src="js/main.js"></script>
+    <!-- Load partsList global BEFORE module -->
+<script src="js/partsList.js"></script>
+<script type="module" src="js/main.js"></script>
+    
+    </div> <!-- your last section -->
+<script src="js/partsList.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
