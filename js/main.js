@@ -3,17 +3,39 @@
 
 import { elements } from './domRefs.js';
 import { state } from './state.js';
-import { calculateSamplingPlan, displaySamplingPlan } from './logic/sampling.js';
+import { calculateSamplingPlan, displaySamplingPlan } from './logic/sampling.js'; // Adjust if inside /logic/
 import { fadeIn, fadeOut, displayError, clearError } from './ui.js';
 import { qcMonitorContact } from './config.js';
 
 // --- Initial Setup ---
 document.addEventListener('DOMContentLoaded', () => {
-  populatePartNameDropdown();
+  populatePartNameDropdown();       // ✅ Ensures dropdown is filled
   setupEventListeners();
   resetFormState();
   registerServiceWorker();
 });
+
+/**
+ * Populate Part Name dropdown from global partsList.
+ */
+function populatePartNameDropdown() {
+  try {
+    console.log('✅ partsList available in main.js:', typeof partsList, partsList); // Debug
+
+    elements.partNameInput.innerHTML = '<option value="">-- Select Part Name --</option>';
+
+    const uniquePartNames = [...new Set(partsList.map(part => part.partName))];
+    uniquePartNames.forEach(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      elements.partNameInput.appendChild(option);
+    });
+  } catch (error) {
+    console.error('❌ Failed to populate Part Name dropdown:', error);
+    displayError('Unable to load Part Name list. Please check partsList.js.', elements.errorMessageDiv);
+  }
+}
 
 /**
  * Attach all event listeners for inputs and buttons.
@@ -31,8 +53,7 @@ function setupEventListeners() {
     resetFormState();
   });
 
-  // You can also hook up defect submission, photo handling, report generation
-  // from other modules like defects.js, photo.js, report.js
+  // Future integration: defects.js, photo.js, report.js
 }
 
 /**
