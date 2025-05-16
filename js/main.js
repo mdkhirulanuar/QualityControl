@@ -9,6 +9,7 @@ import { qcMonitorContact } from './config.js';
 
 // --- Initial Setup ---
 document.addEventListener('DOMContentLoaded', () => {
+  populatePartNameDropdown();
   setupEventListeners();
   resetFormState();
   registerServiceWorker();
