@@ -1,6 +1,6 @@
-// main.js
+// main.js — Final Integrated Version Without Module Dependency
 
-// --- Global DOM Elements ---
+// --- DOM Elements ---
 const aqlForm = document.getElementById('aqlForm');
 const qcInspectorInput = document.getElementById('qcInspector');
 const machineNumberInput = document.getElementById('machineNumber');
@@ -34,7 +34,6 @@ const batchSection = document.querySelector('.batch-info');
 const lotSection = document.querySelector('.lot-details');
 const buttonGroup = document.querySelector('.button-group');
 
-// Annotation Elements
 const annotationModal = document.getElementById('annotationModal');
 const annotationCanvas = document.getElementById('annotationCanvas');
 const closeModal = document.querySelector('.close-modal');
@@ -44,32 +43,104 @@ const drawFreehandButton = document.getElementById('drawFreehandButton');
 const undoButton = document.getElementById('undoButton');
 const saveAnnotationButton = document.getElementById('saveAnnotationButton');
 
-// Contact for report submission
+// Global State
+let currentSamplingPlan = null;
+let capturedPhotos = [];
+const MAX_PHOTOS = 5;
+let fabricCanvas = null;
+let currentPhotoIndex = null;
+let annotationHistory = [];
+let currentMode = null;
 const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately";
 
-// App Initialization
-document.addEventListener('DOMContentLoaded', function () {
+// === UI Animation ===
+function fadeIn(el) {
+  el.style.opacity = 0;
+  el.style.display = 'block';
+  let op = 0;
+  const timer = setInterval(() => {
+    if (op >= 1) clearInterval(timer);
+    el.style.opacity = op;
+    op += 0.1;
+  }, 30);
+}
+function fadeOut(el) {
+  let op = 1;
+  const timer = setInterval(() => {
+    if (op <= 0) {
+      clearInterval(timer);
+      el.style.display = 'none';
+    }
+    el.style.opacity = op;
+    op -= 0.1;
+  }, 30);
+}
+
+// === Batch Validation Logic ===
+function validateBatchSection() {
+  const isValid =
+    qcInspectorInput.value !== '' &&
+    machineNumberInput.value !== '' &&
+    partNameInput.value !== '' &&
+    partIdInput.value !== '' &&
+    poNumberInput.value.trim() !== '' &&
+    productionDateInput.value !== '';
+
+  if (isValid) {
+    fadeIn(lotSection);
+    fadeIn(buttonGroup);
+  } else {
+    fadeOut(lotSection);
+    fadeOut(buttonGroup);
+    fadeOut(resultsDiv);
+    fadeOut(defectsInputArea);
+    fadeOut(photoCaptureArea);
+    fadeOut(verdictMessageDiv);
+    fadeOut(defectChecklistDiv);
+    fadeOut(finalReportAreaDiv);
+    fadeOut(generateReportButton);
+    fadeOut(savePdfButton);
+    fadeOut(printButton);
+  }
+  return isValid;
+}
+
+// === AQL Logic ===
+function calculateLotSize() {
+  const boxes = parseInt(numBoxesInput.value, 10);
+  const pcs = parseInt(pcsPerBoxInput.value, 10);
+  if (!isNaN(boxes) && !isNaN(pcs)) {
+    lotSizeInput.value = boxes * pcs;
+  } else {
+    lotSizeInput.value = '';
+  }
+}
+
+// === Init App ===
+document.addEventListener('DOMContentLoaded', () => {
   populatePartNameDropdown();
   resetAll();
 
-  // --- Input Validation Events ---
+  // Input Events for Batch Identification
   qcInspectorInput.addEventListener('change', validateBatchSection);
   machineNumberInput.addEventListener('change', validateBatchSection);
   partNameInput.addEventListener('change', validateBatchSection);
   poNumberInput.addEventListener('input', validateBatchSection);
   productionDateInput.addEventListener('change', validateBatchSection);
+
+  // Lot Input Events
   numBoxesInput.addEventListener('input', () => {
     calculateLotSize();
-    validateLotSection();
+    validateBatchSection();
   });
   pcsPerBoxInput.addEventListener('input', () => {
     calculateLotSize();
-    validateLotSection();
+    validateBatchSection();
   });
-  aqlSelect.addEventListener('change', validateLotSection);
-  defectsFoundInput.addEventListener('change', validateDefectsSection);
 
-  // --- Main Logic Buttons ---
+  aqlSelect.addEventListener('change', validateBatchSection);
+
+  // Buttons
   calculateButton.addEventListener('click', () => {
     currentSamplingPlan = calculateSamplingPlan();
     if (currentSamplingPlan) {
@@ -93,10 +164,8 @@ document.addEventListener('DOMContentLoaded', function () {
   printButton.addEventListener('click', printReport);
   resetButton.addEventListener('click', resetAll);
 
-  // --- Photo & Annotation Events ---
-  uploadMultiplePhotosInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
-
-  photoPreview.addEventListener('click', (e) => {
+  uploadMultiplePhotosInput.addEventListener('change', e => handleFileUpload(e.target.files));
+  photoPreview.addEventListener('click', e => {
     if (e.target.tagName === 'IMG') {
       const index = parseInt(e.target.dataset.index, 10);
       const action = prompt('Type "annotate" to annotate or "remove" to delete this photo.');
@@ -113,22 +182,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
   closeModal.addEventListener('click', closeAnnotationModal);
 
-  // --- Touch Enhancements (Mobile) ---
+  // Touch UX
   document.querySelectorAll('button').forEach(button => {
     button.addEventListener('touchstart', () => button.classList.add('active'));
     button.addEventListener('touchend', () => button.classList.remove('active'));
   });
 });
 
-// --- Service Worker ---
+// PWA Service Worker
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
+  window.addEventListener('load', () => {
     navigator.serviceWorker.register('service-worker.js')
-      .then(registration => {
-        console.log('ServiceWorker registered with scope:', registration.scope);
-      })
-      .catch(err => {
-        console.log('ServiceWorker registration failed:', err);
-      });
+      .then(reg => console.log('ServiceWorker registered:', reg.scope))
+      .catch(err => console.error('ServiceWorker registration failed:', err));
   });
 }
