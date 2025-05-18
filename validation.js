@@ -1,11 +1,56 @@
 // validation.js
 
-function validateBatchSection() {
+// Elements required for section display toggling
+const lotSection = document.querySelector('.lot-details');
+const buttonGroup = document.querySelector('.button-group');
+const resultsDiv = document.getElementById('results');
+const defectsInputArea = document.getElementById('defectsInputArea');
+const photoCaptureArea = document.getElementById('photoCaptureArea');
+const verdictMessageDiv = document.getElementById('verdictMessage');
+const defectChecklistDiv = document.getElementById('defectChecklist');
+const finalReportAreaDiv = document.getElementById('finalReportArea');
+const generateReportButton = document.getElementById('generateReportButton');
+const savePdfButton = document.getElementById('savePdfButton');
+const printButton = document.getElementById('printButton');
+
+// === Visibility Utility ===
+export function fadeIn(element) {
+  element.style.opacity = 0;
+  element.style.display = 'block';
+  let op = 0;
+  const timer = setInterval(() => {
+    if (op >= 1) clearInterval(timer);
+    element.style.opacity = op;
+    op += 0.1;
+  }, 30);
+}
+
+export function fadeOut(element) {
+  let op = 1;
+  const timer = setInterval(() => {
+    if (op <= 0) {
+      clearInterval(timer);
+      element.style.display = 'none';
+    }
+    element.style.opacity = op;
+    op -= 0.1;
+  }, 30);
+}
+
+// === Batch Section Validation ===
+export function validateBatchSection() {
+  const qcInspectorInput = document.getElementById('qcInspector');
+  const machineNumberInput = document.getElementById('machineNumber');
+  const partNameInput = document.getElementById('partName');
+  const partIdInput = document.getElementById('partId');
+  const poNumberInput = document.getElementById('poNumber');
+  const productionDateInput = document.getElementById('productionDate');
+
   const isValid =
     qcInspectorInput.value !== '' &&
     machineNumberInput.value !== '' &&
-    partIdInput.value !== '' &&
     partNameInput.value !== '' &&
+    partIdInput.value !== '' &&
     poNumberInput.value.trim() !== '' &&
     productionDateInput.value !== '';
 
@@ -29,9 +74,13 @@ function validateBatchSection() {
   return isValid;
 }
 
-function validateLotSection() {
-  const numBoxes = parseInt(numBoxesInput.value, 10);
-  const pcsPerBox = parseInt(pcsPerBoxInput.value, 10);
+// === Lot Section Validation ===
+export function validateLotSection() {
+  const numBoxes = parseInt(document.getElementById('numBoxes').value, 10);
+  const pcsPerBox = parseInt(document.getElementById('pcsPerBox').value, 10);
+  const aqlSelect = document.getElementById('aql');
+  const calculateButton = document.getElementById('calculateButton');
+
   const isValid =
     numBoxes > 0 &&
     pcsPerBox > 0 &&
@@ -55,7 +104,11 @@ function validateLotSection() {
   return isValid;
 }
 
-function validateDefectsSection() {
+// === Defects Section Validation ===
+export function validateDefectsSection() {
+  const defectsFoundInput = document.getElementById('defectsFound');
+  const submitDefectsButton = document.getElementById('submitDefectsButton');
+
   const defectsFound = parseInt(defectsFoundInput.value, 10);
   const isValid = !isNaN(defectsFound) && defectsFound >= 0 && currentSamplingPlan;
 
@@ -72,28 +125,4 @@ function validateDefectsSection() {
   }
 
   return isValid;
-}
-
-// --- UI Effects ---
-function fadeIn(element) {
-  element.style.opacity = 0;
-  element.style.display = 'block';
-  let op = 0;
-  const timer = setInterval(() => {
-    if (op >= 1) clearInterval(timer);
-    element.style.opacity = op;
-    op += 0.1;
-  }, 30);
-}
-
-function fadeOut(element) {
-  let op = 1;
-  const timer = setInterval(() => {
-    if (op <= 0) {
-      clearInterval(timer);
-      element.style.display = 'none';
-    }
-    element.style.opacity = op;
-    op -= 0.1;
-  }, 30);
 }
