@@ -1,31 +1,47 @@
 // verdictHandler.js
 
-function verdict_bindEvents() {
-  const majorInput = document.getElementById('majorDefects');
-  const minorInput = document.getElementById('minorDefects');
+function submitDefects() {
+  clearError();
 
-  if (majorInput && minorInput) {
-    majorInput.addEventListener('input', updateShortVerdict);
-    minorInput.addEventListener('input', updateShortVerdict);
-  }
-}
-
-function updateShortVerdict(data) {
-  const major = data ? parseInt(data.majorDefects) : parseInt(document.getElementById('majorDefects').value);
-  const minor = data ? parseInt(data.minorDefects) : parseInt(document.getElementById('minorDefects').value);
-
-  const verdictText = calculateVerdict(major, minor);
-  const verdictDisplay = document.getElementById('shortVerdict');
-
-  if (verdictDisplay) {
-    verdictDisplay.textContent = verdictText;
+  const defectsFound = parseInt(defectsFoundInput.value, 10);
+  if (isNaN(defectsFound) || defectsFound < 0) {
+    displayError('Please enter a valid number of defects (0 or more).');
+    fadeOut(verdictMessageDiv);
+    fadeOut(defectChecklistDiv);
+    fadeOut(photoCaptureArea);
+    fadeOut(finalReportAreaDiv);
+    fadeOut(generateReportButton);
+    fadeOut(savePdfButton);
+    fadeOut(printButton);
+    return;
   }
 
-  togglePhotoFieldsIfRequired(); // Ensure photos are shown if Rejected
-}
+  if (!currentSamplingPlan) {
+    displayError('Please calculate the sampling plan first.');
+    return;
+  }
 
-function calculateVerdict(major, minor) {
-  if (isNaN(major) || isNaN(minor)) return '';
+  const isRejected = defectsFound > currentSamplingPlan.accept;
+  const verdict = isRejected ? 'REJECTED 🔴' : 'ACCEPTED 🟢';
+  const message = isRejected
+    ? `This batch is REJECTED due to ${defectsFound} defects, exceeding rejection threshold (≥ ${currentSamplingPlan.reject}). This batch requires 100% inspection.`
+    : `This batch is ACCEPTED as it has ${defectsFound} defects, within acceptance limit (≤ ${currentSamplingPlan.accept}).`;
 
-  return major === 0 && minor === 0 ? 'PASSED' : 'REJECTED';
+  verdictMessageDiv.innerHTML = `
+    <div class="${isRejected ? 'reject' : 'accept'}">
+      <strong>${verdict}</strong><br>${message}
+      ${isRejected ? `<br><small>Notify QC Executive immediately for further action</small>` : ''}
+    </div>
+  `;
+
+  fadeIn(verdictMessageDiv);
+  fadeIn(defectChecklistDiv);
+
+  if (isRejected) {
+    fadeIn(photoCaptureArea);
+    generateReportButton.style.display = 'none'; // wait for photo
+  } else {
+    fadeOut(photoCaptureArea);
+    fadeIn(generateReportButton); // immediately allow report generation
+  }
 }
