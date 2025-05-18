@@ -1,5 +1,3 @@
-// formHandler.js
-
 function resetAll() {
   aqlForm.reset();
   lotSizeInput.value = '';
@@ -7,11 +5,13 @@ function resetAll() {
   partNameInput.value = '';
   poNumberInput.value = '';
   productionDateInput.value = '';
+  defectsFoundInput.value = '';
+  resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select AQL quality level, and click calculate.</p>';
 
+  // Reset dropdown
   populatePartNameDropdown();
 
-  resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
-
+  // Hide all dynamic sections
   fadeOut(lotSection);
   fadeOut(buttonGroup);
   fadeOut(resultsDiv);
@@ -25,12 +25,13 @@ function resetAll() {
   fadeOut(printButton);
 
   currentSamplingPlan = null;
-  defectsFoundInput.value = '';
   capturedPhotos = [];
+
   updatePhotoPreview();
 
+  // Uncheck all defect checkboxes
   document.querySelectorAll('#defectChecklist input[type="checkbox"]').forEach(cb => cb.checked = false);
 
   clearError();
-  validateBatchSection();
+  validateBatchSection(); // Ensure logic is re-evaluated
 }
