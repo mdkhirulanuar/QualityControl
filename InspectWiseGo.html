@@ -1,117 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-    <!-- Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd. -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!--
+        Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>InspectWise Go</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js" defer></script>
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#2575fc" />
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2575fc">
 </head>
 <body>
     <div class="container">
         <h1>InspectWise Go</h1>
-        <center><p>InspectWise Go: Smart Sampling Tool.</p></center>
+        <center><p>InspectWise Go: Smart Sampling Tool.</p></center><div id="error-message" class="error-message" style="display: none;"></div>
 
-        <div id="error-message" class="error-message" style="display: none;"></div>
-
-        <form id="aqlForm">
-            <!-- Batch Identification -->
-            <div class="form-section batch-info">
-                <h2>Batch Identification</h2>
-                <div class="form-grid">
-                    <div>
-                        <label for="qcInspector">QC Inspector:</label>
-                        <select id="qcInspector" name="qcInspector" required>
-                            <option value="">-- Select QC Inspector --</option>
-                            <option value="Khirul Anuar">KHIRUL ANUAR</option>
-                            <option value="Hemapria">HEMAPRIA</option>
-                            <option value="Popo">POPO</option>
-                            <option value="Dharisini">DHARISINI</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="machineNumber">Machine No:</label>
-                        <select id="machineNumber" name="machineNumber">
-                            <option value="">-- Select Machine No --</option>
-                            <!-- M01–M20 options -->
-                            ${[...Array(20)].map((_, i) => `<option value="M${String(i + 1).padStart(2, '0')}">M${String(i + 1).padStart(2, '0')}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label for="partName">Part Name:</label>
-                        <select id="partName" name="partName">
-                            <option value="">-- Select Part Name --</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="partId">Part ID:</label>
-                        <input type="text" id="partId" name="partId" readonly />
-                    </div>
-                    <div>
-                        <label for="poNumber">PO Number:</label>
-                        <input type="text" id="poNumber" name="poNumber" placeholder="Enter PO Number" />
-                    </div>
-                    <div>
-                        <label for="productionDate">Production Date:</label>
-                        <input type="date" id="productionDate" name="productionDate" />
-                    </div>
+    <form id="aqlForm">
+        <div class="form-section batch-info">
+            <h2>Batch Identification</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="qcInspector">QC Inspector:</label>
+                    <select id="qcInspector" name="qcInspector" required>
+                        <option value="">-- Select QC Inspector --</option>
+                        <option value="Khirul Anuar">KHIRUL ANUAR</option>
+                        <option value="Hemapria">HEMAPRIA</option>
+                        <option value="Popo">POPO</option>
+                        <option value="Dharisini">DHARISINI</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="machineNumber">Machine No:</label>
+                    <select id="machineNumber" name="machineNumber">
+                        <option value="">-- Select Machine No --</option>
+                        <option value="M01">M01</option>
+                        <option value="M02">M02</option>
+                        <option value="M03">M03</option>
+                        <option value="M04">M04</option>
+                        <option value="M05">M05</option>
+                        <option value="M06">M06</option>
+                        <option value="M07">M07</option>
+                        <option value="M08">M08</option>
+                        <option value="M09">M09</option>
+                        <option value="M10">M10</option>
+                        <option value="M11">M11</option>
+                        <option value="M12">M12</option>
+                        <option value="M13">M13</option>
+                        <option value="M14">M14</option>
+                        <option value="M15">M15</option>
+                        <option value="M16">M16</option>
+                        <option value="M17">M17</option>
+                        <option value="M18">M18</option>
+                        <option value="M19">M19</option>
+                        <option value="M20">M20</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="partName">Part Name:</label>
+                    <select id="partName" name="partName">
+                        <option value="">-- Select Part Name --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="partId">Part ID:</label>
+                    <input type="text" id="partId" name="partId" readonly>
+                </div>
+                <div>
+                    <label for="poNumber">PO Number:</label>
+                    <input type="text" id="poNumber" name="poNumber" placeholder="Enter PO Number">
+                </div>
+                <div>
+                    <label for="productionDate">Production Date:</label>
+                    <input type="date" id="productionDate" name="productionDate">
                 </div>
             </div>
-
-            <!-- Lot & Sampling Details -->
-            <div class="form-section lot-details" style="display: none;">
-                <h2>Lot & Sampling Details</h2>
-                <div class="form-grid">
-                    <div>
-                        <label for="numBoxes">Number of Boxes:</label>
-                        <input type="number" id="numBoxes" name="numBoxes" min="1" inputmode="numeric" />
-                    </div>
-                    <div>
-                        <label for="pcsPerBox">Pieces per Box:</label>
-                        <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" inputmode="numeric" />
-                    </div>
-                    <div>
-                        <label for="lotSize">Total Lot Size:</label>
-                        <input type="number" id="lotSize" name="lotSize" readonly />
-                    </div>
-                    <div>
-                        <label for="aql">Acceptable Quality Level:</label>
-                        <select id="aql" name="aql">
-                            <option value="">-- Select AQL Quality --</option>
-                            <option value="1.0">High Quality (AQL 1.0%)</option>
-                            <option value="2.5">Medium Quality (AQL 2.5%)</option>
-                            <option value="4.0">Low Quality (AQL 4.0%)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="button-group" style="display: none;">
-                <button type="button" id="calculateButton">Calculate Sampling Plan</button>
-                <button type="button" id="resetButton">Reset</button>
-            </div>
-        </form>
-
-        <div id="results" class="results-section" aria-live="polite">
-            <p class="initial-message">Please enter batch details, select AQL quality level, and click calculate.</p>
         </div>
 
-        <!-- Other dynamic areas (defects, photo, verdict, report) remain unchanged -->
+        <div class="form-section lot-details" style="display: none;">
+            <h2>Lot & Sampling Details</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="numBoxes">Number of Boxes:</label>
+                    <input type="number" id="numBoxes" name="numBoxes" min="1" inputmode="numeric" required>
+                </div>
+                <div>
+                    <label for="pcsPerBox">Pieces per Box:</label>
+                    <input type="number" id="pcsPerBox" name="pcsPerBox" min="1" inputmode="numeric" required>
+                </div>
+                <div>
+                    <label for="lotSize">Total Lot Size:</label>
+                    <input type="number" id="lotSize" name="lotSize" readonly required>
+                </div>
+                <div>
+                    <label for="aql">Acceptable Quality Level:</label>
+                    <select id="aql" name="aql" required>
+                        <option value="">-- Select AQL Quality --</option>
+                        <option value="1.0">High Quality (AQL 1.0%)</option>
+                        <option value="2.5">Medium Quality (AQL 2.5%)</option>
+                        <option value="4.0">Low Quality (AQL 4.0%)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
-        <!-- Scripts -->
-        <script src="partsList.js" defer></script>
-        <script src="aql.js" defer></script>
-        <script src="photoHandler.js" defer></script>
-        <script src="reportGenerator.js" defer></script>
-        <script src="formHandler.js" defer></script>
-        <script src="verdictHandler.js" defer></script>
-        <script src="main.js" defer></script>
-    </div>
+        <div class="button-group">
+            <button type="button" id="calculateButton">Calculate Sampling Plan</button>
+            <button type="button" id="resetButton">Reset</button>
+        </div>
+    </form>
+
+    <footer class="footer">
+        <p>Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.</p>
+    </footer>
+</div>
+
+<!-- Modular JS scripts (load in correct order) -->
+<script src="partsList.js" defer></script>
+<script src="validation.js" defer></script>
+<script src="aql.js" defer></script>
+<script src="photoHandler.js" defer></script>
+<script src="reportGenerator.js" defer></script>
+<script src="formHandler.js" defer></script>
+<script src="verdictHandler.js" defer></script>
+<script src="main.js" defer></script>
+
 </body>
 </html>
