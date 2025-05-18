@@ -55,9 +55,9 @@ Fork and submit a pull request
 
 ---
 
-📄 License
+📄 Term of Use
 
-This project is licensed under the MIT License.
+This source code is proprietary. You are not permitted to copy, modify, or use it without express permission.
 
 ---
 
