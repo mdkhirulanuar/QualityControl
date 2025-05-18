@@ -16,7 +16,6 @@ const urlsToCache = [
   './reportGenerator.js',
   './formHandler.js',
   './verdictHandler.js',
-  './utils.js',
 
   // Icons
   './icons/icon-192.png',
