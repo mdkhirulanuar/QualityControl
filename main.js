@@ -1,32 +1,156 @@
 // main.js
 
-// --- Global DOM Elements --- const aqlForm = document.getElementById('aqlForm'); const qcInspectorInput = document.getElementById('qcInspector'); const machineNumberInput = document.getElementById('machineNumber'); const partNameInput = document.getElementById('partName'); const partIdInput = document.getElementById('partId'); const poNumberInput = document.getElementById('poNumber'); const productionDateInput = document.getElementById('productionDate'); const numBoxesInput = document.getElementById('numBoxes'); const pcsPerBoxInput = document.getElementById('pcsPerBox'); const lotSizeInput = document.getElementById('lotSize'); const aqlSelect = document.getElementById('aql'); const calculateButton = document.getElementById('calculateButton'); const resetButton = document.getElementById('resetButton'); const resultsDiv = document.getElementById('results'); const defectsInputArea = document.getElementById('defectsInputArea'); const defectsFoundInput = document.getElementById('defectsFound'); const submitDefectsButton = document.getElementById('submitDefectsButton'); const photoCaptureArea = document.getElementById('photoCaptureArea'); const uploadMultiplePhotosInput = document.getElementById('uploadMultiplePhotos'); const photoPreview = document.getElementById('photoPreview'); const photoCount = document.getElementById('photoCount'); const verdictMessageDiv = document.getElementById('verdictMessage'); const defectChecklistDiv = document.getElementById('defectChecklist'); const generateReportButton = document.getElementById('generateReportButton'); const finalReportAreaDiv = document.getElementById('finalReportArea'); const reportContentDiv = document.getElementById('reportContent'); const savePdfButton = document.getElementById('savePdfButton'); const printButton = document.getElementById('printButton'); const errorMessageDiv = document.getElementById('error-message'); const batchSection = document.querySelector('.batch-info'); const lotSection = document.querySelector('.lot-details'); const buttonGroup = document.querySelector('.button-group');
+// --- Global DOM Elements ---
+const aqlForm = document.getElementById('aqlForm');
+const qcInspectorInput = document.getElementById('qcInspector');
+const machineNumberInput = document.getElementById('machineNumber');
+const partNameInput = document.getElementById('partName');
+const partIdInput = document.getElementById('partId');
+const poNumberInput = document.getElementById('poNumber');
+const productionDateInput = document.getElementById('productionDate');
+const numBoxesInput = document.getElementById('numBoxes');
+const pcsPerBoxInput = document.getElementById('pcsPerBox');
+const lotSizeInput = document.getElementById('lotSize');
+const aqlSelect = document.getElementById('aql');
+const calculateButton = document.getElementById('calculateButton');
+const resetButton = document.getElementById('resetButton');
+const resultsDiv = document.getElementById('results');
+const defectsInputArea = document.getElementById('defectsInputArea');
+const defectsFoundInput = document.getElementById('defectsFound');
+const submitDefectsButton = document.getElementById('submitDefectsButton');
+const photoCaptureArea = document.getElementById('photoCaptureArea');
+const uploadMultiplePhotosInput = document.getElementById('uploadMultiplePhotos');
+const photoPreview = document.getElementById('photoPreview');
+const photoCount = document.getElementById('photoCount');
+const verdictMessageDiv = document.getElementById('verdictMessage');
+const defectChecklistDiv = document.getElementById('defectChecklist');
+const generateReportButton = document.getElementById('generateReportButton');
+const finalReportAreaDiv = document.getElementById('finalReportArea');
+const reportContentDiv = document.getElementById('reportContent');
+const savePdfButton = document.getElementById('savePdfButton');
+const printButton = document.getElementById('printButton');
+const errorMessageDiv = document.getElementById('error-message');
+const batchSection = document.querySelector('.batch-info');
+const lotSection = document.querySelector('.lot-details');
+const buttonGroup = document.querySelector('.button-group');
 
-// Annotation Elements const annotationModal = document.getElementById('annotationModal'); const annotationCanvas = document.getElementById('annotationCanvas'); const closeModal = document.querySelector('.close-modal'); const drawCircleButton = document.getElementById('drawCircleButton'); const drawTextButton = document.getElementById('drawTextButton'); const drawFreehandButton = document.getElementById('drawFreehandButton'); const undoButton = document.getElementById('undoButton'); const saveAnnotationButton = document.getElementById('saveAnnotationButton');
+// Annotation Elements
+const annotationModal = document.getElementById('annotationModal');
+const annotationCanvas = document.getElementById('annotationCanvas');
+const closeModal = document.querySelector('.close-modal');
+const drawCircleButton = document.getElementById('drawCircleButton');
+const drawTextButton = document.getElementById('drawTextButton');
+const drawFreehandButton = document.getElementById('drawFreehandButton');
+const undoButton = document.getElementById('undoButton');
+const saveAnnotationButton = document.getElementById('saveAnnotationButton');
 
 const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately";
 
-// --- Part Dropdown Logic (NEW) --- function populatePartNameDropdown() { partNameInput.innerHTML = '<option value="">-- Select Part Name --</option>'; const uniquePartNames = [...new Set(partsList.map(part => part.partName))]; uniquePartNames.forEach(name => { const option = document.createElement('option'); option.value = name; option.textContent = name; partNameInput.appendChild(option); });
+// --- Part Dropdown Logic (NEW) ---
+function populatePartNameDropdown() {
+  partNameInput.innerHTML = '<option value="">-- Select Part Name --</option>';
+  const uniquePartNames = [...new Set(partsList.map(part => part.partName))];
+  uniquePartNames.forEach(name => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    partNameInput.appendChild(option);
+  });
 
-partNameInput.addEventListener('change', function () { const selectedPart = partsList.find(p => p.partName === partNameInput.value); partIdInput.value = selectedPart ? selectedPart.partId : ''; validateBatchSection(); }); }
+  partNameInput.addEventListener('change', function () {
+    const selectedPart = partsList.find(p => p.partName === partNameInput.value);
+    partIdInput.value = selectedPart ? selectedPart.partId : '';
+    validateBatchSection();
+  });
+}
 
-// --- App Initialization --- document.addEventListener('DOMContentLoaded', function () { populatePartNameDropdown(); resetAll();
+// --- App Initialization ---
+document.addEventListener('DOMContentLoaded', function () {
+  populatePartNameDropdown();
+  resetAll();
 
-qcInspectorInput.addEventListener('change', validateBatchSection); machineNumberInput.addEventListener('change', validateBatchSection); partNameInput.addEventListener('change', validateBatchSection); poNumberInput.addEventListener('input', validateBatchSection); productionDateInput.addEventListener('change', validateBatchSection);
+  qcInspectorInput.addEventListener('change', validateBatchSection);
+  machineNumberInput.addEventListener('change', validateBatchSection);
+  partNameInput.addEventListener('change', validateBatchSection);
+  poNumberInput.addEventListener('input', validateBatchSection);
+  productionDateInput.addEventListener('change', validateBatchSection);
 
-numBoxesInput.addEventListener('input', () => { calculateLotSize(); validateLotSection(); }); pcsPerBoxInput.addEventListener('input', () => { calculateLotSize(); validateLotSection(); }); aqlSelect.addEventListener('change', validateLotSection); defectsFoundInput.addEventListener('change', validateDefectsSection);
+  numBoxesInput.addEventListener('input', () => {
+    calculateLotSize();
+    validateLotSection();
+  });
+  pcsPerBoxInput.addEventListener('input', () => {
+    calculateLotSize();
+    validateLotSection();
+  });
+  aqlSelect.addEventListener('change', validateLotSection);
+  defectsFoundInput.addEventListener('change', validateDefectsSection);
 
-calculateButton.addEventListener('click', () => { currentSamplingPlan = calculateSamplingPlan(); if (currentSamplingPlan) { displaySamplingPlan(currentSamplingPlan); } else { fadeOut(resultsDiv); fadeOut(defectsInputArea); fadeOut(photoCaptureArea); fadeOut(verdictMessageDiv); fadeOut(defectChecklistDiv); fadeOut(finalReportAreaDiv); fadeOut(generateReportButton); fadeOut(savePdfButton); fadeOut(printButton); } });
+  calculateButton.addEventListener('click', () => {
+    currentSamplingPlan = calculateSamplingPlan();
+    if (currentSamplingPlan) {
+      displaySamplingPlan(currentSamplingPlan);
+    } else {
+      fadeOut(resultsDiv);
+      fadeOut(defectsInputArea);
+      fadeOut(photoCaptureArea);
+      fadeOut(verdictMessageDiv);
+      fadeOut(defectChecklistDiv);
+      fadeOut(finalReportAreaDiv);
+      fadeOut(generateReportButton);
+      fadeOut(savePdfButton);
+      fadeOut(printButton);
+    }
+  });
 
-submitDefectsButton.addEventListener('click', submitDefects); generateReportButton.addEventListener('click', generateReport); savePdfButton.addEventListener('click', saveReportAsPdf); printButton.addEventListener('click', printReport); resetButton.addEventListener('click', resetAll);
+  submitDefectsButton.addEventListener('click', submitDefects);
+  generateReportButton.addEventListener('click', generateReport);
+  savePdfButton.addEventListener('click', saveReportAsPdf);
+  printButton.addEventListener('click', printReport);
+  resetButton.addEventListener('click', resetAll);
 
-uploadMultiplePhotosInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
+  uploadMultiplePhotosInput.addEventListener('change', (e) => handleFileUpload(e.target.files));
 
-photoPreview.addEventListener('click', (e) => { if (e.target.tagName === 'IMG') { const index = parseInt(e.target.dataset.index, 10); const action = prompt('Type "annotate" to annotate or "remove" to delete this photo.'); if (action && action.toLowerCase() === 'annotate') { initAnnotationCanvas(capturedPhotos[index], index); annotationModal.style.display = 'flex'; } else if (action && action.toLowerCase() === 'remove') { if (confirm('Remove this photo?')) { removePhoto(index); } } } });
+  photoPreview.addEventListener('click', (e) => {
+    if (e.target.tagName === 'IMG') {
+      const index = parseInt(e.target.dataset.index, 10);
+      const action = prompt('Type "annotate" to annotate or "remove" to delete this photo.');
+      if (action && action.toLowerCase() === 'annotate') {
+        initAnnotationCanvas(capturedPhotos[index], index);
+        annotationModal.style.display = 'flex';
+      } else if (action && action.toLowerCase() === 'remove') {
+        if (confirm('Remove this photo?')) {
+          removePhoto(index);
+        }
+      }
+    }
+  });
 
-closeModal.addEventListener('click', closeAnnotationModal);
+  closeModal.addEventListener('click', closeAnnotationModal);
 
-document.querySelectorAll('button').forEach(button => { button.addEventListener('touchstart', () => button.classList.add('active')); button.addEventListener('touchend', () => button.classList.remove('active')); }); });
+  document.querySelectorAll('button').forEach(button => {
+    button.addEventListener('touchstart', () => button.classList.add('active'));
+    button.addEventListener('touchend', () => button.classList.remove('active'));
+  });
+});
 
-// --- Service Worker Registration --- if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('service-worker.js') .then(registration => { console.log('ServiceWorker registered with scope:', registration.scope); }) .catch(err => { console.log('ServiceWorker registration failed:', err); }); }); }
+// --- Service Worker Registration ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(registration => {
+        console.log('ServiceWorker registered with scope:', registration.scope);
+      })
+      .catch(err => {
+        console.log('ServiceWorker registration failed:', err);
+      });
+  });
+}
+
+
+✅ Your main.js has been fully updated and restored properly with the populatePartNameDropdown() function placed back in, exactly as needed, without changing anything else.
+
+All core functionality (part dropdown, autofill, batch validation) should now work exactly like before — only fixed, not rewritten.
+
+Let me know if you want me to recheck the dropdown behavior live, or need a matching update for any other module (formHandler.js, validation.js, etc.).
 
