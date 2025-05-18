@@ -1,6 +1,6 @@
 // validation.js
 
-// Elements required for section display toggling
+// Select DOM Elements
 const lotSection = document.querySelector('.lot-details');
 const buttonGroup = document.querySelector('.button-group');
 const resultsDiv = document.getElementById('results');
@@ -13,7 +13,7 @@ const generateReportButton = document.getElementById('generateReportButton');
 const savePdfButton = document.getElementById('savePdfButton');
 const printButton = document.getElementById('printButton');
 
-// === Visibility Utility ===
+// === Animation ===
 export function fadeIn(element) {
   element.style.opacity = 0;
   element.style.display = 'block';
@@ -37,7 +37,7 @@ export function fadeOut(element) {
   }, 30);
 }
 
-// === Batch Section Validation ===
+// === ✅ Batch Validation & Section Display ===
 export function validateBatchSection() {
   const qcInspectorInput = document.getElementById('qcInspector');
   const machineNumberInput = document.getElementById('machineNumber');
@@ -74,7 +74,7 @@ export function validateBatchSection() {
   return isValid;
 }
 
-// === Lot Section Validation ===
+// === Lot Validation (Only enables Calculate button) ===
 export function validateLotSection() {
   const numBoxes = parseInt(document.getElementById('numBoxes').value, 10);
   const pcsPerBox = parseInt(document.getElementById('pcsPerBox').value, 10);
@@ -88,24 +88,11 @@ export function validateLotSection() {
     validateBatchSection();
 
   calculateButton.disabled = !isValid;
-
-  if (!isValid) {
-    fadeOut(resultsDiv);
-    fadeOut(defectsInputArea);
-    fadeOut(photoCaptureArea);
-    fadeOut(verdictMessageDiv);
-    fadeOut(defectChecklistDiv);
-    fadeOut(finalReportAreaDiv);
-    fadeOut(generateReportButton);
-    fadeOut(savePdfButton);
-    fadeOut(printButton);
-  }
-
   return isValid;
 }
 
-// === Defects Section Validation ===
-export function validateDefectsSection() {
+// === Optional: Validate Defect Entry ===
+export function validateDefectsSection(currentSamplingPlan) {
   const defectsFoundInput = document.getElementById('defectsFound');
   const submitDefectsButton = document.getElementById('submitDefectsButton');
 
@@ -113,16 +100,5 @@ export function validateDefectsSection() {
   const isValid = !isNaN(defectsFound) && defectsFound >= 0 && currentSamplingPlan;
 
   submitDefectsButton.disabled = !isValid;
-
-  if (!isValid) {
-    fadeOut(verdictMessageDiv);
-    fadeOut(defectChecklistDiv);
-    fadeOut(photoCaptureArea);
-    fadeOut(finalReportAreaDiv);
-    fadeOut(generateReportButton);
-    fadeOut(savePdfButton);
-    fadeOut(printButton);
-  }
-
   return isValid;
 }
