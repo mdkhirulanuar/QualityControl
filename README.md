@@ -1,8 +1,3 @@
-Here is a fully prepared and professional README.md documentation for your QualityControl project, based on the current GitHub structure:
-
-
----
-
 # 📋 Quality Control Web App — InspectWiseGo
 
 A lightweight, responsive, and mobile-friendly **Quality Control (QC) inspection** web application developed as a **Progressive Web App (PWA)**. It enables field inspectors and QA teams to perform visual inspections, log data, and work seamlessly even in offline scenarios.
@@ -55,7 +50,6 @@ npx serve .
 # or
 python3 -m http.server
 
-
 ---
 
 🌐 Deployment Instructions
@@ -63,16 +57,12 @@ python3 -m http.server
 This project can be deployed on:
 
 GitHub Pages
-
 Netlify
-
 Vercel
-
 Any static web server
 
 
 Ensure the manifest.json, offline.html, and icons are all correctly linked for PWA behavior.
-
 
 ---
 
@@ -87,14 +77,11 @@ Form input validation	☐ Planned
 Camera/photo support	☐ Planned
 User feedback confirmation	☐ Planned
 
-
-
 ---
 
 📸 Screenshots
 
 Add application UI screenshots here (optional)
-
 
 ---
 
@@ -103,19 +90,14 @@ Add application UI screenshots here (optional)
 Contributions are welcome! Here's how you can help:
 
 Open an issue
-
 Suggest features or enhancements
-
 Fork and submit a pull request
-
-
 
 ---
 
 📄 License
 
 This project is licensed under the MIT License.
-
 
 ---
 
