@@ -33,55 +33,15 @@ QualityControl/ ├── assets/              # Images, icons, and other static
 
 ## ⚙️ Getting Started
 
-### Prerequisites
-
-- A modern web browser (Chrome, Firefox, Edge)
-- Recommended: Local server for full PWA features (`http-server`, `serve`, or `python`)
-
-### Local Setup
-
-```bash
-git clone https://github.com/mdkhirulanuar/QualityControl.git
-cd QualityControl
-
-Open InspectWiseGo.html directly in the browser, or use a local server:
-
-npx serve .
-# or
-python3 -m http.server
-
----
-
-🌐 Deployment Instructions
-
-This project can be deployed on:
-
-GitHub Pages
-Netlify
-Vercel
-Any static web server
-
-
-Ensure the manifest.json, offline.html, and icons are all correctly linked for PWA behavior.
-
----
-
 🧪 Roadmap
 
 Feature	Status
 
 Modularize JS logic	☐ Planned
-Add service worker (PWA)	☐ Planned
 Local data storage	☐ Planned
 Form input validation	☐ Planned
 Camera/photo support	☐ Planned
 User feedback confirmation	☐ Planned
-
----
-
-📸 Screenshots
-
-Add application UI screenshots here (optional)
 
 ---
 
@@ -106,13 +66,6 @@ This project is licensed under the MIT License.
 Developed by mdkhirulanuar
 
 ---
-
-### ✅ Next Recommendations
-
-- **Add a `service-worker.js`** file to support true offline caching and make your PWA installable.
-- **Use semantic HTML tags and ARIA attributes** for accessibility.
-- **Organize JavaScript into modular components** if functionality expands.
-- **Use `localStorage` or `IndexedDB`** for storing QC logs locally if offline data persistence is needed.
 
 Let me know if you'd like the README saved as a file or committed into the repo structure.
 
