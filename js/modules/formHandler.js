@@ -1,7 +1,8 @@
 // formHandler.js — Handles AQL form logic and reset
+import { populatePartNameDropdown } from './utils.js';
 
 export function initFormHandlers() {
-// --- DOM Element Selection ---
+  // --- DOM Element Selection ---
   const aqlForm = document.getElementById('aqlForm');
   const qcInspectorInput = document.getElementById('qcInspector');
   const machineNumberInput = document.getElementById('machineNumber');
@@ -34,13 +35,6 @@ export function initFormHandlers() {
   const batchSection = document.querySelector('.batch-info');
   const lotSection = document.querySelector('.lot-details');
   const buttonGroup = document.querySelector('.button-group');
-}
-
-  // --- Event Handlers ---
-
-
-  // --- Event Handlers ---
-
 
   // --- Event Handlers ---
   calculateButton.addEventListener('click', () => {
@@ -62,5 +56,6 @@ export function initFormHandlers() {
 
   resetButton.addEventListener('click', resetAll);
 
-  // --- Photo Event Listeners ---
-
+  // Populate part name dropdown from global partsList
+  populatePartNameDropdown(partNameInput, partsList);
+}
