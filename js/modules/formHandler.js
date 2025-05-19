@@ -56,6 +56,11 @@ export function initFormHandlers() {
 
   resetButton.addEventListener('click', resetAll);
 
-  // Populate part name dropdown from global partsList
+  // --- Populate Dropdown + Auto-fill ---
   populatePartNameDropdown(partNameInput, partsList);
+
+  partNameInput.addEventListener('change', function () {
+    const selectedPart = partsList.find(part => part.partName === partNameInput.value);
+    partIdInput.value = selectedPart ? selectedPart.partId : '';
+  });
 }
