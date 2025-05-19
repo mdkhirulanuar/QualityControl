@@ -36,31 +36,61 @@ export function initFormHandlers() {
   const lotSection = document.querySelector('.lot-details');
   const buttonGroup = document.querySelector('.button-group');
 
-  // --- Event Handlers ---
-  calculateButton.addEventListener('click', () => {
-    currentSamplingPlan = calculateSamplingPlan();
-    if (currentSamplingPlan) {
-      displaySamplingPlan(currentSamplingPlan);
+  // --- Logic ---
+  function validateBatchSection() {
+    const isValid = qcInspectorInput.value !== '' &&
+                    machineNumberInput.value !== '' &&
+                    partIdInput.value !== '' &&
+                    partNameInput.value !== '' &&
+                    poNumberInput.value.trim() !== '' &&
+                    productionDateInput.value !== '';
+    if (isValid) {
+      lotSection.style.display = 'block';
+      buttonGroup.style.display = 'flex';
     } else {
-      fadeOut(resultsDiv);
-      fadeOut(defectsInputArea);
-      fadeOut(photoCaptureArea);
-      fadeOut(verdictMessageDiv);
-      fadeOut(defectChecklistDiv);
-      fadeOut(finalReportAreaDiv);
-      fadeOut(generateReportButton);
-      fadeOut(savePdfButton);
-      fadeOut(printButton);
+      lotSection.style.display = 'none';
+      buttonGroup.style.display = 'none';
+      resultsDiv.style.display = 'none';
     }
+    return isValid;
+  }
+
+  function resetAll() {
+    aqlForm.reset();
+    lotSizeInput.value = '';
+    partIdInput.value = '';
+    partNameInput.value = '';
+    poNumberInput.value = '';
+    productionDateInput.value = '';
+    populatePartNameDropdown(partNameInput, partsList);
+    resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
+    lotSection.style.display = 'none';
+    buttonGroup.style.display = 'none';
+    resultsDiv.style.display = 'none';
+    validateBatchSection();
+  }
+
+  // --- Event Listeners ---
+  calculateButton.addEventListener('click', () => {
+    console.log('Calculate clicked'); // Placeholder
   });
 
   resetButton.addEventListener('click', resetAll);
 
-  // --- Populate Dropdown + Auto-fill ---
+  // Populate and auto-fill
   populatePartNameDropdown(partNameInput, partsList);
 
   partNameInput.addEventListener('change', function () {
     const selectedPart = partsList.find(part => part.partName === partNameInput.value);
-    partIdInput.value = selectedPart ? selectedPart.partId : '';
+    partIdInput.value = selectedPart ? part.partId : '';
+    validateBatchSection();
   });
+
+  qcInspectorInput.addEventListener('change', validateBatchSection);
+  machineNumberInput.addEventListener('change', validateBatchSection);
+  poNumberInput.addEventListener('input', validateBatchSection);
+  productionDateInput.addEventListener('change', validateBatchSection);
+
+  // Init form on load
+  resetAll();
 }
