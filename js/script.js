@@ -485,20 +485,25 @@ document.addEventListener('DOMContentLoaded', function() {
       samplingInstructions = '<p><strong>Sampling Instructions:</strong> Inspect all pieces from all boxes (100% inspection required).</p>';
     } else if (isNaN(numBoxesVal) || numBoxesVal <= 0 || isNaN(pcsPerBoxVal) || pcsPerBoxVal <= 0) {
       samplingInstructions = '<p style="color: red;">Enter valid Number of Boxes and Pieces per Box.</p>';
-    } else {
-      const minBoxesToOpen = Math.ceil(plan.sampleSize / pcsPerBoxVal);
-      const boxesToOpen = Math.min(minBoxesToOpen, numBoxesVal);
-      const pcsPerOpenedBox = Math.ceil(plan.sampleSize / boxesToOpen);
-      const totalInspected = boxesToOpen * pcsPerOpenedBox;
+    } } else {
+  // Sample only 50% from each selected box
+  const pcsPerOpenedBox = Math.ceil(pcsPerBoxVal / 2);
 
-      samplingInstructions = `
-        <p><strong>Sampling Instructions:</strong></p>
-        <ul>
-          <li>Randomly select and open <strong>${boxesToOpen}</strong> box(es) (out of ${numBoxesVal}).</li>
-          <li>From each opened box, inspect <strong>${pcsPerOpenedBox}</strong> piece(s).</li>
-        </ul>
-        <p><small>(Total pieces inspected: ${totalInspected}${totalInspected > plan.sampleSize ? ', slightly exceeding the minimum sample size of ' + plan.sampleSize : ''})</small></p>`;
-    }
+  // Calculate how many boxes to open to reach the required sample size
+  const boxesToOpen = Math.min(Math.ceil(plan.sampleSize / pcsPerOpenedBox), numBoxesVal);
+
+  // Calculate total pieces inspected
+  const totalInspected = boxesToOpen * pcsPerOpenedBox;
+
+  samplingInstructions = `
+    <p><strong>Sampling Instructions:</strong></p>
+    <ul>
+      <li>Randomly select and open <strong>${boxesToOpen}</strong> box(es) (out of ${numBoxesVal}).</li>
+      <li>From each opened box, inspect <strong>${pcsPerOpenedBox}</strong> piece(s).</li>
+    </ul>
+    <p><small>(Total pieces inspected: ${totalInspected}${totalInspected > plan.sampleSize ? ', slightly exceeding the minimum sample size of ' + plan.sampleSize : ''})</small></p>
+  `;
+}
 
     const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
                     aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
