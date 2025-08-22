@@ -1,8 +1,8 @@
 {
-  "name": "InspectWise Go",
-  "short_name": "InspectWise",
-  "description": "Smart Sampling Tool for QC Inspections",
-  "start_url":"/QualityControl/InspectWiseGo.html",
+  "name": "KPI-F25 FORM",
+  "short_name": "KPI-F25",
+  "description": "AQL SAMPLING INSPECTION RECORD",
+  "start_url":"/QualityControl/KPI-F25.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2575fc",
