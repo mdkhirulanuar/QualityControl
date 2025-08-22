@@ -1,5 +1,6 @@
 /*
-    Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
+    Copyright © 2025 KPI Electrical Manufacturing Sdn. Bhd.
+This application was developed and is maintained by Khirul Anuar for use in Quality Control operations.
 */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const qcInspectorInput = document.getElementById('qcInspector');
   const operatorName = document.getElementById('operatorName')
   const machineNumberInput = document.getElementById('machineNumber');
+  const supplierName = document.getElementById('supplierName');
   const partNameInput = document.getElementById('partName');
   const partIdInput = document.getElementById('partId');
   const poNumberInput = document.getElementById('poNumber');
@@ -51,14 +53,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- State Variables ---
   let currentSamplingPlan = null;
   let capturedPhotos = [];
-  const MAX_PHOTOS = 5;
+  const MAX_PHOTOS = 10;
   let fabricCanvas = null;
   let currentPhotoIndex = null;
   let annotationHistory = [];
   let currentMode = null;
   const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately";
 
-  const copyrightNotice = "Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
+  const copyrightNotice = "Copyright © 2025 KPI Electrical Manufacturing Sdn. Bhd.
+This application was developed and is maintained by Khirul Anuar for use in Quality Control operations.";
 
   // --- Populate Part Name Dropdown ---
   function populatePartNameDropdown() {
@@ -153,6 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const isValid = qcInspectorInput.value !== '' &&
                     operatorName.value !== '' &&
                     machineNumberInput.value !== '' &&
+                    supplierName.value !== '' &&
                     partIdInput.value !== '' &&
                     partNameInput.value !== '' &&
                     poNumberInput.value.trim() !== '' &&
@@ -591,11 +595,12 @@ samplingInstructions = `
                     `AQL ${aqlSelect.value}%`;
 
     const reportHTML = `
-      <h3>Batch Identification</h3>
+      <h3>Sampling Identification</h3>
       <p><strong>Report ID:</strong> ${reportId}</p>
       <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
       <p><strong>Operator Name:</strong> ${operatorName.value || 'N/A'}</p>
       <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
+      <p><strong>Supplier Name:</strong> ${supplierName.value || 'N/A'}</p
       <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
       <p><strong>Part ID:</strong> ${partIdInput.value || 'N/A'}</p>
       <p><strong>PO Number:</strong> ${poNumberInput.value || 'N/A'}</p>
@@ -649,14 +654,14 @@ samplingInstructions = `
     let y = 20;
 
     doc.setFontSize(16);
-    doc.text("Quality Control Inspection Report", margin, y);
+    doc.text("KPI-F25 FORM - AQL SAMPLING INSPECTION RECORD", margin, y);
     y += 10;
 
     doc.setFontSize(12);
     const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
     doc.autoTable({
       startY: y,
-      head: [['Field', 'Value']],
+      head: [['Items', 'Details']],
       body: [
         ['Report ID', reportId],
         ['QC Inspector', qcInspectorInput.value || 'N/A'],
@@ -681,7 +686,7 @@ samplingInstructions = `
                     `AQL ${aqlSelect.value}%`;
     doc.autoTable({
       startY: y,
-      head: [['Field', 'Value']],
+      head: [['Items', 'Details']],
       body: [
         ['Total Lot Size', lotSizeInput.value],
         ['Inspection Level', 'General Level II (Normal)'],
@@ -700,7 +705,7 @@ samplingInstructions = `
     y += 5;
     doc.autoTable({
       startY: y,
-      head: [['Field', 'Value']],
+      head: [['Items', 'Details']],
       body: [
         ['Number of Defects Found', defectsFoundInput.value],
         ['Verdict', parseInt(defectsFoundInput.value, 10) <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT']
@@ -777,7 +782,9 @@ samplingInstructions = `
     partNameInput.value = '';
     poNumberInput.value = '';
     productionDateInput.value = '';
+    populateSupplierDropdown('supplierName');
     populatePartNameDropdown();
+    populateOperatorDropdown('operatorName');
     resultsDiv.innerHTML = '<p class="initial-message">Please enter batch details, select quality level, and click calculate.</p>';
     fadeOut(lotSection);
     fadeOut(buttonGroup);
