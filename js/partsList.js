@@ -215,5 +215,6 @@ const partsList = [
     { partId: "18-16438-00", partName: "SW PNL TF 126/166 RO DWI KD R1" }
     { partId: "CPG-OLD", partName: "SCENT GEL (OLD)" }
     { partId: "CPG-NEW", partName: "SCENT GEL (NEW)" }
-    { partId: "CPG-PREMIUM", partName: "SCENT GEL (PREMIUM)" }
+    { partId: "CPG-PREMIUM BL", partName: "SCENT GEL (PREMIUM) BLACK" }
+    { partId: "CPG-PREMIUM WH", partName: "SCENT GEL (PREMIUM) WHITE" }
 ];
