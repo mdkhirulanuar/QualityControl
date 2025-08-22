@@ -1,10 +1,11 @@
-const CACHE_NAME = 'inspectwisego-cache-v2';
+const CACHE_NAME = 'KPI-F25-cache-v2';
 const urlsToCache = [
   './',
-  './InspectWiseGo.html',
+  './KPI-F25.html',
   './style.css',
   './script.js',
   './js/operatorList.js',
+  './js/supplierList.js',
   './partsList.js',
   './manifest.json',
   './offline.html',
