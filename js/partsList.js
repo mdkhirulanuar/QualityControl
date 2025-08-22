@@ -213,8 +213,5 @@ const partsList = [
     { partId: "18-17401-02", partName: "SW PANEL SFG12 W/NUT LWI KD" },
     { partId: "18-17401-03", partName: "SW PANEL SFG12 W/NUT LWI KD" },
     { partId: "18-16438-00", partName: "SW PNL TF 126/166 RO DWI KD R1" }
-    { partId: "18-0000-00", partName: "SCENT GEL OLD" }
-    { partId: "18-0000-01", partName: "SCENT GEL NEW" }
-    { partId: "18-0000-02", partName: "SCENT GEL PREMIUM (WHITE)" }
-    { partId: "18-0000-03", partName: "SCENT GEL PREMIUM (BLACK)" }
+    
 ];
