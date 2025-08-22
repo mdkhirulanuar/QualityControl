@@ -35,7 +35,13 @@
                             <option value="Dharisini">DHARISINI</option>
                         </select>
                     </div>
-                    <div>
+		   <div>
+                        <label for="operatorName">Operator Name:</label>
+                        <select id="operatorName" name="operatorName" required>
+                            <option value="">-- Select operator --</option>
+                        </select>
+                    </div>
+                   <div>
                         <label for="machineNumber">Machine No:</label>
                         <select id="machineNumber" name="machineNumber">
                             <option value="">-- Select Machine No --</option>
@@ -218,6 +224,7 @@
 
     <!-- Scripts -->
     <script src="js/script.js" defer></script>
+<script src="js/operatorList.js"></script>
 <script src="js/partsList.js" defer></script>
 <script src="js/service-worker.js" defer></script>
 </body>
