@@ -4,6 +4,7 @@ const urlsToCache = [
   './InspectWiseGo.html',
   './style.css',
   './script.js',
+  './js/operatorList.js',
   './partsList.js',
   './manifest.json',
   './offline.html',
