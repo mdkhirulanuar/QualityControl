@@ -2,14 +2,20 @@
 // Central list of operators + helper to populate a <select>
 
 const OPERATOR_LIST = [
-  "Abdul",
-  "Aishah",
-  "Bala",
-  "Chong",
-  "Devi",
-  "Hafiz",
-  "Nurul",
-  "Wei Liang"
+  "Md Repon Hossen",
+  "Sree Sukumar Shil",
+  "Md Ashik Ali",
+  "Salek Abdus",
+  "Ahmod Naim",
+  "Naim",
+  "Md Tohidul Islam",
+  "Mozid Mohammad Abdul",
+  "Suman Mia",
+  "Md Beltu Ali",
+  "Abu Talib",
+  "Aye Aye Aung",
+  "Khin Hlaing San",
+  "Thet Mar Htwe"
 ];
 
 function populateOperatorDropdown(selectId) {
@@ -27,4 +33,5 @@ function populateOperatorDropdown(selectId) {
     opt.textContent = name;
     el.appendChild(opt);
   });
+
 }
