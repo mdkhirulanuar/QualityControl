@@ -1,81 +1,144 @@
 /*
   InspectWise Go
   Updated: 2025-08-23
-  CHANGE: Shift (Day/Night) added to form validation, report preview, and PDF.
-  NOTE: This file gracefully uses your existing samplingPlan.js if available.
+  CHANGE: Adds Shift (Day/Night) into validation, preview, and PDF.
+  Also includes an adapter shim so this file works with your existing
+  partsList.js / operatorList.js / samplingPlan.js without renaming them.
 */
 
+/* ======== Adapter shim (keeps your other JS working as-is) ======== */
+(function () {
+  const g = window;
+
+  // Operators normalization (accept several global names)
+  if (!g.OPERATORS) {
+    g.OPERATORS =
+      g.OPERATORS ||
+      g.operators ||
+      g.operatorList ||
+      g.OPERATOR_LIST ||
+      [];
+  }
+
+  // Parts normalization (accept array of objects/strings or object map)
+  if (!g.PARTS) {
+    const fromArrayOfObjects = (arr) =>
+      Array.isArray(arr) && arr.every(p => typeof p === 'object')
+        ? arr.map(p => ({ name: p.name ?? p.partName ?? p.title ?? String(p), id: p.id ?? p.code ?? p.partId ?? '' }))
+        : null;
+
+    const fromArrayOfStrings = (arr) =>
+      Array.isArray(arr) && arr.every(s => typeof s === 'string')
+        ? arr.map(s => ({ name: s, id: '' }))
+        : null;
+
+    const fromObjectMap = (obj) =>
+      obj && typeof obj === 'object' && !Array.isArray(obj)
+        ? Object.keys(obj).map(k => ({ name: k, id: obj[k] }))
+        : null;
+
+    g.PARTS =
+      fromArrayOfObjects(g.parts) ||
+      fromArrayOfObjects(g.PARTS) ||
+      fromArrayOfObjects(g.partList) ||
+      fromArrayOfObjects(g.PART_LIST) ||
+      fromArrayOfStrings(g.parts) ||
+      fromArrayOfStrings(g.partList) ||
+      fromObjectMap(g.PART_LIST) ||
+      [];
+  }
+
+  // Sampling plan adapter (accept several function names)
+  g.__getSamplingPlanAdapter__ = function (lotSize, aql) {
+    try {
+      if (g.SAMPLING && typeof g.SAMPLING.getPlan === 'function')
+        return g.SAMPLING.getPlan(lotSize, aql);
+      if (typeof g.getSamplingPlan === 'function')
+        return g.getSamplingPlan(lotSize, aql);
+      if (g.SAMPLING_PLAN && typeof g.SAMPLING_PLAN.lookup === 'function')
+        return g.SAMPLING_PLAN.lookup(lotSize, aql);
+      if (typeof g.lookupPlan === 'function')
+        return g.lookupPlan(lotSize, aql);
+    } catch (e) {}
+    return null; // fall back later
+  };
+})();
+
+/* ==================== Main app script ==================== */
 document.addEventListener('DOMContentLoaded', () => {
+  // ---------- Safe element getter ----------
+  const must = (el, id) => {
+    if (!el) console.warn(`[InspectWise] Missing element #${id} in HTML`);
+    return el;
+  };
+
   // ---------- Element handles ----------
-  const form = document.getElementById('aqlForm');
+  const form = must(document.getElementById('aqlForm'), 'aqlForm');
 
   // Batch Identification
-  const qcInspectorInput = document.getElementById('qcInspector');
-  const operatorNameSelect = document.getElementById('operatorName');
-  const machineNumberInput = document.getElementById('machineNumber');
-  const partNameSelect = document.getElementById('partName');
-  const partIdInput = document.getElementById('partId');
-  const poNumberInput = document.getElementById('poNumber');
-  const productionDateInput = document.getElementById('productionDate');
-  const shiftInputs = document.querySelectorAll('input[name="shift"]'); // ✅ NEW Shift radios
+  const qcInspectorInput   = must(document.getElementById('qcInspector'), 'qcInspector');
+  const operatorNameSelect = must(document.getElementById('operatorName'), 'operatorName');
+  const machineNumberInput = must(document.getElementById('machineNumber'), 'machineNumber');
+  const partNameSelect     = must(document.getElementById('partName'), 'partName');
+  const partIdInput        = must(document.getElementById('partId'), 'partId');
+  const poNumberInput      = must(document.getElementById('poNumber'), 'poNumber');
+  const productionDateInput= must(document.getElementById('productionDate'), 'productionDate');
+  const shiftInputs        = document.querySelectorAll('input[name="shift"]'); // ✅ NEW Shift radios
 
   // Lot & Sampling
-  const lotSection = document.querySelector('.lot-details');
-  const buttonGroup = document.querySelector('.button-group');
-  const numBoxesInput = document.getElementById('numBoxes');
-  const pcsPerBoxInput = document.getElementById('pcsPerBox');
-  const lotSizeInput = document.getElementById('lotSize');
-  const aqlSelect = document.getElementById('aql');
-  const calculateButton = document.getElementById('calculateButton');
-  const resetButton = document.getElementById('resetButton');
+  const lotSection   = document.querySelector('.lot-details');
+  const buttonGroup  = document.querySelector('.button-group');
+  const numBoxesInput= must(document.getElementById('numBoxes'), 'numBoxes');
+  const pcsPerBoxInput=must(document.getElementById('pcsPerBox'), 'pcsPerBox');
+  const lotSizeInput = must(document.getElementById('lotSize'), 'lotSize');
+  const aqlSelect    = must(document.getElementById('aql'), 'aql');
+  const calculateButton = must(document.getElementById('calculateButton'), 'calculateButton');
+  const resetButton  = must(document.getElementById('resetButton'), 'resetButton');
 
   // Output areas
-  const resultsDiv = document.getElementById('results');
-  const defectChecklistDiv = document.getElementById('defectChecklist');
-  const photoCaptureArea = document.getElementById('photoCaptureArea');
-  const verdictMessageDiv = document.getElementById('verdictMessage');
-  const generateReportButton = document.getElementById('generateReportButton');
-  const finalReportAreaDiv = document.getElementById('finalReportArea');
-  const reportContentDiv = document.getElementById('reportContent');
-  const savePdfButton = document.getElementById('savePdfButton');
+  const resultsDiv         = must(document.getElementById('results'), 'results');
+  const defectChecklistDiv = document.getElementById('defectChecklist'); // optional in your HTML
+  const photoCaptureArea   = document.getElementById('photoCaptureArea'); // optional
+  const verdictMessageDiv  = document.getElementById('verdictMessage');   // optional
+  const generateReportButton = must(document.getElementById('generateReportButton'), 'generateReportButton');
+  const finalReportAreaDiv = must(document.getElementById('finalReportArea'), 'finalReportArea');
+  const reportContentDiv   = must(document.getElementById('reportContent'), 'reportContent');
+  const savePdfButton      = must(document.getElementById('savePdfButton'), 'savePdfButton');
 
   // ---------- Helpers ----------
-  const fadeIn = (el) => { if (el) { el.style.display = ''; el.style.opacity = 1; } };
-  const fadeOut = (el) => { if (el) { el.style.opacity = 0; el.style.display = 'none'; } };
+  const fadeIn  = (el) => { if (el) { el.style.display = '';  el.style.opacity = 1; } };
+  const fadeOut = (el) => { if (el) { el.style.opacity = 0;   el.style.display = 'none'; } };
 
   const getShiftValue = () => {
     const picked = [...shiftInputs].find(r => r.checked);
     return picked ? picked.value : '';
   };
 
-  const todayStr = () => new Date().toLocaleDateString();
+  const todayStr   = () => new Date().toLocaleDateString();
   const nowTimeStr = () => new Date().toLocaleTimeString();
 
-  // If you ship parts/operators lists as globals, populate selects
-  (function hydrateDropdownsIfAvailable() {
-    try {
-      if (window.OPERATORS && Array.isArray(window.OPERATORS)) {
-        operatorNameSelect.innerHTML = '<option value="">— Select Operator —</option>' +
-          window.OPERATORS.map(o => `<option value="${o}">${o}</option>`).join('');
-      }
-      if (window.PARTS && Array.isArray(window.PARTS)) {
-        partNameSelect.innerHTML = '<option value="">— Select Part —</option>' +
-          window.PARTS.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
-      }
-    } catch (_) {}
+  // Populate dropdowns from existing globals (adapter normalized them)
+  (function hydrateDropdowns() {
+    if (operatorNameSelect) {
+      operatorNameSelect.innerHTML =
+        '<option value="">— Select Operator —</option>' +
+        (window.OPERATORS || []).map(o => `<option value="${o}">${o}</option>`).join('');
+    }
+    if (partNameSelect) {
+      partNameSelect.innerHTML =
+        '<option value="">— Select Part —</option>' +
+        (window.PARTS || []).map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    }
   })();
 
-  // When part selected, auto-fill Part ID if PARTS map exists
+  // Auto-fill Part ID on part change (if available)
   partNameSelect?.addEventListener('change', () => {
-    if (window.PARTS && Array.isArray(window.PARTS)) {
-      const found = window.PARTS.find(p => p.name === partNameSelect.value);
-      if (found && partIdInput) partIdInput.value = found.id || '';
-    }
+    const found = (window.PARTS || []).find(p => p.name === partNameSelect.value);
+    if (found && partIdInput) partIdInput.value = found.id || '';
     validateBatchSection();
   });
 
   // ---------- Validation flows ----------
-  // Disable downstream UI until batch info is valid
   const disableDownstream = () => {
     [lotSection, buttonGroup, resultsDiv, defectChecklistDiv, photoCaptureArea,
      verdictMessageDiv, finalReportAreaDiv, generateReportButton, savePdfButton]
@@ -104,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return isValid;
   };
 
-  // Validate when any batch field changes
+  // React to changes in batch fields
   [qcInspectorInput, operatorNameSelect, machineNumberInput, partNameSelect,
    partIdInput, poNumberInput, productionDateInput].forEach(el => {
     el?.addEventListener('input', validateBatchSection);
@@ -112,17 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   shiftInputs.forEach(r => r.addEventListener('change', validateBatchSection)); // ✅ NEW
 
-  // ---------- Lot & Sampling calculations ----------
+  // ---------- Lot & Sampling ----------
   const calcLotSize = () => {
     const boxes = Number(numBoxesInput?.value || 0);
-    const pcs = Number(pcsPerBoxInput?.value || 0);
-    const lot = Math.max(0, boxes * pcs);
+    const pcs   = Number(pcsPerBoxInput?.value || 0);
+    const lot   = Math.max(0, boxes * pcs);
     if (lotSizeInput) lotSizeInput.value = lot;
     return lot;
   };
 
   const codeLetterByLotSize = (lot) => {
-    // ISO 2859-1 / ANSI Z1.4 — General II (typical code-letter bands)
     if (lot <= 0) return '-';
     if (lot <= 8) return 'A';
     if (lot <= 15) return 'B';
@@ -146,41 +208,26 @@ document.addEventListener('DOMContentLoaded', () => {
     J: 80, K: 125, L: 200, M: 315, N: 500, P: 800, Q: 1250
   }[code] || 0);
 
-  // Try to use existing samplingPlan.js if available; otherwise return a fallback
   const computeSamplingPlan = (lotSize, aqlStr) => {
     const aql = String(aqlStr || '2.5').trim();
 
-    // 1) Your own helper (samplingPlan.js) — try common names
-    try {
-      if (window.SAMPLING && typeof window.SAMPLING.getPlan === 'function') {
-        const plan = window.SAMPLING.getPlan(lotSize, aql);
-        if (plan) return plan;
-      }
-      if (typeof window.getSamplingPlan === 'function') {
-        const plan = window.getSamplingPlan(lotSize, aql);
-        if (plan) return plan;
-      }
-      if (window.SAMPLING_PLAN && typeof window.SAMPLING_PLAN.lookup === 'function') {
-        const plan = window.SAMPLING_PLAN.lookup(lotSize, aql);
-        if (plan) return plan;
-      }
-    } catch (_) {}
+    // Prefer your existing samplingPlan.js (via adapter)
+    const extPlan = window.__getSamplingPlanAdapter__?.(lotSize, aql);
+    if (extPlan) return extPlan;
 
-    // 2) Fallback (code letter + sample size); leave Ac/Re as “—”
+    // Fallback (still gives code letter & sample size)
     const code = codeLetterByLotSize(lotSize);
-    const n = sampleSizeByCodeLetter(code);
     return {
       level: 'General II (Normal)',
       aql,
       codeLetter: code,
-      sampleSize: n,
+      sampleSize: sampleSizeByCodeLetter(code),
       ac: '—',
       re: '—',
       source: 'fallback'
     };
   };
 
-  // React to lot inputs
   const validateLotSection = () => {
     const lot = calcLotSize();
     const ready = lot > 0 && !!aqlSelect?.value;
@@ -211,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <p><strong>Acceptance Number (Ac):</strong> ${ac}</p>
         <p><strong>Rejection Number (Re):</strong> ${re}</p>
         ${source === 'fallback'
-          ? `<p style="font-size:12px;color:#777;">(Ac/Re provided by your samplingPlan.js if present; using fallback “—” here.)</p>`
+          ? `<p style="font-size:12px;color:#777;">(Ac/Re will come from your samplingPlan.js if present; fallback shows "—".)</p>`
           : ''
         }
       </div>
@@ -228,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderResults(plan);
   });
 
-  // ---------- Report generation (preview) ----------
+  // ---------- Report preview ----------
   const buildReportHTML = (plan) => {
     const reportId = `RPT-${Date.now().toString(36).toUpperCase()}`;
 
@@ -260,12 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <p><strong>Rejection Number (Re):</strong> ${plan.re}</p>
     `;
 
-    return `
-      <div class="report">
-        ${batchBlock}
-        ${lotBlock}
-      </div>
-    `;
+    return `<div class="report">${batchBlock}${lotBlock}</div>`;
   };
 
   generateReportButton?.addEventListener('click', () => {
@@ -286,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reportId = `RPT-${Date.now().toString(36).toUpperCase()}`;
     const { jsPDF } = window.jspdf || {};
     if (!jsPDF) {
-      alert('jsPDF not loaded. Please check your internet connection.');
+      alert('jsPDF not loaded. Check your internet connection.');
       return;
     }
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -348,14 +390,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------- Reset ----------
-  resetButton?.addEventListener('click', () => {
+  const resetAll = () => {
     form?.reset();
     lotSizeInput.value = 0;
     disableDownstream();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+  };
+  resetButton?.addEventListener('click', resetAll);
 
-  // Initial state
+  // ---------- Initial state ----------
   disableDownstream();
   validateBatchSection();
   validateLotSection();
