@@ -667,6 +667,7 @@ samplingInstructions = `
         ['QC Inspector', qcInspectorInput.value || 'N/A'],
         ['Operator Name', operatorName.value || 'N/A'],
         ['Machine No', machineNumberInput.value || 'N/A'],
+        ['Supplier Name', supplierName.value || 'N/A'],
         ['Part ID', partIdInput.value || 'N/A'],
         ['Part Name', partNameInput.value || 'N/A'],
         ['PO Number', poNumberInput.value || 'N/A'],
