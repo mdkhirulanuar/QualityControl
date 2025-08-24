@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <!--
-        Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
+        Copyright © 2025. Developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.
     -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>InspectWise Go</title>
+    <title>KPI-F25</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js" defer></script>
@@ -17,28 +17,27 @@
 </head>
 <body>
     <div class="container">
-        <h1>InspectWise Go</h1>
-        <center><p>InspectWise Go: Smart Sampling Tool.</p></center>
+        <h1>KPI-F25</h1>
+        <center><p>AQL Sampling Inspection Report</p></center>
 
         <div id="error-message" class="error-message" style="display: none;"></div>
 
         <form id="aqlForm">
             <div class="form-section batch-info">
-                <h2>Batch Identification</h2>
+                <h2>Sampling Identification</h2>
                 <div class="form-grid">
                     <div>
-                        <label for="qcInspector">QC Inspector:</label>
+                        <label for="qcInspector">QC Inspector Name:</label>
                         <select id="qcInspector" name="qcInspector" required>
-                            <option value="">-- Select QC Inspector --</option>
-                            <option value="Khirul Anuar">KHIRUL ANUAR</option>
-                            <option value="Popo">POPO</option>
-                            <option value="Dharisini">DHARISINI</option>
+                            <option value="">-- Select QC Inspector Name --</option>
+                            <option value="Khirul Anuar">Khirul Anuar</option>
+                            <option value="Dharisini">Dharisini</option>
                         </select>
                     </div>
 		   <div>
                         <label for="operatorName">Operator Name:</label>
                         <select id="operatorName" name="operatorName" required>
-                            <option value="">-- Select operator --</option>
+                            <option value="">-- Select Operator Name --</option>
                         </select>
                     </div>
                    <div>
@@ -140,6 +139,8 @@
                 <option value="8">8</option>
                 <option value="9">9</option>
                 <option value="10">10</option>
+				<option value="15">more than 14</option>
+				<option value="20">more than 19</option>
             </select>
             <button type="button" id="submitDefectsButton">Submit Defects & Get Verdict</button>
         </div>
@@ -175,7 +176,7 @@
 
         <div id="photoCaptureArea" class="form-section photo-section" style="display: none;">
             <h4>Photo Documentation (Optional)</h4>
-            <p>Add up to 5 photos to document defects. Click a photo to annotate or remove.</p>
+            <p>Add up to 10 photos to document defects. Click a photo to annotate or remove.</p>
             <div class="photo-options">
                 <label for="uploadMultiplePhotos" class="upload-button">Upload Multiple Photos
                     <input type="file" id="uploadMultiplePhotos" accept="image/*" multiple style="display: none;">
@@ -218,14 +219,14 @@
 
         <!-- Copyright -->
         <footer class="footer">
-            <p>Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.</p>
+            <p>Copyright © 2025. Developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.</p>
         </footer>
     </div>
 
     <!-- Scripts -->
     <script src="js/script.js" defer></script>
-<script src="js/operatorList.js"></script>
-<script src="js/partsList.js" defer></script>
-<script src="js/service-worker.js" defer></script>
-</body>
-</html>
+    <script src="js/operatorList.js" defer></script>
+    <script src="js/partsList.js" defer></script>
+    <script src="js/service-worker.js" defer></script>
+    </body>
+    </html>
