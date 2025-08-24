@@ -675,9 +675,9 @@ samplingInstructions = `
 
     doc.text("Sampling Details & Plan", margin, y);
     y += 5;
-    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+    const aqlText = aqlSelect.value === '1.0' ? 'Strict (only 1% defective allowed)' :
+                    aqlSelect.value === '2.5' ? 'Standard (up to 2.5% defective allowed)' :
+                    aqlSelect.value === '4.0' ? 'Low (up to 4% defective allowed)' :
                     `AQL ${aqlSelect.value}%`;
     doc.autoTable({
       startY: y,
