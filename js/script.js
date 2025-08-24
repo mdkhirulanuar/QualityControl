@@ -649,7 +649,7 @@ samplingInstructions = `
     let y = 20;
 
     doc.setFontSize(16);
-    doc.text("Quality Control Inspection Report", margin, y);
+    doc.text("KPI-F25 FORM (AQL SAMPLING INSPECTION RECORD) ", margin, y);
     y += 10;
 
     doc.setFontSize(12);
