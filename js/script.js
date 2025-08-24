@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return null;
     }
     if (!['1.0', '2.5', '4.0'].includes(aqlValue)) {
-      displayError('Please select High (1.0%), Medium (2.5%), or Low (4.0%) AQL.');
+      displayError('Please select Strict (only 1% defective allowed), Standard (up to 2.5% defective allowed), or Low (up to 4% defective allowed) AQL.');
       return null;
     }
 
@@ -502,9 +502,9 @@ samplingInstructions = `
 
     }
 
-    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+    const aqlText = aqlSelect.value === '1.0' ? 'Strict (only 1% defective allowed)' :
+                    aqlSelect.value === '2.5' ? 'Standard (up to 2.5% defective allowed)' :
+                    aqlSelect.value === '4.0' ? 'Low (up to 4% defective allowed)' :
                     `AQL ${aqlSelect.value}%`;
 
     resultsDiv.innerHTML = `
@@ -551,7 +551,7 @@ samplingInstructions = `
     }
     const verdict = defectsFound <= currentSamplingPlan.accept
       ? `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit: ${currentSamplingPlan.accept})`
-      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
+      : `REJECT Lot (100% inspection is required) (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
     const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
     fadeIn(verdictMessageDiv);
@@ -585,9 +585,9 @@ samplingInstructions = `
       ? `<p style="color: orange; font-weight: bold;">Note: 100% inspection required/performed.</p>`
       : '';
 
-    const aqlText = aqlSelect.value === '1.0' ? 'High Quality (AQL 1.0%)' :
-                    aqlSelect.value === '2.5' ? 'Medium Quality (AQL 2.5%)' :
-                    aqlSelect.value === '4.0' ? 'Low Quality (AQL 4.0%)' :
+    const aqlText = aqlSelect.value === '1.0' ? 'Strict (only 1% defective allowed)' :
+                    aqlSelect.value === '2.5' ? 'Standard (up to 2.5% defective allowed)' :
+                    aqlSelect.value === '4.0' ? 'Low (up to 4% defective allowed)' :
                     `AQL ${aqlSelect.value}%`;
 
     const reportHTML = `
