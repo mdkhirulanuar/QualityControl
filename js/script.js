@@ -576,7 +576,7 @@ samplingInstructions = `
     }
 
     const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
-    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
+    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT - 100% INSPECTION IS REQUIRED';
     const verdictColor = verdictText === 'ACCEPT' ? 'green' : 'red';
     const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
       .map(cb => cb.value);
