@@ -18,7 +18,7 @@
 <body>
     <div class="container">
         <h1>KPI-F25 FORM</h1>
-        <center><p>AQL SAMPLING INSPECTION REPORT</p></center>
+        <center><p>AQL SAMPLING INSPECTION RECORD</p></center>
 
         <div id="error-message" class="error-message" style="display: none;"></div>
 
@@ -125,7 +125,7 @@
         </div>
 
         <div id="defectsInputArea" class="form-section" style="display: none;">
-            <label for="defectsFound">Number of Defects Found:</label>
+            <label for="defectsFound">Number of Defects Parts Found:</label>
             <select id="defectsFound" name="defectsFound" required>
                 <option value="" disabled selected>-- Select Number --</option>
                 <option value="0">0</option>
@@ -142,7 +142,7 @@
 				<option value="15">more than 14</option>
 				<option value="20">more than 19</option>
             </select>
-            <button type="button" id="submitDefectsButton">Submit Defects & Get Verdict</button>
+            <button type="button" id="submitDefectsButton">Submit Defects & Get Result</button>
         </div>
 
         <div id="verdictMessage" class="results-section" style="display: none;" aria-live="polite"></div>
@@ -170,12 +170,12 @@
                 <label><input type="checkbox" name="defect_type" value="Plastic - Broken Part"> Plastic - Broken Part</label>
                 <label><input type="checkbox" name="defect_type" value="Plastic - Un-shining / Poor Gloss"> Plastic - Un-shining / Poor Gloss</label>
                 <label><input type="checkbox" name="defect_type" value="Plastic - Spots / Black Dot"> Plastic - Spots / Black Dot</label>
-                <label><input type="checkbox" name="defect_type" value="Other"> Other (Specify if needed in report notes)</label>
+                <label><input type="checkbox" name="defect_type" value="Other"> Other (Please specify in report notes)</label>
             </div>
         </div>
 
         <div id="photoCaptureArea" class="form-section photo-section" style="display: none;">
-            <h4>Photo Documentation (Optional)</h4>
+            <h4>Photo Documentation for Defected Parts (Optional)</h4>
             <p>Add up to 10 photos to document defects. Click a photo to annotate or remove.</p>
             <div class="photo-options">
                 <label for="uploadMultiplePhotos" class="upload-button">Upload Multiple Photos
@@ -185,7 +185,7 @@
             <div id="photoPreview" class="photo-preview">
                 <p>No photos added yet.</p>
             </div>
-            <p id="photoCount">Photos: 0/5</p>
+            <p id="photoCount">Photos: 0/10</p>
         </div>
 
         <!-- Annotation Modal -->
@@ -209,7 +209,7 @@
         </div>
 
         <div id="finalReportArea" class="results-section report-area" style="display: none;">
-            <h2>Final Inspection Report</h2>
+            <h2>Final AQL Sampling Inspection Record</h2>
             <div id="reportContent"></div>
             <div class="button-group">
                 <button type="button" id="savePdfButton" style="display: none;">Save as PDF</button>
