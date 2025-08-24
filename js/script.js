@@ -551,7 +551,7 @@ samplingInstructions = `
     }
     const verdict = defectsFound <= currentSamplingPlan.accept
       ? `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit: ${currentSamplingPlan.accept})`
-      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject}) - Note: 100% inspection required/performed.`;
+      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject}) - Note: Inspect all pieces from all boxes (100% inspection required).`;
     const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
     fadeIn(verdictMessageDiv);
@@ -576,13 +576,13 @@ samplingInstructions = `
     }
 
     const reportId = `Report_${partIdInput.value || 'NoID'}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}`;
-    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT - 100% INSPECTION IS REQUIRED';
+    const verdictText = defectsFound <= currentSamplingPlan.accept ? 'ACCEPT' : 'REJECT';
     const verdictColor = verdictText === 'ACCEPT' ? 'green' : 'red';
     const selectedDefects = Array.from(document.querySelectorAll('input[name="defect_type"]:checked'))
       .map(cb => cb.value);
     const lotSizeVal = parseInt(lotSizeInput.value, 10);
     const inspectionNote = lotSizeVal && currentSamplingPlan.sampleSize >= lotSizeVal
-      ? `<p style="color: orange; font-weight: bold;">Note: 100% inspection required/performed.</p>`
+      ? `<p style="color: orange; font-weight: bold;">Note: Inspect all pieces from all boxes (100% inspection required).</p>`
       : '';
 
     const aqlText = aqlSelect.value === '1.0' ? 'Strict (only 1% defective allowed)' :
@@ -615,7 +615,7 @@ samplingInstructions = `
 
       <h3>Inspection Results</h3>
       <p><strong>Number of Defects Found:</strong> ${defectsFound}</p>
-      <p><strong>Verdict:</strong> <strong style="color: ${verdictColor};">${verdictText}</strong></p>
+      <p><strong>Verdict:</strong> <strong style="color: ${verdictColor};">${verdictText} - 100% INSPECTION REQUIRED.</strong></p>
 
       <h3>Observed Defect Types</h3>
       ${selectedDefects.length > 0
@@ -688,7 +688,7 @@ samplingInstructions = `
         ['Acceptable Quality Level', aqlText],
         ['Sample Size Code Letter', currentSamplingPlan.codeLetter],
         ['Sample Size Inspected', currentSamplingPlan.sampleSize],
-        ...(currentSamplingPlan.sampleSize >= parseInt(lotSizeInput.value, 10) ? [['Note', '100% inspection required/performed.']] : []),
+        ...(currentSamplingPlan.sampleSize >= parseInt(lotSizeInput.value, 10) ? [['Note', '100% inspection required.']] : []),
         ['Acceptance Number (Ac)', currentSamplingPlan.accept],
         ['Rejection Number (Re)', currentSamplingPlan.reject]
       ],
