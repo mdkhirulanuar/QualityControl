@@ -551,7 +551,7 @@ samplingInstructions = `
     }
     const verdict = defectsFound <= currentSamplingPlan.accept
       ? `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit: ${currentSamplingPlan.accept})`
-      : `REJECT Lot (100% inspection is required) (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
+      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject}) - Note: 100% inspection required/performed.`;
     const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
     fadeIn(verdictMessageDiv);
