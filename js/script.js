@@ -51,14 +51,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // --- State Variables ---
   let currentSamplingPlan = null;
   let capturedPhotos = [];
-  const MAX_PHOTOS = 5;
+  const MAX_PHOTOS = 10;
   let fabricCanvas = null;
   let currentPhotoIndex = null;
   let annotationHistory = [];
   let currentMode = null;
   const qcMonitorContact = "qaqc@kpielectrical.com.my or whatsapp to +60182523255 immediately";
 
-  const copyrightNotice = "Copyright © 2025. InspectWise Go™ is developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
+  const copyrightNotice = "Copyright © 2025. Developed and maintained by Khirul Anuar for KPI Electrical Manufacturing Sdn. Bhd.";
 
   // --- Populate Part Name Dropdown ---
   function populatePartNameDropdown() {
@@ -591,9 +591,9 @@ samplingInstructions = `
                     `AQL ${aqlSelect.value}%`;
 
     const reportHTML = `
-      <h3>Batch Identification</h3>
+      <h3>Sampling Information</h3>
       <p><strong>Report ID:</strong> ${reportId}</p>
-      <p><strong>QC Inspector:</strong> ${qcInspectorInput.value || 'N/A'}</p>
+      <p><strong>QC Inspector Name:</strong> ${qcInspectorInput.value || 'N/A'}</p>
       <p><strong>Operator Name:</strong> ${operatorName.value || 'N/A'}</p>
       <p><strong>Machine No:</strong> ${machineNumberInput.value || 'N/A'}</p>
       <p><strong>Part Name:</strong> ${partNameInput.value || 'N/A'}</p>
