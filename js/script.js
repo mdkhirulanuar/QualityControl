@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isNaN(lotSizeVal) || lotSizeVal <= 0) {
       samplingInstructions = '<p style="color: red;">Cannot calculate sampling instructions without valid lot size.</p>';
     } else if (plan.sampleSize >= lotSizeVal) {
-      samplingInstructions = '<p><strong>Sampling Instructions:</strong> Inspect all pieces from all boxes (100% inspection required).</p>';
+      samplingInstructions = '<p><strong>Sampling Instructions:</strong></p>';
     } else if (isNaN(numBoxesVal) || numBoxesVal <= 0 || isNaN(pcsPerBoxVal) || pcsPerBoxVal <= 0) {
       samplingInstructions = '<p style="color: red;">Enter valid Number of Boxes and Pieces per Box.</p>';
     } else {
@@ -551,7 +551,7 @@ samplingInstructions = `
     }
     const verdict = defectsFound <= currentSamplingPlan.accept
       ? `ACCEPT Lot (Found ${defectsFound} defects, Acceptance limit: ${currentSamplingPlan.accept})`
-      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject}) - Note: Inspect all pieces from all boxes (100% inspection required).`;
+      : `REJECT Lot (Found ${defectsFound} defects, Rejection limit: ${currentSamplingPlan.reject})`;
     const verdictClass = defectsFound <= currentSamplingPlan.accept ? 'accept' : 'reject';
     verdictMessageDiv.innerHTML = `<p class="${verdictClass}">${verdict}</p>`;
     fadeIn(verdictMessageDiv);
@@ -582,7 +582,7 @@ samplingInstructions = `
       .map(cb => cb.value);
     const lotSizeVal = parseInt(lotSizeInput.value, 10);
     const inspectionNote = lotSizeVal && currentSamplingPlan.sampleSize >= lotSizeVal
-      ? `<p style="color: orange; font-weight: bold;">Note: Inspect all pieces from all boxes (100% inspection required).</p>`
+      ? `<p style="color: orange; font-weight: bold;"></p>`
       : '';
 
     const aqlText = aqlSelect.value === '1.0' ? 'Strict (only 1% defective allowed)' :
@@ -615,7 +615,7 @@ samplingInstructions = `
 
       <h3>Inspection Results</h3>
       <p><strong>Number of Defects Found:</strong> ${defectsFound}</p>
-      <p><strong>Verdict:</strong> <strong style="color: ${verdictColor};">${verdictText} - 100% INSPECTION REQUIRED.</strong></p>
+      <p><strong>Verdict:</strong> <strong style="color: ${verdictColor};">${verdictText}</p>
 
       <h3>Observed Defect Types</h3>
       ${selectedDefects.length > 0
