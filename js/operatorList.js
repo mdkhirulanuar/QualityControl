@@ -16,6 +16,7 @@ const OPERATOR_LIST = [
   "Aye Aye Aung",
   "Khin Hlaing San",
   "Thet Mar Htwe"
+  "Khin Hnin Wai"
 ];
 
 function populateOperatorDropdown(selectId) {
@@ -35,3 +36,4 @@ function populateOperatorDropdown(selectId) {
   });
 
 }
+
