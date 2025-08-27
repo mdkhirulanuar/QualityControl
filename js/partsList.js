@@ -216,5 +216,6 @@ const partsList = [
     { partId: "SP-CG-OLD", partName: "SCENT GEL OLD" },
     { partId: "SP-CG-NEW", partName: "SCENT GEL NEW" },
     { partId: "SP-CG-PREM-BL", partName: "SCENT GEL PREMIUM BLACK" },
-    { partId: "SP-CG-PREM-WH", partName: "SCENT GEL PREMIUM WHITE" }
+    { partId: "SP-CG-PREM-WH", partName: "SCENT GEL PREMIUM WHITE" },
+    { partId: "6-4292T/3T", partName: "TOYOTA A DECK LH/RH" },
 ];
