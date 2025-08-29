@@ -1,6 +1,6 @@
 {
-  "name": "InspectWise Go",
-  "short_name": "InspectWise",
+  "name": "KPI-F25 Form",
+  "short_name": "KPI-F25",
   "description": "A PWA for AQL sampling inspection that helps QC inspectors calculate sample sizes and acceptance/rejection criteria.",
   "start_url": "./index.html",
   "scope": "./",
