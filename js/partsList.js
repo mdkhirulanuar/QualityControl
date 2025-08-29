@@ -88,7 +88,7 @@ window.partsList = [
     { partId: "18-14173-00", partName: "G RING 16\" LMC (TY C)" },
     { partId: "18-15460-00", partName: "G RING 16\" LWI (TY C)" },
     { partId: "18-12834-00", partName: "G RING 16\" WE (TY C)" },
-    { partId: "18-14450-00", partName: "G RING 18\" (TY A)" },
+    { partId: "18-14450-00", partName: "G RING 18\" WE (TY A)" },
     { partId: "18-17179-00", partName: "G RING 18\" DCM (TY A)" },
     { partId: "18-14506-00", partName: "G RING 18\" DG (TY A)" },
     { partId: "18-16737-00", partName: "G RING 18\" DMC (TY A)" },
