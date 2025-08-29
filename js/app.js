@@ -663,7 +663,7 @@ samplingInstructions = `
         : '<p>No photos added.</p>'
       }
 
-      <p>${copyrightNotice}</p>
+      <p>${copyrightNotic}</p>
     `;
 
     reportContentDiv.innerHTML = reportHTML;
