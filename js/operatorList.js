@@ -18,6 +18,7 @@ window.OPERATOR_LIST = [
   "Aye Aye Aung",
   "Khin Hlaing San",
   "Khin Hnin Wai",
+  "Shuhel",
   "Thet Mar Htwe"
 ];
 
