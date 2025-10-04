@@ -16,6 +16,7 @@ window.OPERATOR_LIST = [
   "Md Beltu Ali",
   "Abu Talib",
   "Aye Aye Aung",
+  "Alamin",
   "Khin Hlaing San",
   "Khin Hnin Wai",
   "Shuhel",
